@@ -1,19 +1,17 @@
 import SwiftUI
 import SwiftData
-import MapKit
-import CoreLocation
-import UIKit
 
 /// Detail screen for a single transaction, styled after the Apple Card transaction view:
 /// a large amount with merchant and date, a details card, and an editable category picker.
 struct TransactionDetailView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.openURL) private var openURL
     @Bindable var expense: Expense
     @State private var showingCardPicker = false
+    @State private var showingMerchantPicker = false
+    @State private var editingAmount = false
+    @State private var amountDraft = ""
     @State private var confirmingDelete = false
-    @State private var locationProvider = LocationProvider.shared
 
     /// "8/30/25, 9:41 AM"-style timestamp.
     private var dateString: String {
@@ -35,7 +33,7 @@ struct TransactionDetailView: View {
                 header
                 detailsCard
                 if expense.viaWalletImport {
-                    mapCard
+                    TransactionMapCard(expense: expense)
                 }
                 notesCard
                 reportCard
@@ -58,10 +56,27 @@ struct TransactionDetailView: View {
         .onChange(of: expense.notes) { _, _ in
             save(describing: "note")
         }
+        .onChange(of: expense.date) { _, _ in
+            save(describing: "date")
+        }
+        .alert("Edit Amount", isPresented: $editingAmount) {
+            TextField("Amount", text: $amountDraft)
+                .keyboardType(.decimalPad)
+            Button("Save") { commitAmount() }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Enter the transaction amount.")
+        }
         .sheet(isPresented: $showingCardPicker) {
             LibraryPickerView(title: "Card", items: CardLibrary.items, fallbackIcon: "creditcard.fill") { newCard in
                 expense.card = newCard
                 save(describing: "card")
+            }
+        }
+        .sheet(isPresented: $showingMerchantPicker) {
+            LibraryPickerView(title: "Merchant", items: MerchantLibrary.items, fallbackIcon: "tag.fill") { newMerchant in
+                expense.merchant = newMerchant
+                save(describing: "merchant")
             }
         }
     }
@@ -84,9 +99,15 @@ struct TransactionDetailView: View {
         .frame(maxWidth: .infinity)
     }
 
-    /// Card with the editable card-used and category rows.
+    /// Card with the editable merchant, amount, date, card-used, and category rows.
     private var detailsCard: some View {
         VStack(spacing: 0) {
+            merchantRow
+            Divider().padding(.leading, 16)
+            amountRow
+            Divider().padding(.leading, 16)
+            dateRow
+            Divider().padding(.leading, 16)
             cardRow
             Divider().padding(.leading, 16)
             categoryRow
@@ -95,6 +116,53 @@ struct TransactionDetailView: View {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(Color(.secondarySystemGroupedBackground))
         )
+    }
+
+    /// "Merchant" label with a button that opens the merchant picker.
+    private var merchantRow: some View {
+        Button {
+            showingMerchantPicker = true
+        } label: {
+            HStack(spacing: 6) {
+                Text("Merchant").foregroundStyle(.primary)
+                Spacer()
+                if let item = MerchantLibrary.item(named: expense.merchant) {
+                    Image(systemName: item.systemImage).foregroundStyle(item.color)
+                }
+                Text(expense.merchant.isEmpty ? "Not Set" : expense.merchant).foregroundStyle(.secondary)
+                Image(systemName: "chevron.right")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .tint(.primary)
+        .padding(16)
+    }
+
+    /// "Amount" label with a button that opens the amount editor alert.
+    private var amountRow: some View {
+        Button {
+            amountDraft = expense.amount == 0 ? "" : expense.amount.formatted(.number.precision(.fractionLength(0...2)).grouping(.never))
+            editingAmount = true
+        } label: {
+            HStack {
+                Text("Amount").foregroundStyle(.primary)
+                Spacer()
+                Text(expense.amount.asCurrency()).foregroundStyle(.secondary)
+                Image(systemName: "chevron.right")
+                    .font(.caption2.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .tint(.primary)
+        .padding(16)
+    }
+
+    /// "Date" label with an inline date + time picker.
+    private var dateRow: some View {
+        DatePicker("Date", selection: $expense.date, displayedComponents: [.date, .hourAndMinute])
+            .tint(.primary)
+            .padding(16)
     }
 
     /// "Card Used" label with a button that opens the card picker.
@@ -166,102 +234,6 @@ struct TransactionDetailView: View {
         )
     }
 
-    /// Map card under the details: a real map + place-name row when located, else a blurred
-    /// placeholder with an "Allow Location Access" prompt.
-    @ViewBuilder
-    private var mapCard: some View {
-        if let lat = expense.latitude, let lon = expense.longitude {
-            let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lon)
-            VStack(spacing: 0) {
-                Map(initialPosition: .region(MKCoordinateRegion(center: coordinate, latitudinalMeters: 500, longitudinalMeters: 500))) {
-                    Marker(expense.merchant.isEmpty ? "Purchase" : expense.merchant, coordinate: coordinate)
-                }
-                .frame(height: 170)
-                .allowsHitTesting(false)
-
-                Button { openInMaps(coordinate) } label: {
-                    HStack {
-                        Text(placeLabel)
-                            .foregroundStyle(.primary)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(.footnote.weight(.semibold))
-                            .foregroundStyle(.tertiary)
-                    }
-                    .padding(16)
-                }
-                .buttonStyle(.plain)
-            }
-            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color(.secondarySystemGroupedBackground)))
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        } else {
-            mapPlaceholder
-        }
-    }
-
-    /// Best label for the located place.
-    private var placeLabel: String {
-        if !expense.locationName.isEmpty { return expense.locationName }
-        return expense.merchant.isEmpty ? "Location" : expense.merchant
-    }
-
-    /// Blurred map with a location-access prompt (shown when no location is recorded).
-    private var mapPlaceholder: some View {
-        ZStack {
-            Map(initialPosition: .region(MKCoordinateRegion(
-                center: CLLocationCoordinate2D(latitude: 37.3349, longitude: -122.009),
-                latitudinalMeters: 900, longitudinalMeters: 900)))
-                .allowsHitTesting(false)
-                .blur(radius: 6)
-            Color.black.opacity(0.15)
-            VStack(spacing: 10) {
-                Image(systemName: "mappin.slash")
-                    .font(.title)
-                    .foregroundStyle(.white)
-                locationPrompt
-            }
-        }
-        .frame(height: 170)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-    }
-
-    /// The prompt shown over the blurred map, depending on authorization.
-    @ViewBuilder
-    private var locationPrompt: some View {
-        switch locationProvider.authorization {
-        case .denied, .restricted:
-            Button { openSettings() } label: {
-                Label("Allow Location Access", systemImage: "location.fill")
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(.white)
-            .foregroundStyle(.black)
-        case .notDetermined:
-            Button { locationProvider.requestAuthorization() } label: {
-                Label("Allow Location Access", systemImage: "location.fill")
-            }
-            .buttonStyle(.borderedProminent)
-            .tint(.white)
-            .foregroundStyle(.black)
-        default:
-            Text("No location recorded")
-                .font(.subheadline)
-                .foregroundStyle(.white)
-        }
-    }
-
-    /// Opens the location in Apple Maps.
-    private func openInMaps(_ coordinate: CLLocationCoordinate2D) {
-        let item = MKMapItem(placemark: MKPlacemark(coordinate: coordinate))
-        item.name = placeLabel
-        item.openInMaps()
-    }
-
-    /// Opens the app's Settings page (for re-enabling denied location access).
-    private func openSettings() {
-        if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
-    }
-
     /// Editable note card.
     private var notesCard: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -304,6 +276,17 @@ struct TransactionDetailView: View {
         } catch {
             Log.ui.error("Failed to delete transaction: \(error.localizedDescription, privacy: .public)")
         }
+    }
+
+    /// Parses the amount-editor draft and stores it as the expense amount (logs and ignores
+    /// unparseable/zero input). The absolute value is stored to keep amounts positive.
+    private func commitAmount() {
+        guard let value = CurrencyParser.parse(amountDraft), value != 0 else {
+            Log.ui.error("Rejected amount edit: \(amountDraft, privacy: .public)")
+            return
+        }
+        expense.amount = abs(value)
+        save(describing: "amount")
     }
 
     /// Persists an edit to the expense and logs the outcome.

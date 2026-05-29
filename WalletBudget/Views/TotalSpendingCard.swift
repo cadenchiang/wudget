@@ -66,6 +66,9 @@ struct TotalSpendingCard: View {
         })
     }
 
+    /// Whether the period is projected to finish over budget (a budget must be set).
+    private var isOverBudget: Bool { projection?.isWithinBudget == false }
+
     private var delta: Double { total - previousTotal }
 
     /// Whether there's previous-period spending to compare against.
@@ -125,6 +128,7 @@ struct TotalSpendingCard: View {
             HStack(spacing: 8) {
                 Text(total.asCurrency())
                     .font(.system(size: 30, weight: .bold))
+                    .foregroundStyle(isOverBudget ? .red : .primary)
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)
                 if hasComparison {

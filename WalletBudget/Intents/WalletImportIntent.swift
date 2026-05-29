@@ -51,6 +51,20 @@ struct WalletImportIntent: AppIntent {
             throw WalletImportError.missingMerchant
         }
 
+        let context = SharedModelContainer.container.mainContext
+
+        // Guard against the automation firing twice for one purchase: if an identical
+        // amount+merchant was recorded within the dedupe window, skip inserting a second copy.
+        let cutoff = Date().addingTimeInterval(-Self.duplicateWindow)
+        var duplicateCheck = FetchDescriptor<Expense>(
+            predicate: #Predicate { $0.amount == value && $0.merchant == cleanMerchant && $0.date >= cutoff }
+        )
+        duplicateCheck.fetchLimit = 1
+        if let existing = try? context.fetch(duplicateCheck), !existing.isEmpty {
+            Log.intent.info("Skipped duplicate import: \(value) at \(cleanMerchant, privacy: .public) within \(Int(Self.duplicateWindow))s")
+            return .result(value: "Already recorded \(cleanMerchant)")
+        }
+
         let expense = Expense(amount: value, merchant: cleanMerchant, card: card)
         expense.viaWalletImport = true
 
@@ -63,7 +77,6 @@ struct WalletImportIntent: AppIntent {
             }
         }
 
-        let context = SharedModelContainer.container.mainContext
         context.insert(expense)
         do {
             try context.save()
@@ -82,6 +95,10 @@ struct WalletImportIntent: AppIntent {
 
     /// `UserDefaults` key set once the first Wallet Import succeeds (used by onboarding's sync check).
     static let receivedKey = "walletImportReceived"
+
+    /// Window (seconds) within which an identical amount+merchant import is treated as a duplicate
+    /// of one already recorded (guards against the Wallet automation firing twice).
+    static let duplicateWindow: TimeInterval = 90
 }
 
 /// Errors surfaced to Shortcuts/Siri when a `WalletImportIntent` cannot complete.

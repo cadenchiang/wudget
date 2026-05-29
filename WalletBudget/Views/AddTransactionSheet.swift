@@ -85,6 +85,7 @@ struct AddTransactionSheet: View {
                 LibraryPickerView(title: "Card", items: CardLibrary.items, fallbackIcon: "creditcard.fill") { card = $0 }
             }
         }
+        .presentationDragIndicator(.visible)
     }
 
     /// A tappable form row that opens a library picker, showing the current selection (with its
