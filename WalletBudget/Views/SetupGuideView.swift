@@ -78,6 +78,11 @@ struct SetupGuideView: View {
                 }
 
                 Section {
+                    NavigationLink {
+                        NotificationSettingsView()
+                    } label: {
+                        SettingsRow(icon: "bell.badge.fill", tint: .red, title: "Notifications")
+                    }
                     Picker("Theme", selection: $theme) {
                         ForEach(AppTheme.allCases) { option in
                             Text(option.label).tag(option)

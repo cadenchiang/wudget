@@ -89,6 +89,9 @@ struct WalletImportIntent: AppIntent {
         // The onboarding's final screen observes this to confirm the sync works.
         UserDefaults.standard.set(true, forKey: WalletImportIntent.receivedKey)
 
+        // Fire a large-purchase alert if this single charge meets the user's threshold.
+        NotificationManager.shared.notifyLargePurchase(amount: value, merchant: cleanMerchant, card: card)
+
         Log.intent.info("Imported \(expense.amount) at \(cleanMerchant, privacy: .public) [\(expense.category, privacy: .public)] currency=\(currency, privacy: .public)")
         return .result(value: "Imported \(cleanMerchant) in \(expense.category)")
     }

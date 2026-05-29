@@ -24,9 +24,11 @@ struct SpendingView: View {
     @Query(sort: \Expense.date, order: .reverse) private var expenses: [Expense]
     @AppStorage("budget.monthly") private var monthlyBudget = 0.0
     @AppStorage("budget.showLine") private var showBudgetLine = true
+    @AppStorage(ProfileKeys.variableDefault) private var variableDefault = false
     @State private var span: TimeSpan = .month
     @State private var tab: SpendingTab = .recent
     @State private var spendingMode: SpendingMode = .total
+    @State private var appliedModeDefault = false
     @State private var showingAdd = false
 
     /// Expenses within the selected period (already date-descending from the query).
@@ -128,6 +130,13 @@ struct SpendingView: View {
                 .sheet(isPresented: $showingAdd) { AddTransactionSheet() }
                 .onChange(of: span) { _, _ in Haptics.selection() }
                 .onChange(of: tab) { _, _ in Haptics.selection() }
+                .onAppear {
+                    // Apply the onboarding "variable spending" preference once.
+                    if !appliedModeDefault {
+                        spendingMode = variableDefault ? .variable : .total
+                        appliedModeDefault = true
+                    }
+                }
         }
     }
 
