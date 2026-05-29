@@ -10,7 +10,7 @@ struct AboutView: View {
     private var appName: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
             ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
-            ?? "WalletBudget"
+            ?? "Wudget"
     }
 
     /// "Version 1.0 (1)"-style string from the bundle.
@@ -24,14 +24,11 @@ struct AboutView: View {
         List {
             Section {
                 VStack(spacing: 8) {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.accentColor.gradient)
+                    Image("AppIconImage")
+                        .resizable()
+                        .scaledToFit()
                         .frame(width: 72, height: 72)
-                        .overlay {
-                            Image(systemName: "creditcard.fill")
-                                .font(.system(size: 30, weight: .semibold))
-                                .foregroundStyle(.white)
-                        }
+                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     Text(appName).font(.title3.bold())
                     Text(versionString).font(.footnote).foregroundStyle(.secondary)
                 }
@@ -49,10 +46,14 @@ struct AboutView: View {
             }
 
             Section("Legal") {
-                Link(destination: URL(string: "https://walletbudget.app/privacy")!) {
+                NavigationLink {
+                    PrivacyPolicyView()
+                } label: {
                     row("Privacy Policy", icon: "hand.raised", orangeText: true)
                 }
-                Link(destination: URL(string: "https://walletbudget.app/terms")!) {
+                NavigationLink {
+                    TermsOfServiceView()
+                } label: {
                     row("Terms of Service", icon: "doc.text", orangeText: true)
                 }
             }
@@ -72,16 +73,27 @@ struct AboutView: View {
         }
     }
 
-    /// Opens the support email composer.
+    /// Opens the Mail app with a pre-filled support email (subject, body, recipient).
     private func emailSupport() {
-        if let url = URL(string: "mailto:support@walletbudget.app") {
+        var components = URLComponents()
+        components.scheme = "mailto"
+        components.path = "cadenchiang@gmail.com"
+        components.queryItems = [
+            URLQueryItem(name: "subject", value: "Wudget Support"),
+            URLQueryItem(name: "body", value: "\n\n\n\(appName) \(versionString)")
+        ]
+        if let url = components.url {
             openURL(url)
         }
     }
 
-    /// Copies the app name + version to the clipboard.
+    /// Copies the app name + version to the clipboard and briefly shows "Copied!".
     private func copyBuildInfo() {
-        UIPasteboard.general.string = "\(appName) — \(versionString)"
+        UIPasteboard.general.string = "\(appName) \(versionString)"
+        Haptics.tap()
         copied = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            copied = false
+        }
     }
 }

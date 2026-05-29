@@ -89,7 +89,6 @@ struct PersonalOnboardingFlow: View {
     /// Whether the current step has a valid answer (gates the Continue button).
     private var isStepComplete: Bool {
         switch currentStep {
-        case .name: return !profile.name.trimmingCharacters(in: .whitespaces).isEmpty
         case .birthdate, .savingsDate, .summary: return true
         case .savingsDetail: return profile.savingsValue > 0
         case .gender: return profile.gender != nil

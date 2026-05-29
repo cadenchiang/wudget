@@ -9,6 +9,7 @@ struct AddTransactionSheet: View {
     @State private var amountText = ""
     @State private var merchant = ""
     @State private var card = ""
+    @State private var category = ""
     @State private var date = Date()
     @State private var recurrence: RecurrenceFrequency = .none
     @State private var notes = ""
@@ -39,22 +40,28 @@ struct AddTransactionSheet: View {
                         item: MerchantLibrary.item(named: merchant),
                         fallbackIcon: "tag.fill"
                     ) { showingMerchantPicker = true }
+                }
+
+                Section("Optional") {
                     selectionRow(
                         label: "Card",
                         value: card,
-                        placeholder: "Optional",
+                        placeholder: "Choose",
                         item: CardLibrary.item(named: card),
                         fallbackIcon: "creditcard.fill"
                     ) { showingCardPicker = true }
+                    Picker("Category", selection: $category) {
+                        Text("Automatic").tag("")
+                        ForEach(ExpenseCategorizer.allCategories, id: \.self) { name in
+                            Text(name).tag(name)
+                        }
+                    }
                     DatePicker("Date", selection: $date, displayedComponents: [.date, .hourAndMinute])
                     Picker("Repeat", selection: $recurrence) {
                         ForEach(RecurrenceFrequency.allCases) { frequency in
                             Text(frequency.label).tag(frequency)
                         }
                     }
-                }
-
-                Section("Note") {
                     TextField("Add a note", text: $notes, axis: .vertical)
                         .lineLimit(1...4)
                 }
@@ -146,7 +153,9 @@ struct AddTransactionSheet: View {
             return
         }
 
-        let expense = Expense(amount: value, merchant: cleanMerchant, card: card, date: date, recurrence: recurrence, notes: notes.trimmingCharacters(in: .whitespacesAndNewlines))
+        // An empty category means "Automatic" — let the model derive it from the merchant.
+        let chosenCategory = category.isEmpty ? nil : category
+        let expense = Expense(amount: value, merchant: cleanMerchant, card: card, date: date, category: chosenCategory, recurrence: recurrence, notes: notes.trimmingCharacters(in: .whitespacesAndNewlines))
         context.insert(expense)
         do {
             try context.save()

@@ -18,10 +18,11 @@ struct RootView: View {
             }
     }
 
-    /// Rebuilds scheduled reminders and runs the budget-threshold check.
+    /// Rebuilds scheduled reminders, runs the budget-threshold check, and refreshes the widget.
     private func refreshNotifications() {
         NotificationManager.shared.refreshAll(context: context)
         NotificationManager.shared.checkBudgetAlerts(context: context)
+        WidgetUpdater.refresh(context: context)
     }
 
     private var tabs: some View {
@@ -36,5 +37,6 @@ struct RootView: View {
 
 #Preview {
     RootView()
+        .environment(AccountStore())
         .modelContainer(for: [Expense.self, SpendingCategory.self], inMemory: true)
 }

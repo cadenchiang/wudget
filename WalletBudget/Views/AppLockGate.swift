@@ -42,7 +42,7 @@ struct AppLockGate<Content: View>: View {
                 Image(systemName: "lock.fill")
                     .font(.system(size: 44))
                     .foregroundStyle(.secondary)
-                Text("WalletBudget is locked")
+                Text("Wudget is locked")
                     .font(.headline)
                 Button("Unlock") { AppLock.authenticate { unlocked = $0 } }
                     .buttonStyle(.borderedProminent)

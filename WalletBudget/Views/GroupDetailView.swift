@@ -1,11 +1,9 @@
 import SwiftUI
 import SwiftData
 
-/// Lists the individual transactions behind a tapped group (category or merchant) within
-/// the selected period, with swipe-to-delete.
+/// Lists the individual transactions behind a tapped group (category or merchant) within the
+/// selected period, rendered with the same card/row layout as the home Recent list.
 struct GroupDetailView: View {
-    @Environment(\.modelContext) private var context
-
     private let title: String
     private let interval: DateInterval?
     @Query private var expenses: [Expense]
@@ -34,36 +32,38 @@ struct GroupDetailView: View {
     }
 
     var body: some View {
-        List {
-            ForEach(periodExpenses) { expense in
-                NavigationLink {
-                    TransactionDetailView(expense: expense)
-                } label: {
-                    TransactionRow(expense: expense, showsChevron: false)
+        ScrollView {
+            LazyVStack(spacing: 0) {
+                if periodExpenses.isEmpty {
+                    Text("No transactions in this period.")
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(16)
+                } else {
+                    ForEach(Array(periodExpenses.enumerated()), id: \.element.id) { index, expense in
+                        NavigationLink {
+                            TransactionDetailView(expense: expense)
+                        } label: {
+                            TransactionRow(expense: expense)
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal, 16)
+
+                        if index < periodExpenses.count - 1 {
+                            Divider().padding(.leading, 70)
+                        }
+                    }
                 }
             }
-            .onDelete(perform: delete)
+            .background(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(Color(.secondarySystemGroupedBackground))
+            )
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
         }
+        .background(Color(.systemGroupedBackground))
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
-        .overlay {
-            if periodExpenses.isEmpty {
-                ContentUnavailableView("No transactions", systemImage: "creditcard")
-            }
-        }
-    }
-
-    /// Deletes the expenses at the given offsets and saves.
-    /// - Parameter offsets: Index set provided by `onDelete`, relative to `periodExpenses`.
-    private func delete(at offsets: IndexSet) {
-        for expense in offsets.map({ periodExpenses[$0] }) {
-            Log.ui.info("Deleting transaction at \(expense.merchant, privacy: .public)")
-            context.delete(expense)
-        }
-        do {
-            try context.save()
-        } catch {
-            Log.ui.error("Failed to delete transaction(s): \(error.localizedDescription, privacy: .public)")
-        }
     }
 }

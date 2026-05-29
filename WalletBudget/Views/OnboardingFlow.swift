@@ -66,7 +66,8 @@ struct OnboardingFlow: View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
                 Capsule().fill(Color.secondary.opacity(0.2))
-                Capsule().fill(Color.primary).frame(width: geo.size.width * progress)
+                Capsule().fill(isLastStep ? Color.green : Color.primary)
+                    .frame(width: geo.size.width * progress)
             }
         }
         .frame(height: 4)

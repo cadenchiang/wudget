@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// A single grouped-spending row: a colored icon tile, the group name and transaction
 /// count, the period total, an optional delta-versus-last-period line, and a chevron.
@@ -64,11 +65,17 @@ struct SpendingGroupRow: View {
             }
     }
 
-    /// Arrow + amount showing change versus the previous period.
+    /// Percentage change versus the previous period (rounded; 0 when no comparison).
+    private var percentChange: Int {
+        guard group.previousTotal > 0 else { return 0 }
+        return Int((group.delta / group.previousTotal * 100).rounded())
+    }
+
+    /// Arrow + percentage showing change versus the previous period.
     private var deltaLabel: some View {
         HStack(spacing: 2) {
             Image(systemName: group.delta <= 0 ? "arrow.down" : "arrow.up")
-            Text(abs(group.delta).asCurrency())
+            Text("\(abs(percentChange))%")
         }
         .font(.caption)
         .foregroundStyle(.secondary)
@@ -83,20 +90,16 @@ struct TransactionRow: View {
     /// supplies its own chevron (avoids a double chevron).
     var showsChevron: Bool = true
 
-    private var libraryItem: LibraryItem? { MerchantLibrary.item(named: expense.merchant) }
-    private var iconName: String { libraryItem?.systemImage ?? CategoryStyle.icon(for: expense.category) }
-    private var iconColor: Color { libraryItem?.color ?? CategoryStyle.color(for: expense.category) }
+    /// The merchant's library entry, or a generic fallback so the tile always represents the
+    /// merchant (never the category).
+    private var merchantItem: LibraryItem {
+        MerchantLibrary.item(named: expense.merchant)
+            ?? LibraryItem(name: expense.merchant, systemImage: "bag.fill", color: .gray)
+    }
 
     var body: some View {
         HStack(spacing: 12) {
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(iconColor.gradient)
-                .frame(width: 44, height: 44)
-                .overlay {
-                    Image(systemName: iconName)
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(.white)
-                }
+            logoTile
             VStack(alignment: .leading, spacing: 2) {
                 Text(expense.merchant.isEmpty ? "Unknown" : expense.merchant)
                     .font(.body.weight(.semibold))
@@ -114,6 +117,46 @@ struct TransactionRow: View {
             }
         }
         .padding(.vertical, 12)
+    }
+
+    /// The merchant logo: bundled asset → fetched logo → SF Symbol fallback (same as the picker).
+    @ViewBuilder
+    private var logoTile: some View {
+        Group {
+            if let asset = merchantItem.assetName, UIImage(named: asset) != nil {
+                imageTile { Image(asset).resizable().scaledToFit() }
+            } else if let url = LogoProvider.url(for: merchantItem) {
+                AsyncImage(url: url) { phase in
+                    if case .success(let image) = phase {
+                        imageTile { image.resizable().scaledToFit() }
+                    } else {
+                        symbolTile
+                    }
+                }
+            } else {
+                symbolTile
+            }
+        }
+        .frame(width: 44, height: 44)
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+    }
+
+    /// A white tile hosting a fetched/bundled logo image.
+    private func imageTile<Content: View>(@ViewBuilder _ image: () -> Content) -> some View {
+        ZStack {
+            Color(.secondarySystemBackground)
+            image().padding(8)
+        }
+    }
+
+    /// The colored SF Symbol fallback tile.
+    private var symbolTile: some View {
+        ZStack {
+            Rectangle().fill(merchantItem.color.gradient)
+            Image(systemName: merchantItem.systemImage)
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(.white)
+        }
     }
 }
 

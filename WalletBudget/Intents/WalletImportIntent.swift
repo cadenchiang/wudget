@@ -12,7 +12,7 @@ import SwiftData
 struct WalletImportIntent: AppIntent {
     static var title: LocalizedStringResource = "Wallet Import"
     static var description = IntentDescription(
-        "Imports an Apple Wallet transaction into WalletBudget. Map the Wallet automation's Amount, Merchant, and Card onto these fields."
+        "Imports an Apple Wallet transaction into Wudget. Map the Wallet automation's Amount, Merchant, and Card onto these fields."
     )
 
     /// Amount as delivered by the automation (often a currency-formatted string, e.g. "$6.22").
@@ -91,6 +91,9 @@ struct WalletImportIntent: AppIntent {
 
         // Fire a large-purchase alert if this single charge meets the user's threshold.
         NotificationManager.shared.notifyLargePurchase(amount: value, merchant: cleanMerchant, card: card)
+
+        // Keep the home-screen widget in sync with the new transaction.
+        WidgetUpdater.refresh(context: context)
 
         Log.intent.info("Imported \(expense.amount) at \(cleanMerchant, privacy: .public) [\(expense.category, privacy: .public)] currency=\(currency, privacy: .public)")
         return .result(value: "Imported \(cleanMerchant) in \(expense.category)")

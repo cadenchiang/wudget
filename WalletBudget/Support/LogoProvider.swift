@@ -1,31 +1,15 @@
 import Foundation
 
-/// Builds runtime logo image URLs for merchants/cards from a domain.
+/// Resolves logo image URLs for merchants/cards.
 ///
-/// This is how finance apps surface real logos: fetch them on demand from a logo service rather
-/// than bundling copyrighted files. The service is configurable via `baseURLFormat`; the domain
-/// comes from the item's explicit `domain` or is derived from its name. Views load the URL with
-/// `AsyncImage` and fall back to the SF Symbol while loading or on failure.
+/// Remote logo fetching is intentionally disabled: the previous logo service (Clearbit) was
+/// discontinued, so every lookup failed with a DNS error and logged noise. Just as importantly,
+/// sending merchant names to a third-party service conflicts with the app's on-device,
+/// no-data-leaves-your-phone model. Merchant/card tiles therefore use bundled asset images when
+/// present, otherwise the colored SF Symbol fallback. This returns `nil` so callers use those.
 enum LogoProvider {
-    /// Logo service URL format. `%@` is replaced by the domain (e.g. "amazon.com").
-    static let baseURLFormat = "https://logo.clearbit.com/%@"
-
-    /// The logo URL for a library item, or `nil` when no domain can be determined.
-    static func url(for item: LibraryItem) -> URL? {
-        guard let domain = item.domain ?? derivedDomain(from: item.name) else { return nil }
-        return URL(string: String(format: baseURLFormat, domain))
-    }
-
-    /// Derives a best-guess domain from a display name (e.g. "Best Buy" → "bestbuy.com").
-    ///
-    /// Imperfect by design: when the guess is wrong the logo simply fails to load and the SF
-    /// Symbol fallback shows, so a bad guess never breaks the UI.
-    static func derivedDomain(from name: String) -> String? {
-        let cleaned = name.lowercased().unicodeScalars
-            .filter { CharacterSet.alphanumerics.contains($0) }
-            .map(String.init)
-            .joined()
-        guard !cleaned.isEmpty else { return nil }
-        return cleaned + ".com"
-    }
+    /// Always `nil` (remote logo fetching is disabled — see the type's note).
+    /// - Parameter item: The library item (unused).
+    /// - Returns: `nil`.
+    static func url(for item: LibraryItem) -> URL? { nil }
 }

@@ -1,9 +1,9 @@
 import SwiftUI
 import UIKit
 
-/// Settings for the on-device notification system: a master switch, per-type toggles, and the
-/// options each type needs (reminder lead time, large-purchase threshold). Changing anything
-/// reschedules the notifications immediately.
+/// Settings for the on-device notification system: a master switch, clearly-described per-type
+/// toggles grouped by topic, the options each needs, and a "Send Test Notification" button.
+/// Changing anything reschedules the notifications immediately.
 struct NotificationSettingsView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.openURL) private var openURL
@@ -31,9 +31,10 @@ struct NotificationSettingsView: View {
             masterSection
             if permissionDenied { permissionSection }
             if enabled {
-                remindersSection
+                billsSection
                 budgetSection
                 activitySection
+                testSection
             }
         }
         .navigationTitle("Notifications")
@@ -56,55 +57,84 @@ struct NotificationSettingsView: View {
         Section {
             Button("Open Settings to Enable") { openSystemSettings() }
         } footer: {
-            Text("Notifications are turned off for WalletBudget in iOS Settings.")
+            Text("Notifications are turned off for Wudget in iOS Settings.")
         }
     }
 
-    private var remindersSection: some View {
-        Section("Reminders") {
-            toggle("Upcoming Charge Reminders", $upcomingCharges)
+    private var billsSection: some View {
+        Section("Bills & subscriptions") {
+            toggle("Upcoming charge reminders",
+                   "Before a recurring charge hits, e.g. “Netflix will charge $15.98 tomorrow.”",
+                   $upcomingCharges)
             if upcomingCharges {
-                Picker("Remind Me", selection: $leadDays) {
+                Picker("Remind me", selection: $leadDays) {
                     Text("On the day").tag(0)
                     Text("1 day before").tag(1)
                     Text("2 days before").tag(2)
                     Text("3 days before").tag(3)
                 }
             }
-            toggle("Subscription Review", $subscriptionReview)
+            toggle("Monthly subscription review",
+                   "On the 1st, a recap of your recurring payments and their total.",
+                   $subscriptionReview)
         }
     }
 
     private var budgetSection: some View {
         Section("Budget") {
-            toggle("Budget Alerts (80% & 100%)", $budgetAlerts)
-            toggle("Monthly Budget Reset", $monthlyReset)
-            toggle("Savings Goal Nudge", $savingsReminder)
+            toggle("Budget warnings",
+                   "When you reach 80% and 100% of your monthly budget.",
+                   $budgetAlerts)
+            toggle("New month reminder",
+                   "On the 1st, that your budget has reset for the month.",
+                   $monthlyReset)
+            toggle("Savings goal reminder",
+                   "Monthly nudge with how much to set aside for your goal.",
+                   $savingsReminder)
         }
     }
 
     private var activitySection: some View {
-        Section {
-            toggle("Weekly Summary", $weeklySummary)
-            toggle("Large Purchase Alerts", $largePurchase)
+        Section("Activity") {
+            toggle("Weekly spending recap",
+                   "Every Monday, what you spent over the last 7 days.",
+                   $weeklySummary)
+            toggle("Large purchase alerts",
+                   "When a single purchase is over your chosen amount.",
+                   $largePurchase)
             if largePurchase {
-                Picker("Large Purchase Over", selection: $largeThreshold) {
+                Picker("Alert when over", selection: $largeThreshold) {
                     ForEach(thresholds, id: \.self) { amount in
-                        Text(amount.asCurrency()).tag(amount)
+                        Text(amount.asCurrencyRounded()).tag(amount)
                     }
                 }
             }
-        } header: {
-            Text("Activity")
-        } footer: {
-            Text("Get a heads-up before charges, budget check-ins, and alerts for unusually large purchases.")
         }
     }
 
-    /// A toggle bound to a preference that reschedules notifications when changed.
-    private func toggle(_ title: String, _ binding: Binding<Bool>) -> some View {
-        Toggle(title, isOn: binding)
-            .onChange(of: binding.wrappedValue) { _, _ in reschedule() }
+    private var testSection: some View {
+        Section {
+            Button {
+                sendTest()
+            } label: {
+                Label("Send Test Notification", systemImage: "bell.badge")
+            }
+        } footer: {
+            Text("Sends a sample notification now so you can see how alerts look.")
+        }
+    }
+
+    /// A toggle with a title and an explanatory caption; reschedules when changed.
+    private func toggle(_ title: String, _ description: String, _ binding: Binding<Bool>) -> some View {
+        Toggle(isOn: binding) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                Text(description)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .onChange(of: binding.wrappedValue) { _, _ in reschedule() }
     }
 
     /// Requests permission when enabling (and reschedules); reschedules to clear when disabling.
@@ -117,6 +147,14 @@ struct NotificationSettingsView: View {
             }
         } else {
             reschedule()
+        }
+    }
+
+    /// Requests permission if needed, then delivers a sample notification.
+    private func sendTest() {
+        Haptics.tap()
+        notifier.requestAuthorization { granted in
+            if granted { notifier.sendTestNotification() }
         }
     }
 

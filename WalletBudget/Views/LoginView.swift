@@ -31,7 +31,7 @@ struct LoginView: View {
                         .font(.system(size: 40, weight: .semibold))
                         .foregroundStyle(Color(.systemBackground))
                 }
-            Text("WalletBudget").font(.largeTitle.bold())
+            Text("Wudget").font(.largeTitle.bold())
             Text("Track your spending automatically")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)

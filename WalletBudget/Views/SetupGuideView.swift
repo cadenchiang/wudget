@@ -73,16 +73,25 @@ struct SetupGuideView: View {
                     Toggle("Show Budget Line", isOn: $showBudgetLine)
                 } header: {
                     Text("Budget").textCase(nil)
-                } footer: {
-                    Text("Shown as a target line on the spending chart. Mark fixed costs as “Ignored” in Repeat to budget only variable spending.")
                 }
 
                 Section {
                     NavigationLink {
                         NotificationSettingsView()
                     } label: {
-                        SettingsRow(icon: "bell.badge.fill", tint: .red, title: "Notifications")
+                        HStack(spacing: 12) {
+                            Image(systemName: "bell.badge.fill")
+                                .font(.system(size: 22))
+                                .foregroundStyle(.red)
+                                .frame(width: 29, height: 29)
+                            Text("Notifications").foregroundStyle(.primary)
+                        }
                     }
+                } header: {
+                    Text("Notifications").textCase(nil)
+                }
+
+                Section {
                     Picker("Theme", selection: $theme) {
                         ForEach(AppTheme.allCases) { option in
                             Text(option.label).tag(option)
@@ -166,4 +175,6 @@ private struct SettingsRow: View {
 
 #Preview {
     SetupGuideView()
+        .environment(AccountStore())
+        .modelContainer(for: [Expense.self, SpendingCategory.self], inMemory: true)
 }

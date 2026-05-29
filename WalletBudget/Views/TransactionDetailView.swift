@@ -6,6 +6,7 @@ import SwiftData
 struct TransactionDetailView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
     @Bindable var expense: Expense
     @State private var showingCardPicker = false
     @State private var showingMerchantPicker = false
@@ -218,10 +219,10 @@ struct TransactionDetailView: View {
         .padding(16)
     }
 
-    /// Decorative "Report an Issue" card matching the reference layout.
+    /// "Report an Issue" card: opens the Mail app pre-filled with this transaction's details.
     private var reportCard: some View {
         Button {
-            Log.ui.info("Report an Issue tapped for \(expense.merchant, privacy: .public)")
+            reportIssue()
         } label: {
             Text("Report an Issue")
                 .foregroundStyle(.blue)
@@ -232,6 +233,19 @@ struct TransactionDetailView: View {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(Color(.secondarySystemGroupedBackground))
         )
+    }
+
+    /// Opens the Mail app with a support report pre-filled with this transaction's details.
+    private func reportIssue() {
+        Haptics.tap()
+        var components = URLComponents()
+        components.scheme = "mailto"
+        components.path = "cadenchiang@gmail.com"
+        components.queryItems = [
+            URLQueryItem(name: "subject", value: "Wudget Issue Report"),
+            URLQueryItem(name: "body", value: "\n\n\nTransaction: \(expense.merchant) \(expense.amount.asCurrency()) on \(dateString)")
+        ]
+        if let url = components.url { openURL(url) }
     }
 
     /// Editable note card.

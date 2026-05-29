@@ -4,7 +4,7 @@ import StoreKit
 /// One step in the first-launch personal onboarding. The savings-detail steps are filtered out
 /// when the user has no savings goal.
 enum PersonalOnboardingStep: String, CaseIterable, Identifiable {
-    case name, birthdate, gender, currency, goals, income, paySchedule
+    case birthdate, gender, currency, goals, income, paySchedule
     case budget, variableOnly, savingsPrompt, savingsDetail, savingsDate
     case topCategories, cutbackCategories, subscriptions
     case referral, triedOther, rating, summary
@@ -34,7 +34,6 @@ struct PersonalOnboardingStepView: View {
     @ViewBuilder
     private var content: some View {
         switch step {
-        case .name: nameStep
         case .birthdate: birthdateStep
         case .gender: genderStep
         case .currency: currencyStep
@@ -57,17 +56,6 @@ struct PersonalOnboardingStepView: View {
     }
 
     // MARK: - Steps
-
-    private var nameStep: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            OnboardingHeading(title: "What's your name?", subtitle: "We'll use it to personalize the app.")
-            TextField("Your name", text: $profile.name)
-                .textInputAutocapitalization(.words)
-                .font(.title3)
-                .padding(18)
-                .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color(.systemGray6)))
-        }
-    }
 
     private var birthdateStep: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -332,7 +320,7 @@ private struct RatingStepView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
-            OnboardingHeading(title: "Enjoying WalletBudget?", subtitle: "Tap to rate us — it really helps.")
+            OnboardingHeading(title: "Enjoying Wudget?", subtitle: "Tap to rate us, it really helps.")
             StarRatingRow(rating: $rating)
                 .onChange(of: rating) { _, value in
                     if value >= 4 { requestReview() }

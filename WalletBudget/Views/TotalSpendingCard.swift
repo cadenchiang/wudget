@@ -85,15 +85,18 @@ struct TotalSpendingCard: View {
     private func budgetSentence(remaining: Double, periodNoun: String, daysRemaining: Int) -> Text {
         let dayWord = daysRemaining == 1 ? "day" : "days"
         let tail = Text(" with \(daysRemaining) \(dayWord) left this \(periodNoun).").foregroundStyle(.secondary)
-        if remaining >= 0 {
+        if remaining > 0 {
             return Text("You have ").foregroundStyle(.secondary)
                 + Text(remaining.asCurrency()).foregroundStyle(.green)
                 + Text(" left to spend").foregroundStyle(.secondary)
                 + tail
-        } else {
+        } else if remaining < 0 {
             return Text("You're ").foregroundStyle(.secondary)
                 + Text(abs(remaining).asCurrency()).foregroundStyle(.red)
                 + Text(" over budget").foregroundStyle(.secondary)
+                + tail
+        } else {
+            return Text("You've used your full budget").foregroundStyle(.secondary)
                 + tail
         }
     }

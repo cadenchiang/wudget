@@ -156,6 +156,13 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
                    body: "\(amount.asCurrency()) charged at \(who)\(onCard).")
     }
 
+    /// Delivers a sample notification immediately so the user can see what alerts look like.
+    func sendTestNotification() {
+        deliverNow(id: "test." + UUID().uuidString,
+                   title: "Test notification",
+                   body: "This is how Wudget will alert you. You're all set!")
+    }
+
     // MARK: - Low-level helpers (used here and by the builders extension)
 
     /// Delivers a notification immediately.
