@@ -7,7 +7,7 @@ import SwiftData
 struct WalletBudgetApp: App {
     var body: some Scene {
         WindowGroup {
-            RootView()
+            RootGate()
         }
         .modelContainer(SharedModelContainer.container)
     }

@@ -3,11 +3,37 @@ import SwiftUI
 /// The Setup tab, styled like the iOS Settings app: a grouped list whose row opens the
 /// full-screen, step-by-step onboarding flow (`OnboardingFlow`).
 struct SetupGuideView: View {
+    @Environment(AccountStore.self) private var account
     @State private var showingOnboarding = false
+    @AppStorage(Haptics.enabledKey) private var hapticsEnabled = true
+    @AppStorage(AppLock.enabledKey) private var lockEnabled = false
+    @AppStorage(AppTheme.storageKey) private var theme: AppTheme = .system
 
     var body: some View {
         NavigationStack {
             List {
+                Section {
+                    NavigationLink {
+                        AccountView()
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "person.crop.circle.fill")
+                                .font(.system(size: 36))
+                                .foregroundStyle(.gray)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(account.email ?? "Account")
+                                    .font(.body.weight(.semibold))
+                                    .lineLimit(1)
+                                Text("Manage profile")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                } header: {
+                    Text("Account").textCase(nil)
+                }
+
                 Section {
                     Button {
                         showingOnboarding = true
@@ -19,6 +45,18 @@ struct SetupGuideView: View {
                     Text("Wallet").textCase(nil)
                 } footer: {
                     Text("Log Apple Pay purchases automatically.")
+                }
+
+                Section {
+                    Picker("Theme", selection: $theme) {
+                        ForEach(AppTheme.allCases) { option in
+                            Text(option.label).tag(option)
+                        }
+                    }
+                    Toggle("Haptic Feedback", isOn: $hapticsEnabled)
+                    Toggle("Require Face ID", isOn: $lockEnabled)
+                } header: {
+                    Text("Preferences").textCase(nil)
                 }
 
                 Section {

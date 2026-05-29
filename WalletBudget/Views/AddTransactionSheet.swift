@@ -11,6 +11,7 @@ struct AddTransactionSheet: View {
     @State private var card = ""
     @State private var date = Date()
     @State private var recurrence: RecurrenceFrequency = .none
+    @State private var notes = ""
     @State private var errorMessage: String?
     @State private var showingMerchantPicker = false
     @State private var showingCardPicker = false
@@ -48,6 +49,11 @@ struct AddTransactionSheet: View {
                             Text(frequency.label).tag(frequency)
                         }
                     }
+                }
+
+                Section("Note") {
+                    TextField("Add a note", text: $notes, axis: .vertical)
+                        .lineLimit(1...4)
                 }
                 if let errorMessage {
                     Section {
@@ -132,10 +138,11 @@ struct AddTransactionSheet: View {
             return
         }
 
-        let expense = Expense(amount: value, merchant: cleanMerchant, card: card, date: date, recurrence: recurrence)
+        let expense = Expense(amount: value, merchant: cleanMerchant, card: card, date: date, recurrence: recurrence, notes: notes.trimmingCharacters(in: .whitespacesAndNewlines))
         context.insert(expense)
         do {
             try context.save()
+            Haptics.success()
             Log.ui.info("Manually added \(expense.amount) at \(cleanMerchant, privacy: .public)")
             dismiss()
         } catch {

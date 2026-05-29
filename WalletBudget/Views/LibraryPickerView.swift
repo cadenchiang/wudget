@@ -218,6 +218,7 @@ struct LibraryPickerView: View {
 
     /// Records the selection in recents, reports it, and dismisses.
     private func select(_ name: String) {
+        Haptics.tap()
         addRecent(name)
         onSelect(name)
         dismiss()

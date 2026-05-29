@@ -16,6 +16,10 @@ final class SpendingCategory {
     /// Comma-joined auto-categorization keywords (empty for custom categories).
     var keywordsRaw: String
 
+    /// Stable identity of the built-in default this category came from (nil for user-created).
+    /// Survives renames so additive seeding never duplicates a renamed default.
+    var seedKey: String?
+
     /// Parsed keywords.
     var keywords: [String] {
         keywordsRaw.split(separator: ",").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
@@ -28,11 +32,13 @@ final class SpendingCategory {
     ///   - iconName: SF Symbol name.
     ///   - sortOrder: Display position.
     ///   - keywords: Auto-categorization keywords (joined and stored).
-    init(name: String, colorName: String, iconName: String, sortOrder: Int, keywords: [String] = []) {
+    ///   - seedKey: Built-in default identity (nil for user-created categories).
+    init(name: String, colorName: String, iconName: String, sortOrder: Int, keywords: [String] = [], seedKey: String? = nil) {
         self.name = name
         self.colorName = colorName
         self.iconName = iconName
         self.sortOrder = sortOrder
         self.keywordsRaw = keywords.joined(separator: ",")
+        self.seedKey = seedKey
     }
 }

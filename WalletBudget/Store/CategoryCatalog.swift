@@ -24,7 +24,8 @@ enum CategoryCatalog {
         "house.fill", "bolt.fill", "drop.fill", "cross.case.fill", "pills.fill", "figure.run",
         "star.fill", "gamecontroller.fill", "music.note", "film.fill", "tv.fill", "airplane",
         "creditcard.fill", "dollarsign.circle.fill", "gift.fill", "pawprint.fill", "graduationcap.fill",
-        "wrench.and.screwdriver.fill", "doc.text.fill", "phone.fill", "wifi", "tshirt", "square.grid.2x2.fill",
+        "wrench.and.screwdriver.fill", "doc.text.fill", "phone.fill", "wifi", "tshirt", "repeat",
+        "square.grid.2x2.fill",
     ]
 
     /// Resolves a palette name to a `Color` (gray when unknown).
@@ -55,9 +56,15 @@ enum CategoryCatalog {
         Default(name: "Entertainment", colorName: "pink", icon: "star.fill",
                 keywords: ["netflix", "spotify", "hulu", "disney", "cinema", "theater", "steam", "playstation", "xbox"]),
         Default(name: "Bills", colorName: "indigo", icon: "doc.text.fill",
-                keywords: ["at&t", "verizon", "comcast", "pg&e", "electric", "water", "insurance", "rent", "mortgage"]),
+                keywords: ["at&t", "verizon", "comcast", "pg&e", "electric", "water", "insurance"]),
         Default(name: "Health", colorName: "red", icon: "cross.case.fill",
                 keywords: ["pharmacy", "cvs", "walgreens", "clinic", "hospital", "dental", "fitness", "gym"]),
+        Default(name: "Rent", colorName: "mint", icon: "house.fill",
+                keywords: ["rent", "landlord", "lease", "mortgage", "apartment", "property"]),
+        Default(name: "Subscription", colorName: "purple", icon: "repeat",
+                keywords: ["subscription", "membership", "icloud"]),
+        Default(name: "School", colorName: "teal", icon: "graduationcap.fill",
+                keywords: ["tuition", "university", "college", "campus", "bookstore", "textbook"]),
         Default(name: "Other", colorName: "gray", icon: "square.grid.2x2.fill", keywords: []),
     ]
 }

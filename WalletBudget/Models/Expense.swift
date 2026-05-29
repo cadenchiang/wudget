@@ -29,6 +29,9 @@ final class Expense {
     /// Derived spending category (see `ExpenseCategorizer`).
     var category: String
 
+    /// Free-form note attached to the purchase (editable later).
+    var notes: String = ""
+
     /// Recurrence stored as `RecurrenceFrequency.rawValue`. `"none"` means one-time.
     /// Stored (not the enum) so it can be used in SwiftData `#Predicate` queries.
     var recurrenceRaw: String = RecurrenceFrequency.none.rawValue
@@ -60,7 +63,8 @@ final class Expense {
         card: String = "",
         date: Date = Date(),
         category: String? = nil,
-        recurrence: RecurrenceFrequency = .none
+        recurrence: RecurrenceFrequency = .none,
+        notes: String = ""
     ) {
         let trimmedMerchant = merchant.trimmingCharacters(in: .whitespacesAndNewlines)
         self.id = id
@@ -70,5 +74,6 @@ final class Expense {
         self.date = date
         self.category = category ?? ExpenseCategorizer.category(for: trimmedMerchant)
         self.recurrenceRaw = recurrence.rawValue
+        self.notes = notes
     }
 }

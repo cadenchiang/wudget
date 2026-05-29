@@ -28,7 +28,7 @@ struct WalletImportIntent: AppIntent {
     @Parameter(title: "Card", default: "") var card: String
 
     static var parameterSummary: some ParameterSummary {
-        Summary("Import \(\.$amount) spent at \(\.$merchant)")
+        Summary("Import \(\.$amount) spent at \(\.$merchant) using \(\.$card)")
     }
 
     /// Validates inputs, builds an `Expense`, and persists it.

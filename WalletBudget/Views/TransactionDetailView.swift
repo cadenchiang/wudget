@@ -5,8 +5,10 @@ import SwiftData
 /// a large amount with merchant and date, a details card, and an editable category picker.
 struct TransactionDetailView: View {
     @Environment(\.modelContext) private var context
+    @Environment(\.dismiss) private var dismiss
     @Bindable var expense: Expense
     @State private var showingCardPicker = false
+    @State private var confirmingDelete = false
 
     /// "8/30/25, 9:41 AM"-style timestamp.
     private var dateString: String {
@@ -27,14 +29,24 @@ struct TransactionDetailView: View {
             VStack(spacing: 24) {
                 header
                 detailsCard
+                notesCard
                 reportCard
+                deleteButton
             }
             .padding(16)
         }
         .background(Color(.systemGroupedBackground))
         .navigationBarTitleDisplayMode(.inline)
+        .confirmationDialog("Delete this transaction?", isPresented: $confirmingDelete, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) { deleteExpense() }
+            Button("Cancel", role: .cancel) {}
+        }
         .onChange(of: expense.category) { _, _ in
+            Haptics.selection()
             save(describing: "category")
+        }
+        .onChange(of: expense.notes) { _, _ in
+            save(describing: "note")
         }
         .sheet(isPresented: $showingCardPicker) {
             LibraryPickerView(title: "Card", items: CardLibrary.items, fallbackIcon: "creditcard.fill") { newCard in
@@ -142,6 +154,50 @@ struct TransactionDetailView: View {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(Color(.secondarySystemGroupedBackground))
         )
+    }
+
+    /// Editable note card.
+    private var notesCard: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Note")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            TextField("Add a note", text: $expense.notes, axis: .vertical)
+                .lineLimit(1...6)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color(.secondarySystemGroupedBackground))
+        )
+    }
+
+    /// Destructive "Delete Transaction" button (confirmed via dialog).
+    private var deleteButton: some View {
+        Button { confirmingDelete = true } label: {
+            Text("Delete Transaction")
+                .foregroundStyle(.red)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(16)
+        }
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color(.secondarySystemGroupedBackground))
+        )
+    }
+
+    /// Deletes the expense, saves, and pops back.
+    private func deleteExpense() {
+        Haptics.tap(.rigid)
+        context.delete(expense)
+        do {
+            try context.save()
+            Log.ui.info("Deleted transaction at \(expense.merchant, privacy: .public)")
+            dismiss()
+        } catch {
+            Log.ui.error("Failed to delete transaction: \(error.localizedDescription, privacy: .public)")
+        }
     }
 
     /// Persists an edit to the expense and logs the outcome.

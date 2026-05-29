@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 import UIKit
 
 /// Full-screen, paged onboarding that walks the user through creating the Wallet transaction
@@ -75,6 +74,7 @@ struct OnboardingFlow: View {
 
     /// Steps back one screen, or dismisses the flow when already on the first step.
     private func goBack() {
+        Haptics.tap()
         if index > 0 {
             withAnimation { index -= 1 }
         } else {
@@ -101,8 +101,10 @@ struct OnboardingFlow: View {
     /// Advances to the next step, or dismisses on the last step.
     private func advance() {
         if isLastStep {
+            Haptics.success()
             dismiss()
         } else {
+            Haptics.tap()
             withAnimation { index += 1 }
         }
     }
@@ -153,7 +155,7 @@ private struct OnboardingStepView: View {
                 if let actionTitle = step.actionTitle,
                    let urlString = step.actionURLString,
                    let url = URL(string: urlString) {
-                    Button { openURL(url) } label: {
+                    Button { Haptics.tap(); openURL(url) } label: {
                         HStack(spacing: 4) {
                             Text(actionTitle)
                             Image(systemName: "arrow.up.right")
@@ -243,7 +245,6 @@ private struct PhoneFrame: View {
 /// once `WalletImportIntent` has successfully run at least once it flips a flag, and this screen
 /// updates to "Apple Wallet sync complete." Until then it waits.
 private struct SyncCheckView: View {
-    @Environment(\.modelContext) private var context
     @AppStorage(WalletImportIntent.receivedKey) private var received = false
 
     var body: some View {
@@ -261,34 +262,16 @@ private struct SyncCheckView: View {
                 Text("Waiting for your first transaction…")
                     .font(.title3.weight(.semibold))
                     .multilineTextAlignment(.center)
-                Text("A real Apple Pay purchase confirms the automation. Or send a test transaction now to check the app works.")
+                Text("Make a real Apple Pay purchase to confirm it's working. This updates automatically.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
-                Button("Send a test transaction") { sendTest() }
-                    .buttonStyle(.bordered)
-                    .controlSize(.large)
-                    .tint(.primary)
-                    .padding(.top, 4)
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .animation(.easeInOut, value: received)
-    }
-
-    /// Logs a sample transaction through the same path the Wallet automation uses to confirm the
-    /// app works, then removes it so it doesn't linger in Spending. Marks sync as confirmed.
-    private func sendTest() {
-        let sample = Expense(amount: 4.99, merchant: "Test Coffee", card: "Test")
-        context.insert(sample)
-        do {
-            try context.save()        // proves the import write path works
-            received = true
-            context.delete(sample)     // clean up the sample
-            try context.save()
-            Log.ui.info("Onboarding test transaction inserted and removed")
-        } catch {
-            Log.ui.error("Failed test transaction: \(error.localizedDescription, privacy: .public)")
+        .onChange(of: received) { _, isDone in
+            if isDone { Haptics.success() }
         }
     }
 }

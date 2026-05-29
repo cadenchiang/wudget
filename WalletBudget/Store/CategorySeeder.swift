@@ -9,20 +9,38 @@ enum CategorySeeder {
     @MainActor
     static func seedAndRefresh(context: ModelContext) {
         let existing = (try? context.fetch(FetchDescriptor<SpendingCategory>())) ?? []
+        var nextOrder = (existing.map(\.sortOrder).max() ?? -1) + 1
+        var changed = false
 
-        if existing.isEmpty {
-            for (index, def) in CategoryCatalog.defaults.enumerated() {
-                context.insert(SpendingCategory(
-                    name: def.name,
-                    colorName: def.colorName,
-                    iconName: def.icon,
-                    sortOrder: index,
-                    keywords: def.keywords
-                ))
+        for def in CategoryCatalog.defaults {
+            // Already seeded (even if the user renamed it) — leave it alone.
+            if existing.contains(where: { $0.seedKey == def.name }) { continue }
+
+            // Pre-existing default from before seedKey existed — backfill its identity.
+            if let legacy = existing.first(where: { $0.seedKey == nil && $0.name.caseInsensitiveCompare(def.name) == .orderedSame }) {
+                legacy.seedKey = def.name
+                changed = true
+                continue
             }
+
+            // New default (fresh install or a newly added one) — insert it.
+            let order = existing.isEmpty ? (CategoryCatalog.defaults.firstIndex { $0.name == def.name } ?? nextOrder) : nextOrder
+            context.insert(SpendingCategory(
+                name: def.name,
+                colorName: def.colorName,
+                iconName: def.icon,
+                sortOrder: order,
+                keywords: def.keywords,
+                seedKey: def.name
+            ))
+            nextOrder += 1
+            changed = true
+        }
+
+        if changed {
             do {
                 try context.save()
-                Log.store.info("Seeded \(CategoryCatalog.defaults.count) default categories")
+                Log.store.info("Seeded/updated default categories")
             } catch {
                 Log.store.error("Failed to seed categories: \(error.localizedDescription, privacy: .public)")
             }

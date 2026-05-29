@@ -102,17 +102,26 @@ struct TotalSpendingCard: View {
         .frame(height: 190)
         .padding(.top, 4)
         .animation(.easeInOut(duration: 0.2), value: selected)
+        .onChange(of: selected) { _, newValue in
+            if newValue != nil { Haptics.selection() }
+        }
         .chartOverlay { proxy in
             GeometryReader { geo in
                 if let selected,
                    let plotAnchor = proxy.plotFrame,
                    let xPosition = proxy.position(forX: selected) {
                     let plot = geo[plotAnchor]
-                    let cardHalfWidth: CGFloat = 70
-                    let clampedX = min(max(plot.minX + xPosition, plot.minX + cardHalfWidth), plot.maxX - cardHalfWidth)
+                    let cardWidth: CGFloat = 130
+                    let gap: CGFloat = 18
+                    let barX = plot.minX + xPosition
+                    // Place the card beside the bar (right if the bar is on the left half, else left)
+                    // so it never covers the selected bar.
+                    let preferRight = barX < plot.midX
+                    let sideX = preferRight ? barX + gap + cardWidth / 2 : barX - gap - cardWidth / 2
+                    let clampedX = min(max(sideX, plot.minX + cardWidth / 2), plot.maxX - cardWidth / 2)
                     infoCard(bucket: selected)
-                        .frame(width: cardHalfWidth * 2)
-                        .position(x: clampedX, y: plot.minY + 34)
+                        .frame(width: cardWidth)
+                        .position(x: clampedX, y: plot.minY + 30)
                 }
             }
         }
