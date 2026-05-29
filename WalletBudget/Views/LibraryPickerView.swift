@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// A searchable grid for picking a merchant or card, with a Recent section and the ability to
 /// add custom entries.
@@ -163,22 +164,55 @@ struct LibraryPickerView: View {
             .fill(Color(.secondarySystemGroupedBackground))
     }
 
-    /// One icon tile: a colored rounded square with the symbol over the name.
+    /// One icon tile: a real logo (bundled asset or fetched from the logo service) when available,
+    /// otherwise a colored SF Symbol tile.
     private func tile(_ item: LibraryItem) -> some View {
         VStack(spacing: 8) {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(item.color.gradient)
+            logo(for: item)
                 .frame(width: 62, height: 62)
-                .overlay {
-                    Image(systemName: item.systemImage)
-                        .font(.system(size: 26, weight: .semibold))
-                        .foregroundStyle(.white)
-                }
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+
             Text(item.name)
                 .font(.caption)
                 .foregroundStyle(.primary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
+        }
+    }
+
+    /// Logo resolution: bundled asset → fetched logo → SF Symbol fallback (also shown while loading).
+    @ViewBuilder
+    private func logo(for item: LibraryItem) -> some View {
+        if let asset = item.assetName, UIImage(named: asset) != nil {
+            imageTile { Image(asset).resizable().scaledToFit() }
+        } else if let url = LogoProvider.url(for: item) {
+            AsyncImage(url: url) { phase in
+                if case .success(let image) = phase {
+                    imageTile { image.resizable().scaledToFit() }
+                } else {
+                    symbolTile(item)
+                }
+            }
+        } else {
+            symbolTile(item)
+        }
+    }
+
+    /// A white tile hosting a fetched/bundled logo image.
+    private func imageTile<Content: View>(@ViewBuilder _ image: () -> Content) -> some View {
+        ZStack {
+            Color(.secondarySystemBackground)
+            image().padding(10)
+        }
+    }
+
+    /// The colored SF Symbol fallback tile.
+    private func symbolTile(_ item: LibraryItem) -> some View {
+        ZStack {
+            Rectangle().fill(item.color.gradient)
+            Image(systemName: item.systemImage)
+                .font(.system(size: 26, weight: .semibold))
+                .foregroundStyle(.white)
         }
     }
 
