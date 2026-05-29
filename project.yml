@@ -29,6 +29,8 @@ targets:
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
         INFOPLIST_KEY_NSFaceIDUsageDescription: Unlock WalletBudget with Face ID.
+        INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: WalletBudget tags each Apple Pay purchase with where you made it.
+        INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription: WalletBudget tags each Apple Pay purchase with where you made it, even when the automation runs in the background.
 
   WalletBudgetTests:
     type: bundle.unit-test

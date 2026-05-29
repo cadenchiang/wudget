@@ -15,6 +15,7 @@ struct AddTransactionSheet: View {
     @State private var errorMessage: String?
     @State private var showingMerchantPicker = false
     @State private var showingCardPicker = false
+    @FocusState private var amountFocused: Bool
 
     /// Creates the add form.
     /// - Parameter recurrenceDefault: Initial recurrence (e.g. `.monthly` when adding from the
@@ -29,6 +30,8 @@ struct AddTransactionSheet: View {
                 Section("Purchase") {
                     TextField("Amount", text: $amountText)
                         .keyboardType(.decimalPad)
+                        .focused($amountFocused)
+                        .submitLabel(.done)
                     selectionRow(
                         label: "Merchant",
                         value: merchant,
@@ -61,16 +64,20 @@ struct AddTransactionSheet: View {
                     }
                 }
             }
-            .navigationTitle("Add Transaction")
+            .navigationTitle("Transaction")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") { save() }
+                    Button("Add") { save() }
+                        .buttonStyle(.borderedProminent)
+                        .tint(.blue)
                 }
             }
+            .scrollDismissesKeyboard(.interactively)
+            .onAppear { amountFocused = true }
             .sheet(isPresented: $showingMerchantPicker) {
                 LibraryPickerView(title: "Merchant", items: MerchantLibrary.items, fallbackIcon: "tag.fill") { merchant = $0 }
             }

@@ -16,14 +16,25 @@ struct RecurringPaymentsView: View {
                 emptyState
             } else {
                 List {
-                    ForEach(expenses) { expense in
-                        NavigationLink {
-                            TransactionDetailView(expense: expense)
-                        } label: {
-                            RecurringRow(expense: expense)
+                    Section {
+                        ForEach(expenses) { expense in
+                            NavigationLink {
+                                TransactionDetailView(expense: expense)
+                            } label: {
+                                RecurringRow(expense: expense)
+                            }
+                            .swipeActions(edge: .leading) {
+                                Button { toggleExcluded(expense) } label: {
+                                    Label(expense.excludedFromBudget ? "Include" : "Ignore",
+                                          systemImage: expense.excludedFromBudget ? "eye" : "eye.slash")
+                                }
+                                .tint(.gray)
+                            }
                         }
+                        .onDelete(perform: delete)
+                    } footer: {
+                        Text("Swipe a payment right to ignore it, ignored fixed costs (rent, bills) are left out of Variable Spending.")
                     }
-                    .onDelete(perform: delete)
                 }
             }
         }
@@ -53,6 +64,17 @@ struct RecurringPaymentsView: View {
                 .foregroundStyle(.tertiary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    /// Toggles whether a recurring payment is ignored (excluded from Variable Spending).
+    private func toggleExcluded(_ expense: Expense) {
+        Haptics.tap()
+        expense.excludedFromBudget.toggle()
+        do {
+            try context.save()
+        } catch {
+            Log.ui.error("Failed to toggle exclusion: \(error.localizedDescription, privacy: .public)")
+        }
     }
 
     /// Deletes the recurring expenses at the given offsets and saves.
@@ -92,8 +114,18 @@ private struct RecurringRow: View {
                         .foregroundStyle(.white)
                 }
             VStack(alignment: .leading, spacing: 2) {
-                Text(expense.merchant.isEmpty ? "Unknown" : expense.merchant)
-                    .font(.body.weight(.semibold))
+                HStack(spacing: 6) {
+                    Text(expense.merchant.isEmpty ? "Unknown" : expense.merchant)
+                        .font(.body.weight(.semibold))
+                    if expense.excludedFromBudget {
+                        Text("Ignored")
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Capsule().fill(Color(.tertiarySystemFill)))
+                    }
+                }
                 Text(subtitle)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -103,5 +135,6 @@ private struct RecurringRow: View {
                 .font(.body.weight(.medium))
         }
         .padding(.vertical, 6)
+        .opacity(expense.excludedFromBudget ? 0.55 : 1)
     }
 }

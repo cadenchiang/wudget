@@ -1,14 +1,19 @@
 import SwiftUI
 import SwiftData
+import MapKit
+import CoreLocation
+import UIKit
 
 /// Detail screen for a single transaction, styled after the Apple Card transaction view:
 /// a large amount with merchant and date, a details card, and an editable category picker.
 struct TransactionDetailView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.openURL) private var openURL
     @Bindable var expense: Expense
     @State private var showingCardPicker = false
     @State private var confirmingDelete = false
+    @State private var locationProvider = LocationProvider.shared
 
     /// "8/30/25, 9:41 AM"-style timestamp.
     private var dateString: String {
@@ -19,9 +24,9 @@ struct TransactionDetailView: View {
         )
     }
 
-    /// Card label, falling back to "Apple Pay" when no card name was captured.
+    /// Card label, "Not Set" when no card was provided.
     private var cardText: String {
-        expense.card.isEmpty ? "Apple Pay" : expense.card
+        expense.card.isEmpty ? "Not Set" : expense.card
     }
 
     var body: some View {
@@ -29,6 +34,9 @@ struct TransactionDetailView: View {
             VStack(spacing: 24) {
                 header
                 detailsCard
+                if expense.viaWalletImport {
+                    mapCard
+                }
                 notesCard
                 reportCard
                 deleteButton
@@ -37,9 +45,11 @@ struct TransactionDetailView: View {
         }
         .background(Color(.systemGroupedBackground))
         .navigationBarTitleDisplayMode(.inline)
-        .confirmationDialog("Delete this transaction?", isPresented: $confirmingDelete, titleVisibility: .visible) {
+        .alert("Delete Transaction", isPresented: $confirmingDelete) {
             Button("Delete", role: .destructive) { deleteExpense() }
             Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("This transaction will be permanently deleted.")
         }
         .onChange(of: expense.category) { _, _ in
             Haptics.selection()
@@ -154,6 +164,102 @@ struct TransactionDetailView: View {
             RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .fill(Color(.secondarySystemGroupedBackground))
         )
+    }
+
+    /// Map card under the details: a real map + place-name row when located, else a blurred
+    /// placeholder with an "Allow Location Access" prompt.
+    @ViewBuilder
+    private var mapCard: some View {
+        if let lat = expense.latitude, let lon = expense.longitude {
+            let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lon)
+            VStack(spacing: 0) {
+                Map(initialPosition: .region(MKCoordinateRegion(center: coordinate, latitudinalMeters: 500, longitudinalMeters: 500))) {
+                    Marker(expense.merchant.isEmpty ? "Purchase" : expense.merchant, coordinate: coordinate)
+                }
+                .frame(height: 170)
+                .allowsHitTesting(false)
+
+                Button { openInMaps(coordinate) } label: {
+                    HStack {
+                        Text(placeLabel)
+                            .foregroundStyle(.primary)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .padding(16)
+                }
+                .buttonStyle(.plain)
+            }
+            .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color(.secondarySystemGroupedBackground)))
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        } else {
+            mapPlaceholder
+        }
+    }
+
+    /// Best label for the located place.
+    private var placeLabel: String {
+        if !expense.locationName.isEmpty { return expense.locationName }
+        return expense.merchant.isEmpty ? "Location" : expense.merchant
+    }
+
+    /// Blurred map with a location-access prompt (shown when no location is recorded).
+    private var mapPlaceholder: some View {
+        ZStack {
+            Map(initialPosition: .region(MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: 37.3349, longitude: -122.009),
+                latitudinalMeters: 900, longitudinalMeters: 900)))
+                .allowsHitTesting(false)
+                .blur(radius: 6)
+            Color.black.opacity(0.15)
+            VStack(spacing: 10) {
+                Image(systemName: "mappin.slash")
+                    .font(.title)
+                    .foregroundStyle(.white)
+                locationPrompt
+            }
+        }
+        .frame(height: 170)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    /// The prompt shown over the blurred map, depending on authorization.
+    @ViewBuilder
+    private var locationPrompt: some View {
+        switch locationProvider.authorization {
+        case .denied, .restricted:
+            Button { openSettings() } label: {
+                Label("Allow Location Access", systemImage: "location.fill")
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.white)
+            .foregroundStyle(.black)
+        case .notDetermined:
+            Button { locationProvider.requestAuthorization() } label: {
+                Label("Allow Location Access", systemImage: "location.fill")
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.white)
+            .foregroundStyle(.black)
+        default:
+            Text("No location recorded")
+                .font(.subheadline)
+                .foregroundStyle(.white)
+        }
+    }
+
+    /// Opens the location in Apple Maps.
+    private func openInMaps(_ coordinate: CLLocationCoordinate2D) {
+        let item = MKMapItem(placemark: MKPlacemark(coordinate: coordinate))
+        item.name = placeLabel
+        item.openInMaps()
+    }
+
+    /// Opens the app's Settings page (for re-enabling denied location access).
+    private func openSettings() {
+        if let url = URL(string: UIApplication.openSettingsURLString) { openURL(url) }
     }
 
     /// Editable note card.

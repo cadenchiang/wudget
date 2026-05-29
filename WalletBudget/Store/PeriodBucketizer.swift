@@ -23,6 +23,8 @@ enum PeriodBucketizer {
     /// - Returns: Ordered buckets, or `[]` if the period interval can't be computed.
     static func buckets(for span: TimeSpan, now: Date = Date(), calendar: Calendar = .current) -> [PeriodBucket] {
         switch span {
+        case .today:
+            return todayBuckets(now: now, calendar: calendar)
         case .week:
             return weekBuckets(now: now, calendar: calendar)
         case .month:
@@ -30,6 +32,26 @@ enum PeriodBucketizer {
         case .year:
             return yearBuckets(now: now, calendar: calendar)
         }
+    }
+
+    /// Eight three-hour buckets across the day, labeled by start hour (12a, 3a, … 9p).
+    private static func todayBuckets(now: Date, calendar: Calendar) -> [PeriodBucket] {
+        guard let day = calendar.dateInterval(of: .day, for: now) else { return [] }
+        var buckets: [PeriodBucket] = []
+        for index in 0..<8 {
+            let startHour = index * 3
+            guard let start = calendar.date(byAdding: .hour, value: startHour, to: day.start),
+                  let end = calendar.date(byAdding: .hour, value: startHour + 3, to: day.start) else { continue }
+            buckets.append(PeriodBucket(label: hourLabel(startHour), interval: DateInterval(start: start, end: end)))
+        }
+        return buckets
+    }
+
+    /// Compact 12-hour clock label for an hour-of-day (0 → "12a", 13 → "1p").
+    private static func hourLabel(_ hour: Int) -> String {
+        let suffix = hour < 12 ? "a" : "p"
+        let twelve = hour % 12 == 0 ? 12 : hour % 12
+        return "\(twelve)\(suffix)"
     }
 
     /// Seven daily buckets labeled by short weekday name (Sun…Sat).

@@ -1,12 +1,12 @@
 import SwiftUI
 
-/// Pins top chrome above a scroll view using the best API for the runtime.
+/// Pins top chrome above a scroll view.
 ///
-/// On iOS 26+, `.safeAreaBar(edge: .top)` gives the system progressive blur (the same scroll
-/// edge effect as the tab bar): content scrolls under the bar and blurs away, and the effect
-/// extends to the very top edge. On older iOS it falls back to `.safeAreaInset(edge: .top)`
-/// with a `.regularMaterial` background that bleeds past the top safe area. The same `bar`
-/// closure renders on both paths so behavior stays consistent.
+/// On iOS 26+ this uses `.safeAreaBar(edge: .top)`, which gives the native scroll-edge effect:
+/// content scrolling beneath the bar progressively blurs/fades away (matching the system look).
+/// We let the system render that effect rather than layering our own solid background, which had
+/// caused a flicker when the content under the bar changed. On earlier OSes (no scroll-edge
+/// effect) we fall back to a plain `.safeAreaInset` with a matching solid background.
 struct TopChromeBar<Bar: View>: ViewModifier {
     @ViewBuilder var bar: () -> Bar
 
@@ -18,7 +18,7 @@ struct TopChromeBar<Bar: View>: ViewModifier {
         } else {
             content.safeAreaInset(edge: .top, spacing: 0) {
                 bar()
-                    .background(.regularMaterial, ignoresSafeAreaEdges: .top)
+                    .background(Color(.systemGroupedBackground), ignoresSafeAreaEdges: .top)
             }
         }
     }

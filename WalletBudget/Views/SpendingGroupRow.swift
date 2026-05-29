@@ -75,6 +75,48 @@ struct SpendingGroupRow: View {
     }
 }
 
+/// A single transaction row styled like `SpendingGroupRow`: colored icon tile, merchant, date,
+/// amount, and a chevron. Used by the Recent tab so it matches the grouped tabs.
+struct TransactionRow: View {
+    let expense: Expense
+    /// Whether to draw the trailing chevron. Off when inside a `List` `NavigationLink`, which
+    /// supplies its own chevron (avoids a double chevron).
+    var showsChevron: Bool = true
+
+    private var libraryItem: LibraryItem? { MerchantLibrary.item(named: expense.merchant) }
+    private var iconName: String { libraryItem?.systemImage ?? CategoryStyle.icon(for: expense.category) }
+    private var iconColor: Color { libraryItem?.color ?? CategoryStyle.color(for: expense.category) }
+
+    var body: some View {
+        HStack(spacing: 12) {
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(iconColor.gradient)
+                .frame(width: 44, height: 44)
+                .overlay {
+                    Image(systemName: iconName)
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(.white)
+                }
+            VStack(alignment: .leading, spacing: 2) {
+                Text(expense.merchant.isEmpty ? "Unknown" : expense.merchant)
+                    .font(.body.weight(.semibold))
+                Text(expense.date, format: .dateTime.month().day())
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
+            Text(expense.amount.asCurrency())
+                .font(.body.weight(.semibold))
+            if showsChevron {
+                Image(systemName: "chevron.right")
+                    .font(.footnote.weight(.semibold))
+                    .foregroundStyle(.tertiary)
+            }
+        }
+        .padding(.vertical, 12)
+    }
+}
+
 #Preview {
     List {
         SpendingGroupRow(group: GroupTotal(key: "Shopping", total: 1063.56, count: 9, previousTotal: 553.21))

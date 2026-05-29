@@ -52,6 +52,17 @@ struct WalletImportIntent: AppIntent {
         }
 
         let expense = Expense(amount: value, merchant: cleanMerchant, card: card)
+        expense.viaWalletImport = true
+
+        // Best-effort: tag the purchase with the device's current location (no-op if unauthorized).
+        if let location = await LocationProvider.shared.currentLocation() {
+            expense.latitude = location.coordinate.latitude
+            expense.longitude = location.coordinate.longitude
+            if let name = await LocationProvider.shared.placeName(for: location) {
+                expense.locationName = name
+            }
+        }
+
         let context = SharedModelContainer.container.mainContext
         context.insert(expense)
         do {

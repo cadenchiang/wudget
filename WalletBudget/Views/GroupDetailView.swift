@@ -39,7 +39,7 @@ struct GroupDetailView: View {
                 NavigationLink {
                     TransactionDetailView(expense: expense)
                 } label: {
-                    ExpenseRow(expense: expense)
+                    TransactionRow(expense: expense, showsChevron: false)
                 }
             }
             .onDelete(perform: delete)
@@ -64,30 +64,6 @@ struct GroupDetailView: View {
             try context.save()
         } catch {
             Log.ui.error("Failed to delete transaction(s): \(error.localizedDescription, privacy: .public)")
-        }
-    }
-}
-
-/// A single transaction row: merchant + category over amount + date.
-struct ExpenseRow: View {
-    let expense: Expense
-
-    var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(expense.merchant.isEmpty ? "Unknown" : expense.merchant)
-                Text(expense.category)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-            Spacer()
-            VStack(alignment: .trailing, spacing: 2) {
-                Text(expense.amount.asCurrency())
-                    .fontWeight(.medium)
-                Text(expense.date, format: .dateTime.month().day())
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
         }
     }
 }

@@ -5,6 +5,7 @@ import Foundation
 /// All date math takes its inputs explicitly (`now`, `calendar`) so it is deterministic
 /// and unit testable.
 enum TimeSpan: String, CaseIterable, Identifiable {
+    case today
     case week
     case month
     case year
@@ -14,6 +15,7 @@ enum TimeSpan: String, CaseIterable, Identifiable {
     /// Label shown in the segmented control.
     var title: String {
         switch self {
+        case .today: return "Today"
         case .week: return "Week"
         case .month: return "Month"
         case .year: return "Year"
@@ -23,6 +25,7 @@ enum TimeSpan: String, CaseIterable, Identifiable {
     /// The calendar component this span spans.
     private var component: Calendar.Component {
         switch self {
+        case .today: return .day
         case .week: return .weekOfYear
         case .month: return .month
         case .year: return .year
@@ -51,6 +54,9 @@ enum TimeSpan: String, CaseIterable, Identifiable {
         formatter.calendar = calendar
         formatter.locale = calendar.locale ?? .current
         switch self {
+        case .today:
+            formatter.dateFormat = "EEEE, MMM d"
+            return formatter.string(from: now)
         case .week:
             formatter.dateFormat = "MMM d"
             let start = formatter.string(from: interval.start)

@@ -8,6 +8,8 @@ struct SetupGuideView: View {
     @AppStorage(Haptics.enabledKey) private var hapticsEnabled = true
     @AppStorage(AppLock.enabledKey) private var lockEnabled = false
     @AppStorage(AppTheme.storageKey) private var theme: AppTheme = .system
+    @AppStorage("budget.monthly") private var monthlyBudget = 0.0
+    @AppStorage("budget.showLine") private var showBudgetLine = true
 
     var body: some View {
         NavigationStack {
@@ -41,10 +43,38 @@ struct SetupGuideView: View {
                         SettingsRow(assetImage: "applewallet", title: "Set up Apple Wallet tracking")
                     }
                     .buttonStyle(.plain)
+
+                    NavigationLink {
+                        ManageCategoriesView()
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "tag")
+                                .font(.system(size: 22))
+                                .foregroundStyle(.purple)
+                                .frame(width: 29, height: 29)
+                            Text("Categories").foregroundStyle(.primary)
+                        }
+                    }
                 } header: {
-                    Text("Wallet").textCase(nil)
+                    Text("Tracking").textCase(nil)
+                }
+
+                Section {
+                    NavigationLink {
+                        BudgetEditorView()
+                    } label: {
+                        HStack {
+                            Text("Monthly Budget")
+                            Spacer()
+                            Text(monthlyBudget > 0 ? monthlyBudget.asCurrency() : "None")
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    Toggle("Show Budget Line", isOn: $showBudgetLine)
+                } header: {
+                    Text("Budget").textCase(nil)
                 } footer: {
-                    Text("Log Apple Pay purchases automatically.")
+                    Text("Shown as a target line on the spending chart. Mark fixed costs as “Ignored” in Repeat to budget only variable spending.")
                 }
 
                 Section {
@@ -61,18 +91,6 @@ struct SetupGuideView: View {
 
                 Section {
                     NavigationLink {
-                        ManageCategoriesView()
-                    } label: {
-                        HStack(spacing: 12) {
-                            Image(systemName: "tag")
-                                .font(.system(size: 22))
-                                .foregroundStyle(.purple)
-                                .frame(width: 29, height: 29)
-                            Text("Categories").foregroundStyle(.primary)
-                        }
-                    }
-
-                    NavigationLink {
                         AboutView()
                     } label: {
                         HStack(spacing: 12) {
@@ -85,14 +103,13 @@ struct SetupGuideView: View {
                     }
                 }
             }
-            .safeAreaInset(edge: .top, spacing: 0) {
+            .topChromeBar {
                 Text("Settings")
                     .font(.title3.weight(.semibold))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 20)
                     .padding(.top, 12)
                     .padding(.bottom, 16)
-                    .background(Color(.systemGroupedBackground))
             }
             .toolbar(.hidden, for: .navigationBar)
             .fullScreenCover(isPresented: $showingOnboarding) {

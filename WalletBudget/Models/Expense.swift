@@ -32,6 +32,19 @@ final class Expense {
     /// Free-form note attached to the purchase (editable later).
     var notes: String = ""
 
+    /// When true, this is treated as a fixed cost and excluded from Variable Spending / the budget.
+    var excludedFromBudget: Bool = false
+
+    /// True when this came from an Apple Pay / Wallet Import (vs. manual entry). Only these show
+    /// the location map.
+    var viaWalletImport: Bool = false
+
+    /// Captured location of the purchase (nil when unknown/not permitted).
+    var latitude: Double?
+    var longitude: Double?
+    /// Reverse-geocoded place/city name for the location (empty when unknown).
+    var locationName: String = ""
+
     /// Recurrence stored as `RecurrenceFrequency.rawValue`. `"none"` means one-time.
     /// Stored (not the enum) so it can be used in SwiftData `#Predicate` queries.
     var recurrenceRaw: String = RecurrenceFrequency.none.rawValue

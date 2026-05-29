@@ -34,7 +34,7 @@ struct AccountView: View {
         }
         .navigationTitle("Account")
         .navigationBarTitleDisplayMode(.inline)
-        .confirmationDialog("Log out of WalletBudget?", isPresented: $confirmLogout, titleVisibility: .visible) {
+        .alert("Log out of WalletBudget?", isPresented: $confirmLogout) {
             Button("Log Out", role: .destructive) {
                 Haptics.tap()
                 account.signOut()

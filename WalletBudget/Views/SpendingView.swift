@@ -21,10 +21,12 @@ private enum SpendingTab: String, CaseIterable, Identifiable {
 /// Main screen: a Week/Month/Year selector, a total-spending card with a bar chart, a
 /// Recent / By Merchant / By Category selector, and the matching rows below.
 struct SpendingView: View {
-    @Environment(\.modelContext) private var context
     @Query(sort: \Expense.date, order: .reverse) private var expenses: [Expense]
+    @AppStorage("budget.monthly") private var monthlyBudget = 0.0
+    @AppStorage("budget.showLine") private var showBudgetLine = true
     @State private var span: TimeSpan = .month
     @State private var tab: SpendingTab = .recent
+    @State private var spendingMode: SpendingMode = .total
     @State private var showingAdd = false
 
     /// Expenses within the selected period (already date-descending from the query).
@@ -35,6 +37,16 @@ struct SpendingView: View {
     /// Expenses within the previous period (for deltas/comparison).
     private var previousExpenses: [Expense] {
         SpendingSummary.filter(expenses, in: span.previousInterval())
+    }
+
+    /// Current-period expenses honoring the spending mode (Variable excludes fixed costs).
+    private var displayedCurrent: [Expense] {
+        spendingMode == .variable ? currentExpenses.filter { !$0.excludedFromBudget } : currentExpenses
+    }
+
+    /// Previous-period expenses honoring the spending mode.
+    private var displayedPrevious: [Expense] {
+        spendingMode == .variable ? previousExpenses.filter { !$0.excludedFromBudget } : previousExpenses
     }
 
     /// The grouping used when not in the Recent tab.
@@ -53,9 +65,63 @@ struct SpendingView: View {
         PeriodBucketizer.buckets(for: span)
     }
 
+    /// Transactions marked as recurring (across all time).
+    private var recurringExpenses: [Expense] {
+        expenses.filter { $0.recurrence != .none }
+    }
+
+    /// A forward-looking pace projection for the current period (nil when not meaningful).
+    private var projection: SpendingProjection? {
+        let total = SpendingSummary.total(displayedCurrent)
+        guard total > 0, let interval = span.interval() else { return nil }
+        let now = Date()
+        let elapsed = now.timeIntervalSince(interval.start)
+        let duration = interval.end.timeIntervalSince(interval.start)
+        // Only project once we're meaningfully into the period and still within it.
+        guard duration > 0, elapsed > 0, elapsed < duration else { return nil }
+        let fraction = elapsed / duration
+        guard fraction >= 0.1 else { return nil }
+        let projected = total / fraction
+        let within = periodBudget.map { projected <= $0 }
+        let remaining = periodBudget.map { $0 - total }
+        // Whole days left in the period, counting today (interval.end is the exclusive period end).
+        let calendar = Calendar.current
+        let daysRemaining = max(1, calendar.dateComponents([.day], from: calendar.startOfDay(for: now), to: interval.end).day ?? 1)
+        return SpendingProjection(amount: projected, periodNoun: periodNoun, isWithinBudget: within, remaining: remaining, daysRemaining: daysRemaining)
+    }
+
+    /// Total budget for the current span, scaled from the monthly budget (nil when unset).
+    private var periodBudget: Double? {
+        guard monthlyBudget > 0 else { return nil }
+        switch span {
+        case .today: return monthlyBudget / 30.4
+        case .week: return monthlyBudget * 7.0 / 30.4
+        case .month: return monthlyBudget
+        case .year: return monthlyBudget * 12.0
+        }
+    }
+
+    /// Period noun used in the prediction copy.
+    private var periodNoun: String {
+        switch span {
+        case .today: return "day"
+        case .week: return "week"
+        case .month: return "month"
+        case .year: return "year"
+        }
+    }
+
+    /// The monthly budget scaled to a per-bucket target for the current span (nil when unset).
+    private var budgetPerBucket: Double? {
+        guard let periodBudget else { return nil }
+        let bucketCount = periodBuckets.count
+        guard bucketCount > 0 else { return nil }
+        return periodBudget / Double(bucketCount)
+    }
+
     var body: some View {
         NavigationStack {
-            spendingList
+            spendingScroll
                 .background(Color(.systemGroupedBackground))
                 .topChromeBar { topBar }
                 .toolbar(.hidden, for: .navigationBar)
@@ -121,20 +187,21 @@ struct SpendingView: View {
         .accessibilityLabel("Time span: \(span.title)")
     }
 
-    /// The spending content as a List. The top cards keep their look via clear rows; the Recent
-    /// rows support native swipe-to-delete, while grouped rows do not.
-    private var spendingList: some View {
-        List {
-            Section {
+    /// The spending content: chart card, repeat card, tab selector, and the rows card.
+    private var spendingScroll: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
                 TotalSpendingCard(
-                    total: SpendingSummary.total(currentExpenses),
-                    previousTotal: SpendingSummary.total(previousExpenses),
-                    segments: SpendingSummary.categorySegments(currentExpenses, buckets: periodBuckets),
-                    bucketLabels: periodBuckets.map(\.label)
+                    total: SpendingSummary.total(displayedCurrent),
+                    previousTotal: SpendingSummary.total(displayedPrevious),
+                    segments: SpendingSummary.categorySegments(displayedCurrent, buckets: periodBuckets),
+                    bucketLabels: periodBuckets.map(\.label),
+                    projection: projection,
+                    budgetPerBucket: showBudgetLine ? budgetPerBucket : nil,
+                    mode: $spendingMode
                 )
-                .clearRow(top: 8)
 
-                recurringCard.clearRow()
+                recurringCard
 
                 Picker("View", selection: $tab) {
                     ForEach(SpendingTab.allCases) { option in
@@ -142,73 +209,20 @@ struct SpendingView: View {
                     }
                 }
                 .pickerStyle(.segmented)
-                .clearRow()
-            }
 
-            Section {
                 if tab == .recent {
-                    recentRows
+                    recentCard
                 } else {
-                    groupRows
+                    groupsCard
                 }
             }
-        }
-        .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
-    }
-
-    /// Flat, date-ordered transaction rows with swipe-to-delete (the Recent tab).
-    @ViewBuilder
-    private var recentRows: some View {
-        if currentExpenses.isEmpty {
-            emptyRow
-        } else {
-            ForEach(currentExpenses) { expense in
-                NavigationLink {
-                    TransactionDetailView(expense: expense)
-                } label: {
-                    ExpenseRow(expense: expense)
-                }
-            }
-            .onDelete(perform: deleteRecent)
+            .padding(.horizontal, 16)
+            .padding(.top, 8)
+            .padding(.bottom, 24)
         }
     }
 
-    /// Grouped rows (By Merchant / By Category), each opening the group's transaction list.
-    @ViewBuilder
-    private var groupRows: some View {
-        if groups.isEmpty {
-            emptyRow
-        } else {
-            ForEach(groups) { group in
-                NavigationLink {
-                    GroupDetailView(grouping: grouping, key: group.key, interval: span.interval())
-                } label: {
-                    SpendingGroupRow(group: group, grouping: grouping)
-                }
-            }
-        }
-    }
-
-    /// Deletes recent transactions at the given offsets and saves.
-    private func deleteRecent(at offsets: IndexSet) {
-        Haptics.tap(.rigid)
-        for expense in offsets.map({ currentExpenses[$0] }) {
-            context.delete(expense)
-        }
-        do {
-            try context.save()
-        } catch {
-            Log.ui.error("Failed to delete transaction(s): \(error.localizedDescription, privacy: .public)")
-        }
-    }
-
-    /// Transactions marked as recurring (across all time).
-    private var recurringExpenses: [Expense] {
-        expenses.filter { $0.recurrence != .none }
-    }
-
-    /// A slim card linking to the recurring-payments list.
+    /// Slim "Repeat" card linking to the recurring-payments list.
     private var recurringCard: some View {
         NavigationLink {
             RecurringPaymentsView()
@@ -226,27 +240,80 @@ struct SpendingView: View {
                     .foregroundStyle(.tertiary)
             }
             .padding(.horizontal, 16)
-            .padding(.vertical, 9)
-            .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(Color(.secondarySystemGroupedBackground))
-            )
+            .padding(.vertical, 12)
+            .background(card)
         }
         .buttonStyle(.plain)
     }
 
-    private var emptyRow: some View {
-        Text("No transactions in this period.")
-            .foregroundStyle(.secondary)
-    }
-}
+    /// Flat, date-ordered list of the period's transactions (the Recent tab).
+    private var recentCard: some View {
+        rowsCard(currentExpenses.isEmpty) {
+            ForEach(Array(currentExpenses.enumerated()), id: \.element.id) { index, expense in
+                NavigationLink {
+                    TransactionDetailView(expense: expense)
+                } label: {
+                    TransactionRow(expense: expense)
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, 16)
 
-private extension View {
-    /// Renders this view as a full-bleed, background-less list row so it keeps its own card look.
-    func clearRow(top: CGFloat = 0) -> some View {
-        listRowBackground(Color.clear)
-            .listRowSeparator(.hidden)
-            .listRowInsets(EdgeInsets(top: top, leading: 16, bottom: 8, trailing: 16))
+                if index < currentExpenses.count - 1 {
+                    Divider().padding(.leading, 70)
+                }
+            }
+        }
+    }
+
+    /// Grouped rows (By Merchant / By Category), each opening the group's transaction list.
+    private var groupsCard: some View {
+        rowsCard(groups.isEmpty) {
+            ForEach(Array(groups.enumerated()), id: \.element.id) { index, group in
+                NavigationLink {
+                    GroupDetailView(grouping: grouping, key: group.key, interval: span.interval())
+                } label: {
+                    SpendingGroupRow(group: group, grouping: grouping)
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, 16)
+
+                if index < groups.count - 1 {
+                    Divider().padding(.leading, 70)
+                }
+            }
+        }
+    }
+
+    /// Wraps rows in the shared card, or shows the empty message.
+    @ViewBuilder
+    private func rowsCard<Rows: View>(_ isEmpty: Bool, @ViewBuilder rows: () -> Rows) -> some View {
+        LazyVStack(spacing: 0) {
+            if isEmpty {
+                Text("No transactions in this period.")
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(16)
+            } else {
+                rows()
+            }
+        }
+        .background(card)
+    }
+
+    /// Shared rounded card background.
+    private var card: some View {
+        RoundedRectangle(cornerRadius: 20, style: .continuous)
+            .fill(Color(.secondarySystemGroupedBackground))
+    }
+
+    /// The current-period expenses belonging to a group.
+    private func expenses(for group: GroupTotal) -> [Expense] {
+        currentExpenses.filter { expense in
+            switch grouping {
+            case .category: return expense.category == group.key
+            case .merchant: return (expense.merchant.isEmpty ? "Unknown" : expense.merchant) == group.key
+            }
+        }
     }
 }
 

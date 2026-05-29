@@ -91,7 +91,7 @@ struct OnboardingFlow: View {
         }
         .buttonStyle(.borderedProminent)
         .controlSize(.large)
-        .tint(.primary)
+        .tint(isLastStep ? .green : .primary)
         .padding(.horizontal, 24)
         .padding(.bottom, 16)
     }
