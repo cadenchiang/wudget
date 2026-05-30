@@ -10,6 +10,20 @@ struct OnboardingStep: Identifiable {
     let imageName: String
     /// One short line shown beneath the screenshot.
     let title: String
+    /// Optional secondary line shown beneath the title.
+    let subtitle: String?
+    /// Optional substring of `title` to emphasize (e.g. a button name).
+    let highlight: String?
+    /// Whether the `highlight` substring is colored blue (true) or left primary (false).
+    let highlightColored: Bool
+    /// When true, the `highlight` substring renders as a blue pill with white text (a button).
+    let highlightPill: Bool
+    /// Optional SF Symbol (blue) shown inline just before the highlight.
+    let highlightSymbol: String?
+    /// When true, the inline symbol replaces the highlight text entirely (icon instead of words).
+    let symbolReplacesHighlight: Bool
+    /// Optional asset image shown inline just before the highlight.
+    let highlightAsset: String?
     /// Optional SF Symbol shown instead of a screenshot.
     let systemImage: String?
     /// Optional asset-catalog image (e.g. the Apple Wallet logo) shown as an app-icon-style logo.
@@ -24,6 +38,13 @@ struct OnboardingStep: Identifiable {
     init(
         imageName: String,
         title: String,
+        subtitle: String? = nil,
+        highlight: String? = nil,
+        highlightColored: Bool = true,
+        highlightPill: Bool = false,
+        highlightSymbol: String? = nil,
+        symbolReplacesHighlight: Bool = false,
+        highlightAsset: String? = nil,
         systemImage: String? = nil,
         assetImage: String? = nil,
         actionTitle: String? = nil,
@@ -32,6 +53,13 @@ struct OnboardingStep: Identifiable {
     ) {
         self.imageName = imageName
         self.title = title
+        self.subtitle = subtitle
+        self.highlight = highlight
+        self.highlightColored = highlightColored
+        self.highlightPill = highlightPill
+        self.highlightSymbol = highlightSymbol
+        self.symbolReplacesHighlight = symbolReplacesHighlight
+        self.highlightAsset = highlightAsset
         self.systemImage = systemImage
         self.assetImage = assetImage
         self.actionTitle = actionTitle
@@ -45,14 +73,18 @@ extension OnboardingStep {
     /// screen covers a single action. `imageName` values correspond to screenshots to be
     /// added to Assets (e.g. "onboarding1"…"onboarding8").
     static let walletSetup: [OnboardingStep] = [
-        OnboardingStep(imageName: "onboarding1", title: "Track Apple Pay automatically", assetImage: "applewallet"),
-        OnboardingStep(imageName: "onboarding2", title: "Go to the Automation tab",
-                       actionTitle: "Open Shortcuts", actionURLString: "shortcuts://"),
-        OnboardingStep(imageName: "onboarding3", title: "Tap + and choose the Wallet trigger"),
-        OnboardingStep(imageName: "onboarding4", title: "Choose your cards, then tap Next"),
-        OnboardingStep(imageName: "onboarding5", title: "Create a new shortcut"),
-        OnboardingStep(imageName: "onboarding6", title: "Search “Wallet Import” and add it"),
-        OnboardingStep(imageName: "onboarding7", title: "Map Amount, Merchant, and Card"),
+        OnboardingStep(imageName: "onboarding1", title: "Track Apple Pay automatically",
+                       subtitle: "This will take about 2 minutes.", assetImage: "applewallet"),
+        OnboardingStep(imageName: "onboardingAutomation", title: "Open the Automation tab, then tap New Automation",
+                       actionTitle: "Open Shortcuts", actionURLString: "shortcuts://automation"),
+        OnboardingStep(imageName: "onboarding3", title: "Scroll down and tap Wallet"),
+        OnboardingStep(imageName: "onboardingCards", title: "Choose your cards, then tap Next"),
+        OnboardingStep(imageName: "onboardingCreate", title: "Press “Create New Shortcut”"),
+        OnboardingStep(imageName: "onboardingWalletImport", title: "Press Wallet Import"),
+        OnboardingStep(imageName: "onboardingFinish", title: "Tap the blue checkmark to finish",
+                       highlight: "blue checkmark", highlightSymbol: "checkmark.circle.fill",
+                       symbolReplacesHighlight: true),
+        OnboardingStep(imageName: "onboardingDone", title: "This is what it should look like"),
         OnboardingStep(imageName: "onboarding8", title: "Apple Wallet sync", isSyncCheck: true),
     ]
 }

@@ -12,6 +12,8 @@ struct OnboardingFlow: View {
 
     private let steps = OnboardingStep.walletSetup
     @State private var index = 0
+    /// Whether a Wallet Import has reached the app (drives the green "sync complete" state).
+    @AppStorage(WalletImportIntent.receivedKey) private var received = false
 
     private var progress: Double {
         Double(index + 1) / Double(steps.count)
@@ -66,7 +68,7 @@ struct OnboardingFlow: View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
                 Capsule().fill(Color.secondary.opacity(0.2))
-                Capsule().fill(isLastStep ? Color.green : Color.primary)
+                Capsule().fill(isLastStep && received ? Color.green : Color.primary)
                     .frame(width: geo.size.width * progress)
             }
         }
@@ -134,10 +136,18 @@ private struct OnboardingStepView: View {
         VStack(spacing: 20) {
             Spacer()
             artwork
-            Text(step.title)
-                .font(.title.bold())
-                .foregroundStyle(.primary)
-                .multilineTextAlignment(.center)
+            VStack(spacing: 8) {
+                Text(step.title)
+                    .font(.title.bold())
+                    .foregroundStyle(.primary)
+                    .multilineTextAlignment(.center)
+                if let subtitle = step.subtitle {
+                    Text(subtitle)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+            }
             Spacer()
         }
         .frame(maxWidth: .infinity)
@@ -147,11 +157,7 @@ private struct OnboardingStepView: View {
     private var standardStep: some View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 10) {
-                Text(step.title)
-                    .font(.title.bold())
-                    .foregroundStyle(.primary)
-                    .multilineTextAlignment(.leading)
-                    .fixedSize(horizontal: false, vertical: true)
+                titleView
 
                 if let actionTitle = step.actionTitle,
                    let urlString = step.actionURLString,
@@ -174,6 +180,70 @@ private struct OnboardingStepView: View {
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 12)
+    }
+
+    /// The step title. When `highlightPill` is set, the highlight renders as a blue button-style
+    /// pill on its own line; otherwise it falls back to the inline styled `titleText`.
+    @ViewBuilder
+    private var titleView: some View {
+        if step.highlightPill, let highlight = step.highlight,
+           let range = step.title.range(of: highlight) {
+            let prefix = String(step.title[..<range.lowerBound]).trimmingCharacters(in: .whitespaces)
+            VStack(alignment: .leading, spacing: 12) {
+                if !prefix.isEmpty {
+                    Text(prefix)
+                        .font(.title.bold())
+                        .foregroundStyle(.primary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Text(highlight)
+                    .font(.title3.weight(.semibold))
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(Capsule().fill(.blue))
+            }
+        } else if let highlight = step.highlight, let asset = step.highlightAsset,
+                  let range = step.title.range(of: highlight) {
+            // Render the asset as a properly sized image (embedding it inline in Text would
+            // draw it at full resolution and blow up the screen).
+            let prefix = String(step.title[..<range.lowerBound])
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                if !prefix.isEmpty { Text(prefix).font(.title.bold()) }
+                Image(asset)
+                    .resizable().scaledToFit()
+                    .frame(width: 30, height: 30)
+                    .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+                Text(highlight).font(.title.bold())
+            }
+            .foregroundStyle(.primary)
+        } else {
+            titleText
+                .font(.title.bold())
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    /// The step title, with an optional inline SF Symbol and a colored `highlight` substring.
+    /// When `symbolReplacesHighlight` is set, the symbol stands in for the highlight words.
+    private var titleText: Text {
+        guard let highlight = step.highlight, let range = step.title.range(of: highlight) else {
+            return Text(step.title).foregroundStyle(.primary)
+        }
+        let prefix = Text(String(step.title[..<range.lowerBound])).foregroundStyle(.primary)
+        let suffix = Text(String(step.title[range.upperBound...])).foregroundStyle(.primary)
+
+        if let symbol = step.highlightSymbol {
+            let icon = Text(Image(systemName: symbol)).foregroundStyle(.blue)
+            if step.symbolReplacesHighlight {
+                return prefix + icon + suffix
+            }
+            return prefix + icon + Text(" ")
+                + Text(highlight).foregroundStyle(step.highlightColored ? .blue : .primary)
+                + suffix
+        }
+        return prefix + Text(highlight).foregroundStyle(step.highlightColored ? .blue : .primary) + suffix
     }
 
     /// The logo (intro step) or the iPhone-framed screenshot.
@@ -256,6 +326,10 @@ private struct SyncCheckView: View {
                     .foregroundStyle(.green)
                 Text("Apple Wallet sync complete")
                     .font(.title3.weight(.semibold))
+                    .multilineTextAlignment(.center)
+                Text("Any payments you make will now be tracked automatically.")
+                    .font(.subheadline.weight(.light))
+                    .foregroundStyle(.primary)
                     .multilineTextAlignment(.center)
             } else {
                 ProgressView()

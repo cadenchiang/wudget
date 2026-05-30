@@ -1,9 +1,7 @@
 import SwiftUI
 
-/// Decides what to show at the top level: the login screen when signed out, otherwise the app
-/// (behind the optional Face ID lock). Owns and injects the shared `AccountStore`.
-///
-/// The personal onboarding flow is disabled for now; launch goes straight to login.
+/// Decides what to show at the top level: the welcome landing (which raises the sign-in sheet) when
+/// signed out, otherwise the app (behind the optional Face ID lock). Owns and injects `AccountStore`.
 struct RootGate: View {
     @State private var account = AccountStore()
     @AppStorage(AppTheme.storageKey) private var theme: AppTheme = .system
@@ -13,7 +11,7 @@ struct RootGate: View {
             if account.isSignedIn {
                 AppLockGate { RootView() }
             } else {
-                LoginView()
+                WelcomeLandingView()
             }
         }
         .environment(account)

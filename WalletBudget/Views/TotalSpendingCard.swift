@@ -83,20 +83,23 @@ struct TotalSpendingCard: View {
     /// A one-sentence budget summary: how much is left to spend this period (and over how many
     /// days), or how much over budget. The dollar amount is colored green (under) or red (over).
     private func budgetSentence(remaining: Double, periodNoun: String, daysRemaining: Int) -> Text {
-        let dayWord = daysRemaining == 1 ? "day" : "days"
-        let tail = Text(" with \(daysRemaining) \(dayWord) left this \(periodNoun).").foregroundStyle(.secondary)
+        // "today" reads naturally for the day span; other spans get a days-left tail.
+        let tail: Text
+        if periodNoun == "day" {
+            tail = Text(" today.").foregroundStyle(.secondary)
+        } else {
+            let dayWord = daysRemaining == 1 ? "day" : "days"
+            tail = Text(" with \(daysRemaining) \(dayWord) left this \(periodNoun).").foregroundStyle(.secondary)
+        }
         if remaining > 0 {
             return Text("You have ").foregroundStyle(.secondary)
                 + Text(remaining.asCurrency()).foregroundStyle(.green)
                 + Text(" left to spend").foregroundStyle(.secondary)
                 + tail
-        } else if remaining < 0 {
+        } else {
             return Text("You're ").foregroundStyle(.secondary)
                 + Text(abs(remaining).asCurrency()).foregroundStyle(.red)
                 + Text(" over budget").foregroundStyle(.secondary)
-                + tail
-        } else {
-            return Text("You've used your full budget").foregroundStyle(.secondary)
                 + tail
         }
     }

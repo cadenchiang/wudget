@@ -1,117 +1,122 @@
 import SwiftUI
-import UIKit
 
-/// The very first screen on launch: a clean (no colored background) landing with an iPhone mockup
-/// in the center that animates up into place, an app title, and two choices:
-/// "Get Started" (new users → onboarding) and "Already have an account? Sign In" (→ login).
+/// Welcome / landing screen, in the Nara/Cal-AI style: a phone preview on top, a centered tagline,
+/// and a single prominent black "Get Started" pill. Tapping Get Started hands off to sign-in.
 struct WelcomeLandingView: View {
-    /// Called when the user taps "Get Started".
-    let onGetStarted: () -> Void
-    /// Called when the user taps "Already have an account? Sign In".
-    let onSignIn: () -> Void
+    @Environment(AccountStore.self) private var account
 
-    /// Drives the pop-up entrance animation.
+    /// Drives the entrance animation (phone fades/slides up, then the CTA panel).
     @State private var appeared = false
+    /// Whether the sign-in bottom sheet is showing.
+    @State private var showingAuth = false
 
     var body: some View {
-        VStack(spacing: 0) {
-            Spacer(minLength: 24)
+        ZStack {
+            Color(.systemBackground).ignoresSafeArea()
 
-            phoneMockup
-                .frame(maxWidth: 230)
-                .opacity(appeared ? 1 : 0)
-                .scaleEffect(appeared ? 1 : 0.9)
-                .offset(y: appeared ? 0 : 28)
-
-            Text("Spend smart, save more")
-                .font(.system(size: 40, weight: .bold))
-                .foregroundStyle(.black)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 28)
-                .padding(.top, 32)
-                .opacity(appeared ? 1 : 0)
-                .offset(y: appeared ? 0 : 20)
-
-            Spacer(minLength: 24)
-
-            buttons
-                .opacity(appeared ? 1 : 0)
-                .offset(y: appeared ? 0 : 24)
+            VStack(spacing: 0) {
+                Spacer(minLength: 12)
+                phonePreview
+                    .frame(maxWidth: 250)
+                    .opacity(appeared ? 1 : 0)
+                    .offset(y: appeared ? 0 : 26)
+                Spacer(minLength: 24)
+                ctaPanel
+                    .opacity(appeared ? 1 : 0)
+                    .offset(y: appeared ? 0 : 16)
+            }
+            .padding(.horizontal, 24)
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemBackground))
         .onAppear {
-            withAnimation(.spring(response: 0.7, dampingFraction: 0.8)) { appeared = true }
+            withAnimation(.timingCurve(0.16, 1.0, 0.3, 1.0, duration: 1.0)) { appeared = true }
+        }
+        .sheet(isPresented: $showingAuth) {
+            AuthSheet()
+                .environment(account)
+                .presentationDetents([.height(430)])
+                .presentationDragIndicator(.visible)
+                .presentationCornerRadius(28)
         }
     }
 
-    /// The two stacked actions at the bottom.
-    private var buttons: some View {
-        VStack(spacing: 14) {
+    /// Tagline + the single Get Started CTA, hugging the bottom.
+    private var ctaPanel: some View {
+        VStack(spacing: 0) {
+            Text("Spend smart,\nsave more.")
+                .font(.system(size: 34, weight: .bold))
+                .multilineTextAlignment(.center)
+                .lineSpacing(2)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 24)
+
             Button {
                 Haptics.tap()
-                onGetStarted()
+                showingAuth = true
             } label: {
                 Text("Get Started")
-                    .fontWeight(.semibold)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(Capsule().fill(Color.black))
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
-            .tint(.black)
-
-            Button {
-                Haptics.tap()
-                onSignIn()
-            } label: {
-                Text("Already have an account? **Sign In**")
-                    .font(.subheadline)
-                    .foregroundStyle(.black)
-            }
+            Spacer().frame(height: 32)
         }
-        .padding(.horizontal, 24)
-        .padding(.bottom, 24)
+        .frame(maxWidth: .infinity)
     }
 
-    /// A small iPhone mockup showing the app's first onboarding screenshot (placeholder if absent).
-    private var phoneMockup: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 40, style: .continuous)
-                .fill(.black)
-            mockScreen
-                .clipShape(RoundedRectangle(cornerRadius: 33, style: .continuous))
-                .padding(5)
-        }
-        .overlay(alignment: .top) {
-            GeometryReader { geo in
-                Capsule()
-                    .fill(.black)
-                    .frame(width: geo.size.width * 0.30, height: geo.size.width * 0.085)
-                    .frame(maxWidth: .infinity)
-                    .padding(.top, geo.size.width * 0.05 + 6)
-            }
-        }
-        .aspectRatio(1206.0 / 2622.0, contentMode: .fit)
-        .shadow(color: .black.opacity(0.2), radius: 16, y: 8)
-    }
+    /// A phone mockup showing a mini version of the spending screen.
+    private var phonePreview: some View {
+        let bars: [(h: CGFloat, c: Color)] = [(44, .blue), (58, .green), (74, .orange), (92, .purple), (66, .pink)]
+        return RoundedRectangle(cornerRadius: 46, style: .continuous)
+            .fill(Color.black)
+            .aspectRatio(9.0 / 19.0, contentMode: .fit)
+            .overlay {
+                RoundedRectangle(cornerRadius: 40, style: .continuous)
+                    .fill(Color(.secondarySystemBackground))
+                    .padding(6)
+                    .overlay(alignment: .top) {
+                        VStack(alignment: .leading, spacing: 0) {
+                            Capsule().fill(.black)
+                                .frame(width: 86, height: 24)
+                                .frame(maxWidth: .infinity)
+                                .padding(.top, 12)
 
-    @ViewBuilder
-    private var mockScreen: some View {
-        if let image = UIImage(named: "onboarding2") {
-            Image(uiImage: image)
-                .resizable()
-                .scaledToFill()
-        } else {
-            ZStack {
-                Color(.secondarySystemBackground)
-                Image(systemName: "chart.bar.xaxis")
-                    .font(.system(size: 44))
-                    .foregroundStyle(.secondary)
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Total Spending").font(.caption2).foregroundStyle(.secondary)
+                                Text("$1,248").font(.title2.bold())
+                                Text("$252 left this month").font(.caption2.weight(.medium)).foregroundStyle(.green)
+                                HStack(alignment: .bottom, spacing: 6) {
+                                    ForEach(Array(bars.enumerated()), id: \.offset) { _, bar in
+                                        RoundedRectangle(cornerRadius: 4, style: .continuous)
+                                            .fill(bar.c)
+                                            .frame(maxWidth: .infinity)
+                                            .frame(height: bar.h)
+                                    }
+                                }
+                                .frame(height: 92, alignment: .bottom)
+                                .padding(.top, 4)
+
+                                ForEach(["Blue Bottle", "Whole Foods"], id: \.self) { merchant in
+                                    HStack {
+                                        Text(merchant).font(.caption2.weight(.medium))
+                                        Spacer()
+                                        Text(merchant == "Blue Bottle" ? "$6.25" : "$48.10").font(.caption2.weight(.semibold))
+                                    }
+                                    .padding(.horizontal, 10).padding(.vertical, 7)
+                                    .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color(.systemBackground)))
+                                }
+                            }
+                            .padding(16)
+                            Spacer(minLength: 0)
+                        }
+                    }
+                    .clipShape(RoundedRectangle(cornerRadius: 40, style: .continuous))
             }
-        }
+            .shadow(color: .black.opacity(0.22), radius: 26, y: 14)
     }
 }
 
 #Preview {
-    WelcomeLandingView(onGetStarted: {}, onSignIn: {})
+    WelcomeLandingView()
 }

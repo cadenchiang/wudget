@@ -20,13 +20,6 @@ targets:
     platform: iOS
     sources:
       - path: WalletBudget
-    dependencies:
-      - target: WudgetWidgets
-    entitlements:
-      path: WalletBudget/WalletBudget.entitlements
-      properties:
-        com.apple.security.application-groups:
-          - group.com.cadenchiang.walletbudget
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.cadenchiang.walletbudget
@@ -39,28 +32,6 @@ targets:
         INFOPLIST_KEY_NSFaceIDUsageDescription: Wudget uses Face ID to lock the app so only you can open it and see your spending.
         INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: Wudget adds the location of each Apple Pay purchase so you can see where you spent. Locations stay on your device.
         INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription: Wudget records where each Apple Pay purchase happened, even when the import runs in the background. Locations stay on your device and are never shared.
-
-  WudgetWidgets:
-    type: app-extension
-    platform: iOS
-    sources:
-      - path: WudgetWidgets
-      - path: WalletBudget/Support/WidgetShared.swift
-    entitlements:
-      path: WudgetWidgets/WudgetWidgets.entitlements
-      properties:
-        com.apple.security.application-groups:
-          - group.com.cadenchiang.walletbudget
-    info:
-      path: WudgetWidgets/Info.plist
-      properties:
-        CFBundleDisplayName: Wudget
-        NSExtension:
-          NSExtensionPointIdentifier: com.apple.widgetkit-extension
-    settings:
-      base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.cadenchiang.walletbudget.widgets
-        GENERATE_INFOPLIST_FILE: NO
 
   WalletBudgetTests:
     type: bundle.unit-test
