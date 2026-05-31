@@ -51,6 +51,7 @@
 		A1DA3288D7B27FE0983AC576 /* TotalSpendingCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 22A930C47D514E788DCCD805 /* TotalSpendingCard.swift */; };
 		A349ACEFD3DB55D7D49470F2 /* RootGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D978EF958C1C58E9CAEFA7A /* RootGate.swift */; };
 		AA27954626BF0B75EAB45E82 /* SpendingGroupRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB092227C8A29FC4505A1626 /* SpendingGroupRow.swift */; };
+		A238A9FC3D4D4F84B140FFF0 /* MerchantLogoTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = E532A71BDC874015A800D687 /* MerchantLogoTile.swift */; };
 		B7A0B137417A61E85BD70C8B /* ManageCategoriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9914378A8743498974C9ED7 /* ManageCategoriesView.swift */; };
 		B80CA42F12C4C45011AF72B6 /* TopChromeBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C740448D5F20571006ED775B /* TopChromeBar.swift */; };
 		BDEAA7E44A46DDEB23E31F47 /* RecurrenceFrequency.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83F6022920D4C45574AAACD1 /* RecurrenceFrequency.swift */; };
@@ -156,6 +157,7 @@
 		ED7746652ABA2A9FB9EBCE3E /* NotificationSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationSettingsView.swift; sourceTree = "<group>"; };
 		EFE66E9E1422C962E226F2E0 /* WalletImportIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletImportIntent.swift; sourceTree = "<group>"; };
 		FB092227C8A29FC4505A1626 /* SpendingGroupRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpendingGroupRow.swift; sourceTree = "<group>"; };
+		E532A71BDC874015A800D687 /* MerchantLogoTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MerchantLogoTile.swift; sourceTree = "<group>"; };
 		FB2B9B80AFEC249446DD3E4E /* CurrencyParser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CurrencyParser.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -186,6 +188,7 @@
 				97C852F791DC04262D40EDDF /* RootView.swift */,
 				477070C96FAAB28061BAD0E9 /* SetupGuideView.swift */,
 				FB092227C8A29FC4505A1626 /* SpendingGroupRow.swift */,
+				E532A71BDC874015A800D687 /* MerchantLogoTile.swift */,
 				6CC0F426B5A43C944E7779BE /* SpendingView.swift */,
 				13F8E7F69117406FD8616313 /* TermsOfServiceView.swift */,
 				22A930C47D514E788DCCD805 /* TotalSpendingCard.swift */,
@@ -452,6 +455,7 @@
 				02A357CCF686C2FA3D89BC80 /* SharedModelContainer.swift in Sources */,
 				32F4719277646ED8352840C4 /* SpendingCategory.swift in Sources */,
 				AA27954626BF0B75EAB45E82 /* SpendingGroupRow.swift in Sources */,
+				A238A9FC3D4D4F84B140FFF0 /* MerchantLogoTile.swift in Sources */,
 				DF1F8D54188C1AD9C32FD029 /* SpendingSummary.swift in Sources */,
 				FECD22ACDEA1F00B7BAFAC05 /* SpendingView.swift in Sources */,
 				74BB5C56F1534A9C12EE589F /* TermsOfServiceView.swift in Sources */,

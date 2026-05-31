@@ -41,7 +41,11 @@ struct RecurringPaymentsView: View {
         .navigationTitle("Repeat")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItemGroup(placement: .topBarTrailing) {
+                // Edit toggles swipe-to-delete/ignore editing. Hidden when there's nothing to edit.
+                if !expenses.isEmpty {
+                    EditButton().tint(.blue)
+                }
                 Button { showingAdd = true } label: {
                     Image(systemName: "plus")
                 }
@@ -50,7 +54,7 @@ struct RecurringPaymentsView: View {
             }
         }
         .sheet(isPresented: $showingAdd) {
-            AddTransactionSheet(recurrenceDefault: .monthly)
+            AddTransactionSheet(recurrenceDefault: .monthly, categoryDefault: "Subscription")
         }
     }
 
@@ -92,7 +96,7 @@ struct RecurringPaymentsView: View {
     }
 }
 
-/// A recurring-payment row: category-colored icon, merchant, frequency + next due date, amount.
+/// A recurring-payment row: merchant logo, merchant, frequency + next due date, amount.
 private struct RecurringRow: View {
     let expense: Expense
 
@@ -105,14 +109,7 @@ private struct RecurringRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            RoundedRectangle(cornerRadius: 9, style: .continuous)
-                .fill(CategoryStyle.color(for: expense.category).gradient)
-                .frame(width: 38, height: 38)
-                .overlay {
-                    Image(systemName: CategoryStyle.icon(for: expense.category))
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(.white)
-                }
+            MerchantLogoTile(merchant: expense.merchant, size: 38, cornerRadius: 9)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Text(expense.merchant.isEmpty ? "Unknown" : expense.merchant)

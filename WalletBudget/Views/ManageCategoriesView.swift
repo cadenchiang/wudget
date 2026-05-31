@@ -7,24 +7,41 @@ struct ManageCategoriesView: View {
     @Query(sort: \SpendingCategory.sortOrder) private var categories: [SpendingCategory]
     @State private var editing: SpendingCategory?
     @State private var addingNew = false
+    /// Drives the list's edit mode from the custom blue "Edit"/"Done" control above the list
+    /// (instead of a nav-bar `EditButton`).
+    @State private var editMode: EditMode = .inactive
 
     var body: some View {
-        List {
-            ForEach(categories) { category in
-                Button { editing = category } label: { row(category) }
-                    .buttonStyle(.plain)
+        VStack(spacing: 0) {
+            HStack {
+                Spacer()
+                Button(editMode.isEditing ? "Done" : "Edit") {
+                    withAnimation { editMode = editMode.isEditing ? .inactive : .active }
+                }
+                .font(editMode.isEditing ? .body.weight(.semibold) : .body)
+                .tint(.blue)
+                .accessibilityLabel(editMode.isEditing ? "Done editing categories" : "Edit categories")
             }
-            .onDelete(perform: delete)
-            .onMove(perform: move)
+            .padding(.horizontal)
+            .padding(.top, 8)
+
+            List {
+                ForEach(categories) { category in
+                    Button { editing = category } label: { row(category) }
+                        .buttonStyle(.plain)
+                }
+                .onDelete(perform: delete)
+                .onMove(perform: move)
+            }
+            .environment(\.editMode, $editMode)
         }
         .navigationTitle("Categories")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItemGroup(placement: .topBarTrailing) {
+            ToolbarItem(placement: .topBarTrailing) {
                 Button { addingNew = true } label: { Image(systemName: "plus") }
                     .tint(.primary)
                     .accessibilityLabel("Add category")
-                EditButton().tint(.primary)
             }
         }
         .sheet(item: $editing) { CategoryEditorView(category: $0) }

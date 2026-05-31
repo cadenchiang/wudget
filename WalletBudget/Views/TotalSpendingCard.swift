@@ -75,9 +75,16 @@ struct TotalSpendingCard: View {
     private var hasComparison: Bool { previousTotal > 0 }
 
     /// One-line comparison versus the previous period (only meaningful when `hasComparison`).
-    private var comparison: String {
-        let direction = delta <= 0 ? "less" : "more"
-        return "So far, you've spent \(abs(delta).asCurrency()) \(direction) than last period at this time."
+    ///
+    /// The "$144.70 less"/"$144.70 more" phrase is colored green when you've spent *less* than last
+    /// period (good) and red when you've spent *more* (bad); the rest of the sentence is primary.
+    private var comparison: Text {
+        let spentLess = delta <= 0
+        let highlight: Color = spentLess ? .green : .red
+        let direction = spentLess ? "less" : "more"
+        return Text("So far, you've spent ").foregroundStyle(.primary)
+            + Text("\(abs(delta).asCurrency()) \(direction)").foregroundStyle(highlight).fontWeight(.semibold)
+            + Text(" than last period at this time.").foregroundStyle(.primary)
     }
 
     /// A one-sentence budget summary: how much is left to spend this period (and over how many
@@ -162,9 +169,8 @@ struct TotalSpendingCard: View {
                     .font(.subheadline)
                     .fixedSize(horizontal: false, vertical: true)
             } else if hasComparison {
-                Text(comparison)
+                comparison
                     .font(.subheadline)
-                    .foregroundStyle(.primary)
                     .fixedSize(horizontal: false, vertical: true)
             }
 

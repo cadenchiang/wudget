@@ -16,19 +16,28 @@ struct AddTransactionSheet: View {
     @State private var errorMessage: String?
     @State private var showingMerchantPicker = false
     @State private var showingCardPicker = false
+    /// Whether the optional "details" section is expanded. Collapsed by default so the sheet opens
+    /// clean (just the two required fields); auto-expanded when a default is pre-filled so the
+    /// caller's preset (e.g. a monthly subscription) is visible.
+    @State private var showDetails: Bool
     @FocusState private var amountFocused: Bool
 
     /// Creates the add form.
-    /// - Parameter recurrenceDefault: Initial recurrence (e.g. `.monthly` when adding from the
-    ///   Recurring screen).
-    init(recurrenceDefault: RecurrenceFrequency = .none) {
+    /// - Parameters:
+    ///   - recurrenceDefault: Initial recurrence (e.g. `.monthly` when adding from the Repeat screen).
+    ///   - categoryDefault: Initial category (e.g. "Subscription" when adding from the Repeat
+    ///     screen). Empty means "Automatic" (derived from the merchant).
+    init(recurrenceDefault: RecurrenceFrequency = .none, categoryDefault: String = "") {
         _recurrence = State(initialValue: recurrenceDefault)
+        _category = State(initialValue: categoryDefault)
+        // Show the details up front when the caller pre-filled a repeat/category so it isn't hidden.
+        _showDetails = State(initialValue: recurrenceDefault != .none || !categoryDefault.isEmpty)
     }
 
     var body: some View {
         NavigationStack {
             Form {
-                Section("Purchase") {
+                Section {
                     TextField("Amount", text: $amountText)
                         .keyboardType(.decimalPad)
                         .focused($amountFocused)
@@ -40,30 +49,36 @@ struct AddTransactionSheet: View {
                         item: MerchantLibrary.item(named: merchant),
                         fallbackIcon: "tag.fill"
                     ) { showingMerchantPicker = true }
+                } header: {
+                    Text("Required")
+                } footer: {
+                    Text("Amount and merchant are all you need. Tap \u{201C}Add details\u{201D} for the rest.")
                 }
 
-                Section("Optional") {
-                    selectionRow(
-                        label: "Card",
-                        value: card,
-                        placeholder: "Choose",
-                        item: CardLibrary.item(named: card),
-                        fallbackIcon: "creditcard.fill"
-                    ) { showingCardPicker = true }
-                    Picker("Category", selection: $category) {
-                        Text("Automatic").tag("")
-                        ForEach(ExpenseCategorizer.allCategories, id: \.self) { name in
-                            Text(name).tag(name)
+                Section {
+                    DisclosureGroup("Add details", isExpanded: $showDetails) {
+                        selectionRow(
+                            label: "Card",
+                            value: card,
+                            placeholder: "Choose",
+                            item: CardLibrary.item(named: card),
+                            fallbackIcon: "creditcard.fill"
+                        ) { showingCardPicker = true }
+                        Picker("Category", selection: $category) {
+                            Text("Automatic").tag("")
+                            ForEach(ExpenseCategorizer.allCategories, id: \.self) { name in
+                                Text(name).tag(name)
+                            }
                         }
-                    }
-                    DatePicker("Date", selection: $date, displayedComponents: [.date, .hourAndMinute])
-                    Picker("Repeat", selection: $recurrence) {
-                        ForEach(RecurrenceFrequency.allCases) { frequency in
-                            Text(frequency.label).tag(frequency)
+                        DatePicker("Date", selection: $date, displayedComponents: [.date, .hourAndMinute])
+                        Picker("Repeat", selection: $recurrence) {
+                            ForEach(RecurrenceFrequency.allCases) { frequency in
+                                Text(frequency.label).tag(frequency)
+                            }
                         }
+                        TextField("Add a note", text: $notes, axis: .vertical)
+                            .lineLimit(1...4)
                     }
-                    TextField("Add a note", text: $notes, axis: .vertical)
-                        .lineLimit(1...4)
                 }
                 if let errorMessage {
                     Section {
