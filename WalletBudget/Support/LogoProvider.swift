@@ -1,15 +1,87 @@
 import Foundation
 
-/// Resolves logo image URLs for merchants/cards.
+/// Resolves real logo image URLs for merchants (and any library item with a known domain).
 ///
-/// Remote logo fetching is intentionally disabled: the previous logo service (Clearbit) was
-/// discontinued, so every lookup failed with a DNS error and logged noise. Just as importantly,
-/// sending merchant names to a third-party service conflicts with the app's on-device,
-/// no-data-leaves-your-phone model. Merchant/card tiles therefore use bundled asset images when
-/// present, otherwise the colored SF Symbol fallback. This returns `nil` so callers use those.
+/// Logos are fetched at runtime from Google's keyless favicon service by domain (e.g.
+/// "starbucks.com"). An item's explicit `domain` wins; otherwise the merchant name is matched
+/// against `knownDomains` below. Items with no resolvable domain return `nil`, so callers fall
+/// back to the bundled asset or the colored SF Symbol.
+///
+/// Tradeoff: this makes a network request per known merchant to render its logo, so logo art is no
+/// longer strictly on-device. The lookup uses a fixed, public merchant list (not the user's data),
+/// and failed/blocked fetches degrade gracefully to the SF Symbol.
 enum LogoProvider {
-    /// Always `nil` (remote logo fetching is disabled — see the type's note).
-    /// - Parameter item: The library item (unused).
-    /// - Returns: `nil`.
-    static func url(for item: LibraryItem) -> URL? { nil }
+    /// A remote logo URL for the item, or `nil` when no domain is known (caller falls back).
+    /// - Parameter item: The merchant/card library item.
+    /// - Returns: A Google favicon URL sized for the tile, or `nil`.
+    static func url(for item: LibraryItem) -> URL? {
+        guard let domain = domain(for: item) else { return nil }
+        return URL(string: "https://www.google.com/s2/favicons?domain=\(domain)&sz=128")
+    }
+
+    /// Resolves a domain for the item: its explicit `domain`, else a name match in `knownDomains`.
+    private static func domain(for item: LibraryItem) -> String? {
+        if let explicit = item.domain, !explicit.isEmpty { return explicit }
+        return knownDomains[item.name.lowercased()]
+    }
+
+    /// Maps known merchant names (lowercased, as listed in `MerchantLibrary`) to their domain so the
+    /// favicon service returns the brand's logo. Extend this freely to add more logos.
+    private static let knownDomains: [String: String] = [
+        // Tech & online
+        "apple": "apple.com", "amazon": "amazon.com", "ebay": "ebay.com", "etsy": "etsy.com",
+        "aliexpress": "aliexpress.com", "temu": "temu.com", "wayfair": "wayfair.com",
+        "google": "google.com", "microsoft": "microsoft.com", "adobe": "adobe.com",
+        "notion": "notion.so", "slack": "slack.com", "zoom": "zoom.us",
+        "icloud": "icloud.com", "claude": "claude.ai", "linkedin": "linkedin.com",
+        // Coffee
+        "starbucks": "starbucks.com", "dunkin'": "dunkindonuts.com", "peet's coffee": "peets.com",
+        "philz coffee": "philzcoffee.com", "blue bottle": "bluebottlecoffee.com",
+        "dutch bros": "dutchbros.com",
+        // Groceries
+        "whole foods": "wholefoodsmarket.com", "trader joe's": "traderjoes.com",
+        "safeway": "safeway.com", "kroger": "kroger.com", "costco": "costco.com",
+        "aldi": "aldi.us", "publix": "publix.com", "sprouts": "sprouts.com",
+        "instacart": "instacart.com",
+        // Retail
+        "target": "target.com", "walmart": "walmart.com", "best buy": "bestbuy.com",
+        "home depot": "homedepot.com", "lowe's": "lowes.com", "ikea": "ikea.com",
+        "macy's": "macys.com", "nordstrom": "nordstrom.com", "sephora": "sephora.com",
+        "ulta": "ulta.com",
+        // Apparel
+        "nike": "nike.com", "adidas": "adidas.com", "lululemon": "lululemon.com",
+        "h&m": "hm.com", "zara": "zara.com", "uniqlo": "uniqlo.com", "gap": "gap.com",
+        "shein": "shein.com",
+        // Dining
+        "chipotle": "chipotle.com", "mcdonald's": "mcdonalds.com", "subway": "subway.com",
+        "taco bell": "tacobell.com", "burger king": "bk.com", "wendy's": "wendys.com",
+        "chick-fil-a": "chick-fil-a.com", "domino's": "dominos.com", "panera": "panerabread.com",
+        "sweetgreen": "sweetgreen.com", "in-n-out": "in-n-out.com", "five guys": "fiveguys.com",
+        "shake shack": "shakeshack.com",
+        // Delivery
+        "doordash": "doordash.com", "uber eats": "ubereats.com", "grubhub": "grubhub.com",
+        "snackpass": "snackpass.co",
+        // Transport & gas
+        "uber": "uber.com", "lyft": "lyft.com", "shell": "shell.com", "chevron": "chevron.com",
+        "exxon": "exxon.com", "bp": "bp.com", "arco": "arco.com",
+        // Entertainment
+        "netflix": "netflix.com", "spotify": "spotify.com", "hulu": "hulu.com",
+        "disney+": "disneyplus.com", "max": "max.com", "youtube": "youtube.com",
+        "apple music": "apple.com", "audible": "audible.com", "steam": "steampowered.com",
+        "playstation": "playstation.com", "xbox": "xbox.com", "nintendo": "nintendo.com",
+        "amc theatres": "amctheatres.com", "ticketmaster": "ticketmaster.com",
+        // Health & fitness
+        "cvs": "cvs.com", "walgreens": "walgreens.com", "rite aid": "riteaid.com",
+        "planet fitness": "planetfitness.com", "equinox": "equinox.com", "peloton": "onepeloton.com",
+        // Travel
+        "airbnb": "airbnb.com", "marriott": "marriott.com", "hilton": "hilton.com",
+        "united": "united.com", "delta": "delta.com", "american airlines": "aa.com",
+        "southwest": "southwest.com", "alaska airlines": "alaskaair.com",
+        // Telecom & utilities
+        "at&t": "att.com", "verizon": "verizon.com", "t-mobile": "t-mobile.com",
+        "xfinity": "xfinity.com", "pg&e": "pge.com",
+        // Money
+        "paypal": "paypal.com", "venmo": "venmo.com", "cash app": "cash.app",
+        "robinhood": "robinhood.com", "coinbase": "coinbase.com"
+    ]
 }

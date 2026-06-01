@@ -41,6 +41,9 @@ enum MerchantLibrary {
         LibraryItem(name: "Notion", systemImage: "doc.fill", color: .black),
         LibraryItem(name: "Slack", systemImage: "number", color: .purple),
         LibraryItem(name: "Zoom", systemImage: "video.fill", color: .blue),
+        LibraryItem(name: "iCloud", systemImage: "icloud.fill", color: .blue),
+        LibraryItem(name: "Claude", systemImage: "sparkles", color: .orange),
+        LibraryItem(name: "LinkedIn", systemImage: "briefcase.fill", color: .blue),
         // Coffee
         LibraryItem(name: "Starbucks", systemImage: "cup.and.saucer.fill", color: .green),
         LibraryItem(name: "Dunkin'", systemImage: "cup.and.saucer.fill", color: .orange),
@@ -96,6 +99,7 @@ enum MerchantLibrary {
         LibraryItem(name: "DoorDash", systemImage: "bag.fill", color: .red),
         LibraryItem(name: "Uber Eats", systemImage: "bag.fill", color: .green),
         LibraryItem(name: "Grubhub", systemImage: "bag.fill", color: .red),
+        LibraryItem(name: "Snackpass", systemImage: "fork.knife", color: .yellow),
         // Transport & gas
         LibraryItem(name: "Uber", systemImage: "car.fill", color: .black),
         LibraryItem(name: "Lyft", systemImage: "car.fill", color: .pink),
