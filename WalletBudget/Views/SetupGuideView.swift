@@ -48,11 +48,15 @@ struct SetupGuideView: View {
                         ManageCategoriesView()
                     } label: {
                         HStack(spacing: 12) {
+                            // The Wallet asset has ~10% transparent padding, so its visible icon is
+                            // ~23pt inside a 29pt slot. Match that: a 23pt tile centered in a 29pt
+                            // column so both rows' icons read as the same size and stay aligned.
                             Image(systemName: "tag.fill")
-                                .font(.system(size: 15, weight: .semibold))
+                                .font(.system(size: 12, weight: .semibold))
                                 .foregroundStyle(.white)
+                                .frame(width: 23, height: 23)
+                                .background(RoundedRectangle(cornerRadius: 5, style: .continuous).fill(.purple))
                                 .frame(width: 29, height: 29)
-                                .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(.purple))
                             Text("Categories").foregroundStyle(.primary)
                         }
                     }

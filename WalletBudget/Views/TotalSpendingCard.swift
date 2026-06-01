@@ -92,35 +92,37 @@ struct TotalSpendingCard: View {
     private func budgetSentence(remaining: Double, periodNoun: String, daysRemaining: Int) -> Text {
         // Tail framing per span: "today" reads naturally for a day; a year shows a per-month pace
         // (a big yearly remainder with "days left" isn't actionable); week/month use days-left.
+        // Sentence text is primary (black) to match the comparison line; only the dollar amount is
+        // colored (green under / red over) and bolded.
         let tail: Text = {
             switch periodNoun {
             case "day":
-                return Text(" today.").foregroundStyle(.secondary)
+                return Text(" today.").foregroundStyle(.primary)
             case "year":
                 if remaining > 0 {
                     let monthsLeft = max(1, Int((Double(daysRemaining) / 30.4).rounded()))
                     let perMonth = remaining / Double(monthsLeft)
-                    return Text(" this year, about \(perMonth.asCurrency()) a month.").foregroundStyle(.secondary)
+                    return Text(" this year, about \(perMonth.asCurrency()) a month.").foregroundStyle(.primary)
                 }
-                return Text(" this year.").foregroundStyle(.secondary)
+                return Text(" this year.").foregroundStyle(.primary)
             default:
                 let dayWord = daysRemaining == 1 ? "day" : "days"
-                return Text(" with \(daysRemaining) \(dayWord) left this \(periodNoun).").foregroundStyle(.secondary)
+                return Text(" with \(daysRemaining) \(dayWord) left this \(periodNoun).").foregroundStyle(.primary)
             }
         }()
         if remaining >= 0.005 {
-            return Text("You have ").foregroundStyle(.secondary)
-                + Text(remaining.asCurrency()).foregroundStyle(.green)
-                + Text(" left to spend").foregroundStyle(.secondary)
+            return Text("You have ").foregroundStyle(.primary)
+                + Text(remaining.asCurrency()).foregroundStyle(.green).fontWeight(.semibold)
+                + Text(" left to spend").foregroundStyle(.primary)
                 + tail
         } else if remaining <= -0.005 {
-            return Text("You're ").foregroundStyle(.secondary)
-                + Text(abs(remaining).asCurrency()).foregroundStyle(.red)
-                + Text(" over budget").foregroundStyle(.secondary)
+            return Text("You're ").foregroundStyle(.primary)
+                + Text(abs(remaining).asCurrency()).foregroundStyle(.red).fontWeight(.semibold)
+                + Text(" over budget").foregroundStyle(.primary)
                 + tail
         } else {
             // Spent right at the budget (within a cent).
-            return Text("You've hit your budget").foregroundStyle(.secondary) + tail
+            return Text("You've hit your budget").foregroundStyle(.primary) + tail
         }
     }
 
