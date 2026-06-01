@@ -48,10 +48,11 @@ struct SetupGuideView: View {
                         ManageCategoriesView()
                     } label: {
                         HStack(spacing: 12) {
-                            Image(systemName: "tag")
-                                .font(.system(size: 22))
-                                .foregroundStyle(.purple)
+                            Image(systemName: "tag.fill")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(.white)
                                 .frame(width: 29, height: 29)
+                                .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(.purple))
                             Text("Categories").foregroundStyle(.primary)
                         }
                     }

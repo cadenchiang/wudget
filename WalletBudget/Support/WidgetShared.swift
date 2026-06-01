@@ -24,6 +24,12 @@ struct WidgetSnapshot: Codable {
     var hasBudget: Bool { monthBudget > 0 }
     var isOverBudget: Bool { hasBudget && monthSpent > monthBudget }
 
+    /// Percent of the month's budget spent so far (0 when no budget). Can exceed 100 when over.
+    var percentUsed: Int {
+        guard hasBudget else { return 0 }
+        return Int((monthSpent / monthBudget * 100).rounded())
+    }
+
     /// Formats an amount in the snapshot's currency (whole dollars for compactness).
     func money(_ value: Double) -> String {
         value.formatted(.currency(code: currencyCode).precision(.fractionLength(0)))
