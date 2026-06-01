@@ -10,7 +10,7 @@ import SwiftData
 /// so users can map them one-to-one. (Currency is accepted for parity but not yet stored; the
 /// app uses the device's currency.)
 struct WalletImportIntent: AppIntent {
-    static var title: LocalizedStringResource = "Wallet Import"
+    static var title: LocalizedStringResource = "Automatically Log Card Payment"
     static var description = IntentDescription(
         "Imports an Apple Wallet transaction into Wudget. Map the Wallet automation's Amount, Merchant, and Card onto these fields."
     )

@@ -12,7 +12,7 @@ struct WalletBudgetShortcuts: AppShortcutsProvider {
                 "Import a transaction into \(.applicationName)",
                 "Wallet import in \(.applicationName)"
             ],
-            shortTitle: "Wallet Import",
+            shortTitle: "Automatically Log Card Payment",
             systemImageName: "creditcard"
         )
     }
