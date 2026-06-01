@@ -104,7 +104,7 @@ struct AddTransactionSheet: View {
                 LibraryPickerView(title: "Merchant", items: MerchantLibrary.items, fallbackIcon: "tag.fill") { merchant = $0 }
             }
             .sheet(isPresented: $showingCardPicker) {
-                LibraryPickerView(title: "Card", items: CardLibrary.items, fallbackIcon: "creditcard.fill") { card = $0 }
+                LibraryPickerView(title: "Card", items: CardLibrary.items, fallbackIcon: "creditcard.fill", style: .list) { card = $0 }
             }
         }
         .presentationDragIndicator(.visible)

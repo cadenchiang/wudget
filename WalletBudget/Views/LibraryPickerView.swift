@@ -1,7 +1,15 @@
 import SwiftUI
 import UIKit
 
-/// A searchable grid for picking a merchant or card, with a Recent section and the ability to
+/// How a `LibraryPickerView` lays out its entries.
+enum LibraryPickerStyle {
+    /// Squircle logo tiles in an adaptive grid (used for merchants).
+    case grid
+    /// Contact-style rows (logo + name) in a list (used for cards).
+    case list
+}
+
+/// A searchable picker for choosing a merchant or card, with a Recent section and the ability to
 /// add custom entries.
 ///
 /// Built-in items and any user-added custom entries are shown as icon tiles. Recently picked
@@ -15,6 +23,8 @@ struct LibraryPickerView: View {
     let builtinItems: [LibraryItem]
     /// Icon used for custom (user-added) entries.
     let fallbackIcon: String
+    /// Whether entries render as grid tiles (merchants) or list rows (cards).
+    let style: LibraryPickerStyle
     /// Called with the chosen (or custom) name.
     let onSelect: (String) -> Void
 
@@ -23,10 +33,11 @@ struct LibraryPickerView: View {
     @AppStorage private var recentsRaw: String
     @AppStorage private var customRaw: String
 
-    init(title: String, items: [LibraryItem], fallbackIcon: String, onSelect: @escaping (String) -> Void) {
+    init(title: String, items: [LibraryItem], fallbackIcon: String, style: LibraryPickerStyle = .grid, onSelect: @escaping (String) -> Void) {
         self.title = title
         self.builtinItems = items
         self.fallbackIcon = fallbackIcon
+        self.style = style
         self.onSelect = onSelect
         _recentsRaw = AppStorage(wrappedValue: "", "library.recents.\(title)")
         _customRaw = AppStorage(wrappedValue: "", "library.custom.\(title)")
@@ -128,7 +139,7 @@ struct LibraryPickerView: View {
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 } else {
-                    grid(recentItems)
+                    content(recentItems)
                 }
             }
             .padding(16)
@@ -137,14 +148,23 @@ struct LibraryPickerView: View {
         }
     }
 
-    /// A titled grid of icon tiles inside a squircle card.
+    /// A titled section of entries (grid tiles or list rows) inside a squircle card.
     private func section(header: String, entries: [LibraryItem]) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(header).font(.headline)
-            grid(entries)
-                .padding(16)
+            content(entries)
+                .padding(style == .list ? 8 : 16)
                 .frame(maxWidth: .infinity)
                 .background(cardBackground)
+        }
+    }
+
+    /// Entries laid out per `style`: grid tiles (merchants) or list rows (cards).
+    @ViewBuilder
+    private func content(_ entries: [LibraryItem]) -> some View {
+        switch style {
+        case .grid: grid(entries)
+        case .list: list(entries)
         }
     }
 
@@ -156,6 +176,35 @@ struct LibraryPickerView: View {
                     .tint(.primary)
             }
         }
+    }
+
+    /// A contact-style list of rows, separated by hairline dividers inset past the logo.
+    private func list(_ entries: [LibraryItem]) -> some View {
+        VStack(spacing: 0) {
+            ForEach(Array(entries.enumerated()), id: \.element.id) { index, entry in
+                Button { select(entry.name) } label: { listRow(entry) }
+                    .tint(.primary)
+                if index < entries.count - 1 {
+                    Divider().padding(.leading, 50)
+                }
+            }
+        }
+    }
+
+    /// One list row: a small logo and the card name, like a contacts entry.
+    private func listRow(_ item: LibraryItem) -> some View {
+        HStack(spacing: 12) {
+            logo(for: item)
+                .frame(width: 38, height: 38)
+                .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+            Text(item.name)
+                .font(.body)
+                .foregroundStyle(.primary)
+            Spacer(minLength: 0)
+        }
+        .padding(.vertical, 8)
+        .padding(.horizontal, 8)
+        .contentShape(Rectangle())
     }
 
     /// Squircle card background for sections.

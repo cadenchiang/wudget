@@ -41,11 +41,13 @@
 		69C159DFED3A1D7BBA06ABF2 /* WalletBudgetShortcuts.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5B80A01155AD07584BE32DD /* WalletBudgetShortcuts.swift */; };
 		74BB5C56F1534A9C12EE589F /* TermsOfServiceView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 13F8E7F69117406FD8616313 /* TermsOfServiceView.swift */; };
 		759682447208897EFBFEFA3A /* AppTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 970CFC25D76DD55DB5773DD2 /* AppTheme.swift */; };
+		7C2BBC1E20190B798FF45FC9 /* CardMatcherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 818D19FA56D5DC673FA3F983 /* CardMatcherTests.swift */; };
 		8635718579EF8A5841DC8189 /* OnboardingFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B123482C74A4635403DDDD0C /* OnboardingFlow.swift */; };
 		8CB2B7FFB5619BC0508D30A8 /* OnboardingComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FA78760B2C7B04E4ED8CECD /* OnboardingComponents.swift */; };
 		8D8F1E5B56237E314041F52E /* CurrencyFormatting.swift in Sources */ = {isa = PBXBuildFile; fileRef = B132FD63D002121492B3FF69 /* CurrencyFormatting.swift */; };
 		908B03CA285C6BD919AD4DF0 /* OnboardingStep.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25B7C7BAD63F87E2A94830D7 /* OnboardingStep.swift */; };
 		968EB200DBEA0A0760332196 /* RecurringPaymentsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C3125566C5DA9010F2F5E38 /* RecurringPaymentsView.swift */; };
+		96C2FC2518C3C93F36DB9206 /* CardMatcher.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2119F6D88ACE9250D8393611 /* CardMatcher.swift */; };
 		96F74E147AA5C30A8F423DC7 /* CategoryCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7767CD45EFCC1CD4B9B354C5 /* CategoryCatalog.swift */; };
 		976B13AF2A589ECCAF9938F0 /* PeriodBucketizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = D09C3A39185D661975162F8E /* PeriodBucketizer.swift */; };
 		9DF0744CE0F3031603CE52B9 /* CurrencyParser.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB2B9B80AFEC249446DD3E4E /* CurrencyParser.swift */; };
@@ -125,6 +127,7 @@
 		18A498A728ED6E7A0A538C5A /* WelcomeLandingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeLandingView.swift; sourceTree = "<group>"; };
 		198999A8BE10CD5ED26A9E6B /* WalletBudgetTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = WalletBudgetTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		1DAEF2B5A1BDA490806C3C71 /* LocationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationProvider.swift; sourceTree = "<group>"; };
+		2119F6D88ACE9250D8393611 /* CardMatcher.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardMatcher.swift; sourceTree = "<group>"; };
 		22A930C47D514E788DCCD805 /* TotalSpendingCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TotalSpendingCard.swift; sourceTree = "<group>"; };
 		25B7C7BAD63F87E2A94830D7 /* OnboardingStep.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingStep.swift; sourceTree = "<group>"; };
 		27ED81C3A0A93C92EF16C0B4 /* SpendingSummaryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpendingSummaryTests.swift; sourceTree = "<group>"; };
@@ -152,6 +155,7 @@
 		7767CD45EFCC1CD4B9B354C5 /* CategoryCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CategoryCatalog.swift; sourceTree = "<group>"; };
 		7829AEE20FE7C85C23D72C20 /* Expense.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Expense.swift; sourceTree = "<group>"; };
 		7BBB66E39B758275D89BC4C6 /* TimeSpanTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeSpanTests.swift; sourceTree = "<group>"; };
+		818D19FA56D5DC673FA3F983 /* CardMatcherTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardMatcherTests.swift; sourceTree = "<group>"; };
 		8260296CE232E54B04D2E451 /* MerchantLogoTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MerchantLogoTile.swift; sourceTree = "<group>"; };
 		83F6022920D4C45574AAACD1 /* RecurrenceFrequency.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecurrenceFrequency.swift; sourceTree = "<group>"; };
 		87204F03B517ACA62A39335E /* LegalDocumentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegalDocumentView.swift; sourceTree = "<group>"; };
@@ -291,6 +295,7 @@
 			isa = PBXGroup;
 			children = (
 				6598F94957F50DE6C1A046DF /* AccountStore.swift */,
+				2119F6D88ACE9250D8393611 /* CardMatcher.swift */,
 				7767CD45EFCC1CD4B9B354C5 /* CategoryCatalog.swift */,
 				574742DB97BE751393D00A94 /* CategoryRegistry.swift */,
 				C25E886AAAF70B1A678B5C73 /* CategorySeeder.swift */,
@@ -318,6 +323,7 @@
 		F7BA56C5BBE95581B374186E /* WalletBudgetTests */ = {
 			isa = PBXGroup;
 			children = (
+				818D19FA56D5DC673FA3F983 /* CardMatcherTests.swift */,
 				E6645A6FE9B8BD276FF68496 /* CurrencyParserTests.swift */,
 				DE85A6AB04548DF2556A07C4 /* ExpenseCategorizerTests.swift */,
 				E643F06B34A969A48FC40272 /* RecurrenceFrequencyTests.swift */,
@@ -467,6 +473,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7C2BBC1E20190B798FF45FC9 /* CardMatcherTests.swift in Sources */,
 				D42B9E8D64BD20B38C34958D /* CurrencyParserTests.swift in Sources */,
 				A0EED0D6A5E570BAE2348BA0 /* ExpenseCategorizerTests.swift in Sources */,
 				00FF23B68E6F7F4272230738 /* RecurrenceFrequencyTests.swift in Sources */,
@@ -489,6 +496,7 @@
 				759682447208897EFBFEFA3A /* AppTheme.swift in Sources */,
 				E451E5CC8A5D41F71B8B522F /* AuthSheet.swift in Sources */,
 				EF55EA78470B6286D277D42F /* BudgetEditorView.swift in Sources */,
+				96C2FC2518C3C93F36DB9206 /* CardMatcher.swift in Sources */,
 				96F74E147AA5C30A8F423DC7 /* CategoryCatalog.swift in Sources */,
 				DF673D1CED3DC1D7D87BD2EC /* CategoryEditorView.swift in Sources */,
 				626DC1446BDC3A625F027FBC /* CategoryRegistry.swift in Sources */,

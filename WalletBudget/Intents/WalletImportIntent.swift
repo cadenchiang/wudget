@@ -65,7 +65,11 @@ struct WalletImportIntent: AppIntent {
             return .result(value: "Already recorded \(cleanMerchant)")
         }
 
-        let expense = Expense(amount: value, merchant: cleanMerchant, card: card)
+        // Link the raw Wallet card string to a known card in our library when we can, so the
+        // transaction shows the right card (and its icon). Falls back to the raw string.
+        let matchedCard = CardMatcher.match(card)
+
+        let expense = Expense(amount: value, merchant: cleanMerchant, card: matchedCard)
         expense.viaWalletImport = true
 
         // Best-effort: tag the purchase with the device's current location (no-op if unauthorized).
@@ -90,7 +94,7 @@ struct WalletImportIntent: AppIntent {
         UserDefaults.standard.set(true, forKey: WalletImportIntent.receivedKey)
 
         // Fire a large-purchase alert if this single charge meets the user's threshold.
-        NotificationManager.shared.notifyLargePurchase(amount: value, merchant: cleanMerchant, card: card)
+        NotificationManager.shared.notifyLargePurchase(amount: value, merchant: cleanMerchant, card: matchedCard)
 
         // Keep the home-screen widget in sync with the new transaction.
         WidgetUpdater.refresh(context: context)
