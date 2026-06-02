@@ -59,7 +59,7 @@ enum CategoryCatalog {
                 keywords: ["at&t", "verizon", "comcast", "pg&e", "electric", "water", "insurance"]),
         Default(name: "Health", colorName: "red", icon: "cross.case.fill",
                 keywords: ["pharmacy", "cvs", "walgreens", "clinic", "hospital", "dental", "fitness", "gym"]),
-        Default(name: "Rent", colorName: "mint", icon: "house.fill",
+        Default(name: "Rent", colorName: "gray", icon: "house.fill",
                 keywords: ["rent", "landlord", "lease", "mortgage", "apartment", "property"]),
         Default(name: "Subscription", colorName: "purple", icon: "repeat",
                 keywords: ["subscription", "membership", "icloud"]),

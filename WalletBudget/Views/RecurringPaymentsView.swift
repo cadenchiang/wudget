@@ -33,7 +33,7 @@ struct RecurringPaymentsView: View {
                         }
                         .onDelete(perform: delete)
                     } footer: {
-                        Text("Swipe a payment right to ignore it, ignored fixed costs (rent, bills) are left out of Variable Spending.")
+                        Text("Swipe a payment right to ignore it, ignored fixed costs (rent, bills) are left out of Everyday Spending.")
                     }
                 }
             }

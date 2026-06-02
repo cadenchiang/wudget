@@ -9,7 +9,7 @@ struct SetupGuideView: View {
     @AppStorage(AppLock.enabledKey) private var lockEnabled = false
     @AppStorage(AppTheme.storageKey) private var theme: AppTheme = .system
     @AppStorage("budget.monthly") private var monthlyBudget = 0.0
-    @AppStorage("budget.showLine") private var showBudgetLine = true
+    @AppStorage("budget.enabled") private var budgetEnabled = true
 
     var body: some View {
         NavigationStack {
@@ -75,7 +75,7 @@ struct SetupGuideView: View {
                                 .foregroundStyle(.secondary)
                         }
                     }
-                    Toggle("Show Budget Line", isOn: $showBudgetLine)
+                    Toggle("Use a Budget", isOn: $budgetEnabled)
                 } header: {
                     Text("Budget").textCase(nil)
                 }

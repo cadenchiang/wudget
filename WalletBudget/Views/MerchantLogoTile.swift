@@ -29,11 +29,19 @@ struct MerchantLogoTile: View {
     var body: some View {
         Group {
             if let asset = item.assetName, UIImage(named: asset) != nil {
-                imageTile { Image(asset).resizable().scaledToFit() }
-            } else if let url = LogoProvider.url(for: item) {
-                AsyncImage(url: url) { phase in
+                imageTile { Image(asset).resizable().scaledToFill() }
+            } else if let primary = LogoProvider.logoURL(for: item) {
+                AsyncImage(url: primary) { phase in
                     if case .success(let image) = phase {
-                        imageTile { image.resizable().scaledToFit() }
+                        imageTile { image.resizable().scaledToFill() }
+                    } else if let fallback = LogoProvider.fallbackURL(for: item) {
+                        AsyncImage(url: fallback) { fallbackPhase in
+                            if case .success(let image) = fallbackPhase {
+                                imageTile { image.resizable().scaledToFill() }
+                            } else {
+                                symbolTile
+                            }
+                        }
                     } else {
                         symbolTile
                     }
@@ -46,15 +54,21 @@ struct MerchantLogoTile: View {
         .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
     }
 
-    /// A white tile hosting a fetched/bundled logo image, padded proportionally to the tile size.
+    /// A tile hosting a logo image that fills the whole squircle (no inset). The white backing only
+    /// shows through any transparent edges of the artwork. Both layers are pinned to the tile size
+    /// so they cover the full squircle edge-to-edge (no uncovered corners).
     private func imageTile<Content: View>(@ViewBuilder _ image: () -> Content) -> some View {
         ZStack {
-            Color(.secondarySystemBackground)
-            image().padding(size * 0.18)
+            Color.white
+            image()
+                .frame(width: size, height: size)
+                .clipped()
         }
+        .frame(width: size, height: size)
     }
 
-    /// The colored SF Symbol fallback tile, sized proportionally to the tile.
+    /// The colored SF Symbol fallback tile, sized proportionally to the tile. The gradient fill is
+    /// pinned to the tile size so it covers the entire squircle.
     private var symbolTile: some View {
         ZStack {
             Rectangle().fill(item.color.gradient)
@@ -62,6 +76,7 @@ struct MerchantLogoTile: View {
                 .font(.system(size: size * 0.41, weight: .semibold))
                 .foregroundStyle(.white)
         }
+        .frame(width: size, height: size)
     }
 }
 

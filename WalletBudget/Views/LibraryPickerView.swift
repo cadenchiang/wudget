@@ -233,11 +233,19 @@ struct LibraryPickerView: View {
     @ViewBuilder
     private func logo(for item: LibraryItem) -> some View {
         if let asset = item.assetName, UIImage(named: asset) != nil {
-            imageTile { Image(asset).resizable().scaledToFit() }
-        } else if let url = LogoProvider.url(for: item) {
-            AsyncImage(url: url) { phase in
+            imageTile { Image(asset).resizable().scaledToFill() }
+        } else if let primary = LogoProvider.logoURL(for: item) {
+            AsyncImage(url: primary) { phase in
                 if case .success(let image) = phase {
-                    imageTile { image.resizable().scaledToFit() }
+                    imageTile { image.resizable().scaledToFill() }
+                } else if let fallback = LogoProvider.fallbackURL(for: item) {
+                    AsyncImage(url: fallback) { fallbackPhase in
+                        if case .success(let image) = fallbackPhase {
+                            imageTile { image.resizable().scaledToFill() }
+                        } else {
+                            symbolTile(item)
+                        }
+                    }
                 } else {
                     symbolTile(item)
                 }
@@ -247,11 +255,11 @@ struct LibraryPickerView: View {
         }
     }
 
-    /// A white tile hosting a fetched/bundled logo image.
+    /// A white tile hosting a fetched/bundled logo image that fills the squircle edge-to-edge.
     private func imageTile<Content: View>(@ViewBuilder _ image: () -> Content) -> some View {
         ZStack {
-            Color(.secondarySystemBackground)
-            image().padding(10)
+            Color.white
+            image()
         }
     }
 

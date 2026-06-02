@@ -23,7 +23,7 @@ private enum SpendingTab: String, CaseIterable, Identifiable {
 struct SpendingView: View {
     @Query(sort: \Expense.date, order: .reverse) private var expenses: [Expense]
     @AppStorage("budget.monthly") private var monthlyBudget = 0.0
-    @AppStorage("budget.showLine") private var showBudgetLine = true
+    @AppStorage("budget.enabled") private var budgetEnabled = true
     @AppStorage(ProfileKeys.variableDefault) private var variableDefault = false
     @State private var span: TimeSpan = .month
     @State private var tab: SpendingTab = .recent
@@ -51,15 +51,29 @@ struct SpendingView: View {
         spendingMode == .variable ? previousExpenses.filter { !$0.excludedFromBudget } : previousExpenses
     }
 
+    /// Previous-period expenses truncated to the same elapsed point we've reached in the current
+    /// period, so the comparison reads "last period *at this time*" (e.g. last month's first week)
+    /// rather than last period's full total. Falls back to the whole previous period if intervals
+    /// can't be computed.
+    private var comparablePrevious: [Expense] {
+        guard let current = span.interval(), let previous = span.previousInterval() else {
+            return displayedPrevious
+        }
+        let elapsed = min(max(0, Date().timeIntervalSince(current.start)), current.duration)
+        let cutoff = previous.start.addingTimeInterval(elapsed)
+        return displayedPrevious.filter { $0.date <= cutoff }
+    }
+
     /// The grouping used when not in the Recent tab.
     private var grouping: SpendingGrouping {
         tab == .category ? .category : .merchant
     }
 
     /// Grouped rows for the current grouping (empty in the Recent tab).
+    /// Uses the mode-aware set so ignored items drop out of the breakdown in Variable mode.
     private var groups: [GroupTotal] {
         guard tab != .recent else { return [] }
-        return SpendingSummary.groups(current: currentExpenses, previous: previousExpenses, by: grouping)
+        return SpendingSummary.groups(current: displayedCurrent, previous: displayedPrevious, by: grouping)
     }
 
     /// Time buckets for the chart x-axis (days for week, day-ranges for month, months for year).
@@ -92,9 +106,11 @@ struct SpendingView: View {
         return SpendingProjection(amount: projected, periodNoun: periodNoun, isWithinBudget: within, remaining: remaining, daysRemaining: daysRemaining)
     }
 
-    /// Total budget for the current span, scaled from the monthly budget (nil when unset).
+    /// Total budget for the current span, scaled from the monthly budget.
+    /// `nil` when the user has turned the budget off or hasn't set one, which removes the
+    /// budget line, the over/under coloring, and the remaining-to-spend sentence everywhere.
     private var periodBudget: Double? {
-        guard monthlyBudget > 0 else { return nil }
+        guard budgetEnabled, monthlyBudget > 0 else { return nil }
         switch span {
         case .today: return monthlyBudget / 30.4
         case .week: return monthlyBudget * 7.0 / 30.4
@@ -202,11 +218,11 @@ struct SpendingView: View {
             VStack(alignment: .leading, spacing: 16) {
                 TotalSpendingCard(
                     total: SpendingSummary.total(displayedCurrent),
-                    previousTotal: SpendingSummary.total(displayedPrevious),
+                    previousTotal: SpendingSummary.total(comparablePrevious),
                     segments: SpendingSummary.categorySegments(displayedCurrent, buckets: periodBuckets),
                     bucketLabels: periodBuckets.map(\.label),
                     projection: projection,
-                    budgetPerBucket: showBudgetLine ? budgetPerBucket : nil,
+                    budgetPerBucket: budgetPerBucket,
                     mode: $spendingMode
                 )
 
@@ -256,9 +272,10 @@ struct SpendingView: View {
     }
 
     /// Flat, date-ordered list of the period's transactions (the Recent tab).
+    /// Honors the spending mode so ignored items don't appear in Variable mode.
     private var recentCard: some View {
-        rowsCard(currentExpenses.isEmpty) {
-            ForEach(Array(currentExpenses.enumerated()), id: \.element.id) { index, expense in
+        rowsCard(displayedCurrent.isEmpty) {
+            ForEach(Array(displayedCurrent.enumerated()), id: \.element.id) { index, expense in
                 NavigationLink {
                     TransactionDetailView(expense: expense)
                 } label: {
@@ -267,7 +284,7 @@ struct SpendingView: View {
                 .buttonStyle(.plain)
                 .padding(.horizontal, 16)
 
-                if index < currentExpenses.count - 1 {
+                if index < displayedCurrent.count - 1 {
                     Divider().padding(.leading, 70)
                 }
             }
@@ -315,9 +332,9 @@ struct SpendingView: View {
             .fill(Color(.secondarySystemGroupedBackground))
     }
 
-    /// The current-period expenses belonging to a group.
+    /// The current-period expenses belonging to a group (mode-aware: excludes ignored in Variable).
     private func expenses(for group: GroupTotal) -> [Expense] {
-        currentExpenses.filter { expense in
+        displayedCurrent.filter { expense in
             switch grouping {
             case .category: return expense.category == group.key
             case .merchant: return (expense.merchant.isEmpty ? "Unknown" : expense.merchant) == group.key

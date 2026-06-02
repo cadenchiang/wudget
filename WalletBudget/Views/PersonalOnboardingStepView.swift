@@ -158,7 +158,7 @@ struct PersonalOnboardingStepView: View {
     }
 
     private var variableOnlyStep: some View {
-        optionStep(title: "Budget only variable spending?", subtitle: "Variable spending excludes fixed costs like rent and wifi, so you focus on what you can change.") {
+        optionStep(title: "Budget only everyday spending?", subtitle: "Everyday spending excludes fixed costs like rent and wifi, so you focus on what you can change.") {
             OnboardingOptionRow(title: "Yes, ignore fixed costs", isSelected: profile.variableOnly == true) { profile.variableOnly = true }
             OnboardingOptionRow(title: "No, track everything", isSelected: profile.variableOnly == false) { profile.variableOnly = false }
         }

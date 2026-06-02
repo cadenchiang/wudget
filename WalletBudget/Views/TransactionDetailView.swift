@@ -37,6 +37,7 @@ struct TransactionDetailView: View {
                     TransactionMapCard(expense: expense)
                 }
                 notesCard
+                ignoreCard
                 reportCard
                 deleteButton
             }
@@ -60,6 +61,14 @@ struct TransactionDetailView: View {
         .onChange(of: expense.date) { _, _ in
             save(describing: "date")
         }
+        .onChange(of: expense.excludedFromBudget) { _, _ in
+            Haptics.selection()
+            save(describing: "ignore")
+        }
+        .onChange(of: expense.recurrenceRaw) { _, _ in
+            Haptics.selection()
+            save(describing: "recurrence")
+        }
         .alert("Edit Amount", isPresented: $editingAmount) {
             TextField("Amount", text: $amountDraft)
                 .keyboardType(.decimalPad)
@@ -69,7 +78,7 @@ struct TransactionDetailView: View {
             Text("Enter the transaction amount.")
         }
         .sheet(isPresented: $showingCardPicker) {
-            LibraryPickerView(title: "Card", items: CardLibrary.items, fallbackIcon: "creditcard.fill") { newCard in
+            LibraryPickerView(title: "Card", items: CardLibrary.items, fallbackIcon: "creditcard.fill", style: .list) { newCard in
                 expense.card = newCard
                 save(describing: "card")
             }
@@ -112,6 +121,8 @@ struct TransactionDetailView: View {
             cardRow
             Divider().padding(.leading, 16)
             categoryRow
+            Divider().padding(.leading, 16)
+            recurrenceRow
         }
         .background(
             RoundedRectangle(cornerRadius: 16, style: .continuous)
@@ -219,6 +230,33 @@ struct TransactionDetailView: View {
         .padding(16)
     }
 
+    /// "Repeats" row with a menu to set how often the transaction recurs (Never / Monthly / Yearly …).
+    /// Setting anything other than Never marks it recurring, so it shows up in the Repeat list.
+    private var recurrenceRow: some View {
+        HStack {
+            Text("Repeats")
+            Spacer()
+            Menu {
+                Picker("Repeats", selection: $expense.recurrence) {
+                    ForEach(RecurrenceFrequency.allCases) { freq in
+                        Text(freq.label).tag(freq)
+                    }
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "repeat")
+                        .foregroundStyle(expense.isRecurring ? .primary : .secondary)
+                    Text(expense.recurrence.label)
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .tint(.primary)
+        }
+        .padding(16)
+    }
+
     /// "Report an Issue" card: opens the Mail app pre-filled with this transaction's details.
     private var reportCard: some View {
         Button {
@@ -256,6 +294,27 @@ struct TransactionDetailView: View {
                 .foregroundStyle(.secondary)
             TextField("Add a note", text: $expense.notes, axis: .vertical)
                 .lineLimit(1...6)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color(.secondarySystemGroupedBackground))
+        )
+    }
+
+    /// Toggle to exclude this transaction from Everyday Spending (fixed costs like rent/bills).
+    /// Works for any transaction, recurring or not, so a one-off rent charge can be ignored too.
+    private var ignoreCard: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Toggle(isOn: $expense.excludedFromBudget) {
+                Text("Ignore in Everyday Spending")
+                    .foregroundStyle(.primary)
+            }
+            .tint(.primary)
+            Text("Fixed costs like rent and bills can be ignored so they don't count toward Everyday Spending.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)

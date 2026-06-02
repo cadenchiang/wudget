@@ -11,12 +11,21 @@ import Foundation
 /// longer strictly on-device. The lookup uses a fixed, public merchant list (not the user's data),
 /// and failed/blocked fetches degrade gracefully to the SF Symbol.
 enum LogoProvider {
-    /// A remote logo URL for the item, or `nil` when no domain is known (caller falls back).
+    /// High-quality primary logo (Clearbit's logo service, by domain), or `nil` when no domain is
+    /// known. Returns a large, mostly-square brand logo, much sharper than a favicon.
     /// - Parameter item: The merchant/card library item.
-    /// - Returns: A Google favicon URL sized for the tile, or `nil`.
-    static func url(for item: LibraryItem) -> URL? {
+    static func logoURL(for item: LibraryItem) -> URL? {
         guard let domain = domain(for: item) else { return nil }
-        return URL(string: "https://www.google.com/s2/favicons?domain=\(domain)&sz=128")
+        return URL(string: "https://logo.clearbit.com/\(domain)?size=256")
+    }
+
+    /// Higher-quality fallback icon, used only when the primary logo fails to load. icon.horse
+    /// returns the site's apple-touch-icon when present (typically 180–512px), which is far
+    /// sharper than a 16–64px favicon.
+    /// - Parameter item: The merchant/card library item.
+    static func fallbackURL(for item: LibraryItem) -> URL? {
+        guard let domain = domain(for: item) else { return nil }
+        return URL(string: "https://icon.horse/icon/\(domain)")
     }
 
     /// Resolves a domain for the item: its explicit `domain`, else a name match in `knownDomains`.

@@ -27,7 +27,7 @@ enum SpendingMode: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .total: return "Total Spending"
-        case .variable: return "Variable Spending"
+        case .variable: return "Everyday Spending"
         }
     }
 }
