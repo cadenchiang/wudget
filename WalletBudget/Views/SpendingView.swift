@@ -27,8 +27,8 @@ struct SpendingView: View {
     @AppStorage(ProfileKeys.variableDefault) private var variableDefault = false
     @State private var span: TimeSpan = .month
     @State private var tab: SpendingTab = .recent
-    @State private var spendingMode: SpendingMode = .total
-    @State private var appliedModeDefault = false
+    @AppStorage("spending.mode") private var spendingMode: SpendingMode = .total
+    @AppStorage("spending.modeSeeded") private var modeSeeded = false
     @State private var showingAdd = false
 
     /// Expenses within the selected period (already date-descending from the query).
@@ -147,10 +147,11 @@ struct SpendingView: View {
                 .onChange(of: span) { _, _ in Haptics.selection() }
                 .onChange(of: tab) { _, _ in Haptics.selection() }
                 .onAppear {
-                    // Apply the onboarding "variable spending" preference once.
-                    if !appliedModeDefault {
+                    // Seed the mode from the onboarding preference only once, ever. After that the
+                    // user's last choice is restored from @AppStorage on every launch.
+                    if !modeSeeded {
                         spendingMode = variableDefault ? .variable : .total
-                        appliedModeDefault = true
+                        modeSeeded = true
                     }
                 }
         }
