@@ -1,6 +1,6 @@
 {
   "fill" : {
-    "solid" : "display-p3:0.81675,0.83530,0.90137,1.00000"
+    "solid" : "display-p3:0.47920,0.73870,0.92145,1.00000"
   },
   "groups" : [
     {
@@ -10,7 +10,7 @@
           "image-name" : "5-front-pocket.svg",
           "name" : "5-front-pocket",
           "position" : {
-            "scale" : 1,
+            "scale" : 0.95,
             "translation-in-points" : [
               23.699415000076442,
               -2.9804968444236692
@@ -34,7 +34,7 @@
           "image-name" : "3-yellow-card.svg",
           "name" : "3-yellow-card",
           "position" : {
-            "scale" : 1,
+            "scale" : 0.95,
             "translation-in-points" : [
               23.699415000076442,
               -2.9804968444236692
@@ -45,7 +45,7 @@
           "image-name" : "4-blue-card.svg",
           "name" : "4-blue-card",
           "position" : {
-            "scale" : 1,
+            "scale" : 0.95,
             "translation-in-points" : [
               22.58065905050148,
               -19.888091153853793
@@ -70,7 +70,7 @@
           "name" : "lines",
           "opacity" : 0.23,
           "position" : {
-            "scale" : 1,
+            "scale" : 0.95,
             "translation-in-points" : [
               23.699415000076442,
               -25.469911504377706
@@ -78,10 +78,22 @@
           }
         },
         {
+          "blend-mode-specializations" : [
+            {
+              "appearance" : "dark",
+              "value" : "normal"
+            }
+          ],
+          "fill-specializations" : [
+            {
+              "appearance" : "dark",
+              "value" : "none"
+            }
+          ],
           "image-name" : "rec.svg",
           "name" : "rec",
           "position" : {
-            "scale" : 1,
+            "scale" : 0.95,
             "translation-in-points" : [
               22.23350216606093,
               -26.51828116445097
@@ -109,7 +121,7 @@
           "image-name" : "1-back-flap.svg",
           "name" : "1-back-flap",
           "position" : {
-            "scale" : 1,
+            "scale" : 0.95,
             "translation-in-points" : [
               23.699415000076442,
               -2.9804968444236692
