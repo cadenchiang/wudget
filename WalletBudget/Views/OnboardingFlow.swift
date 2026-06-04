@@ -156,6 +156,8 @@ private struct OnboardingStepView: View {
 
     private var standardStep: some View {
         VStack(alignment: .leading, spacing: 16) {
+            // Fixed-height header so the phone frame below sits at the same position on every
+            // step, regardless of how many lines the title wraps to or whether a button shows.
             VStack(alignment: .leading, spacing: 10) {
                 titleView
 
@@ -173,7 +175,8 @@ private struct OnboardingStepView: View {
                     .buttonStyle(.plain)
                 }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
+            .frame(minHeight: 100, alignment: .topLeading)
 
             artwork
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -218,9 +221,13 @@ private struct OnboardingStepView: View {
             }
             .foregroundStyle(.primary)
         } else {
+            // Capped at two lines (shrinking slightly if needed) so the header stays compact and
+            // the phone frame below sits at the same height on every step.
             titleText
                 .font(.title.bold())
                 .multilineTextAlignment(.leading)
+                .lineLimit(2)
+                .minimumScaleFactor(0.75)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -260,7 +267,7 @@ private struct OnboardingStepView: View {
                 .font(.system(size: 96, weight: .regular))
                 .foregroundStyle(.green)
         } else {
-            PhoneFrame(imageName: step.imageName)
+            PhoneFrame(imageName: step.imageName, tapPoint: step.tapPoint)
                 .frame(maxHeight: 470)
         }
     }
@@ -271,6 +278,8 @@ private struct OnboardingStepView: View {
 /// is added to the asset catalog.
 private struct PhoneFrame: View {
     let imageName: String
+    /// Normalized (0–1) screenshot location where a subtle pulsing ring marks the tap target.
+    var tapPoint: CGPoint? = nil
 
     var body: some View {
         ZStack {
@@ -278,6 +287,15 @@ private struct PhoneFrame: View {
                 .fill(.black)
             screen
                 .clipShape(RoundedRectangle(cornerRadius: 33, style: .continuous))
+                .overlay {
+                    if let tapPoint {
+                        GeometryReader { geo in
+                            TapIndicator()
+                                .position(x: tapPoint.x * geo.size.width,
+                                          y: tapPoint.y * geo.size.height)
+                        }
+                    }
+                }
                 .padding(5)
         }
         .overlay(alignment: .top) {
@@ -307,6 +325,25 @@ private struct PhoneFrame: View {
                     .foregroundStyle(.secondary)
             }
         }
+    }
+}
+
+/// A subtle pulsing ring overlaid on a screenshot to mark the control the user should tap.
+/// Gently breathes (scale + opacity) so it draws the eye without covering the UI underneath.
+private struct TapIndicator: View {
+    @State private var pulsing = false
+
+    var body: some View {
+        ZStack {
+            Circle().fill(Color.blue.opacity(0.15))
+            Circle().strokeBorder(Color.blue.opacity(0.8), lineWidth: 2)
+        }
+        .frame(width: 32, height: 32)
+        .scaleEffect(pulsing ? 1.2 : 0.85)
+        .opacity(pulsing ? 0.45 : 1)
+        .animation(.easeInOut(duration: 1.1).repeatForever(autoreverses: true), value: pulsing)
+        .onAppear { pulsing = true }
+        .allowsHitTesting(false)
     }
 }
 

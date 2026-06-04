@@ -30,6 +30,16 @@ final class OnboardingStepTests: XCTestCase {
         XCTAssertEqual(names.count, Set(names).count, "Duplicate imageName in walletSetup")
     }
 
+    /// Every `tapPoint` must be normalized (0–1) in both axes or the indicator lands off-screen.
+    func testTapPointsAreNormalized() {
+        for step in OnboardingStep.walletSetup {
+            if let point = step.tapPoint {
+                XCTAssertTrue((0.0...1.0).contains(point.x) && (0.0...1.0).contains(point.y),
+                              "tapPoint \(point) out of unit range for step \"\(step.title)\"")
+            }
+        }
+    }
+
     /// A `highlight`, when present, must be a substring of the title or it silently never renders.
     func testHighlightsAppearInTitles() {
         for step in OnboardingStep.walletSetup {
