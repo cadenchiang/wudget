@@ -13,9 +13,6 @@ struct AppLockGate<Content: View>: View {
     /// (onAppear + scene-phase both firing), which would cancel each other and leave the
     /// Unlock button looking dead.
     @State private var authenticating = false
-    /// True after a biometric attempt failed or was cancelled; reveals the Unlock/Log out
-    /// buttons. While the first prompt is in flight the lock screen is just the logo.
-    @State private var authFailed = false
     @State private var confirmLogout = false
     private let content: Content
 
@@ -37,10 +34,7 @@ struct AppLockGate<Content: View>: View {
                 // Re-lock on background, but not while a prompt is mid-flight (the biometric
                 // sheet can briefly drop the scene to inactive/background and would otherwise
                 // reset state under the running evaluation).
-                if lockEnabled && !authenticating {
-                    unlocked = false
-                    authFailed = false // next foreground starts with the clean logo-only state
-                }
+                if lockEnabled && !authenticating { unlocked = false }
             default:
                 break
             }
@@ -55,10 +49,7 @@ struct AppLockGate<Content: View>: View {
         authenticating = true
         AppLock.authenticate { success in
             authenticating = false
-            guard success else {
-                authFailed = true
-                return
-            }
+            guard success else { return }
             // Wait for the system Face ID checkmark HUD to finish its own dismissal before
             // cross-fading the lock screen away; starting both at once makes the unlock glitch.
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
@@ -67,47 +58,26 @@ struct AppLockGate<Content: View>: View {
         }
     }
 
-    /// Full-bleed brand-blue screen with just the logo. After a failed/cancelled prompt, a solid
-    /// white Unlock capsule (retries Face ID) and an outlined Log out button appear at the bottom.
+    /// The simple black-and-white lock screen: lock glyph, "Budget is locked", an Unlock button
+    /// that retries Face ID, and a quiet Log out escape hatch (with confirmation).
     private var lockScreen: some View {
         ZStack {
-            Color.brandBlue.ignoresSafeArea()
-
-            Image("lockScreenLogo")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 76, height: 76)
-                .clipShape(RoundedRectangle(cornerRadius: 17, style: .continuous))
-                .padding(.top, 150)
-                .frame(maxHeight: .infinity, alignment: .top)
-
-            if authFailed {
-                VStack(spacing: 12) {
-                    Button { authenticateIfNeeded() } label: {
-                        Text("Unlock")
-                            .font(.headline)
-                            .foregroundStyle(.black)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(Capsule().fill(.white))
-                    }
-                    Button { confirmLogout = true } label: {
-                        Text("Log out")
-                            .font(.headline)
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .overlay(Capsule().strokeBorder(.white.opacity(0.8), lineWidth: 1))
-                    }
-                }
-                .buttonStyle(.plain)
-                .padding(.horizontal, 24)
-                .padding(.bottom, 8)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-                .transition(.opacity)
+            Color(.systemBackground).ignoresSafeArea()
+            VStack(spacing: 18) {
+                Image(systemName: "lock.fill")
+                    .font(.system(size: 44))
+                    .foregroundStyle(.secondary)
+                Text("Budget is locked")
+                    .font(.headline)
+                Button("Unlock") { authenticateIfNeeded() }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                    .tint(.primary)
+                Button("Log out") { confirmLogout = true }
+                    .font(.subheadline.weight(.medium))
+                    .foregroundStyle(.secondary)
             }
         }
-        .animation(.easeInOut, value: authFailed)
         .alert("Log out of Budget?", isPresented: $confirmLogout) {
             Button("Log Out", role: .destructive) { account.signOut() }
             Button("Cancel", role: .cancel) {}

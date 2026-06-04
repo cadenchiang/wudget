@@ -10,6 +10,8 @@ import SwiftUI
 /// Rendered with `TimelineView(.animation)` + `Canvas`, so it animates continuously at the
 /// display's refresh rate with no third-party dependencies.
 struct BudgetHeroAnimation: View {
+    /// Line-art color: white on dark/brand backgrounds, `.primary` on black-and-white screens.
+    var tint: Color = .white
     /// Reference time for the entrance (draw-in) phase.
     @State private var start = Date()
 
@@ -64,7 +66,7 @@ struct BudgetHeroAnimation: View {
             var path = Path()
             path.move(to: inner)
             path.addLine(to: outer)
-            context.stroke(path, with: .color(.white.opacity(0.22 * entrance)),
+            context.stroke(path, with: .color(tint.opacity(0.22 * entrance)),
                            style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
         }
     }
@@ -76,7 +78,7 @@ struct BudgetHeroAnimation: View {
 
         let ring = Path(ellipseIn: CGRect(x: center.x - radius, y: center.y - radius,
                                           width: radius * 2, height: radius * 2))
-        context.stroke(ring, with: .color(.white.opacity(0.22 * entrance)), lineWidth: 1)
+        context.stroke(ring, with: .color(tint.opacity(0.22 * entrance)), lineWidth: 1)
 
         let startAngle = Angle.degrees(time * orbit.rotationSpeed)
         let sweep = (orbit.baseSweep + sin(time * orbit.breathSpeed) * orbit.breathDepth) * entrance
@@ -84,15 +86,15 @@ struct BudgetHeroAnimation: View {
         var arc = Path()
         arc.addArc(center: center, radius: radius, startAngle: startAngle, endAngle: endAngle,
                    clockwise: false)
-        context.stroke(arc, with: .color(.white.opacity(0.95)),
+        context.stroke(arc, with: .color(tint.opacity(0.95)),
                        style: StrokeStyle(lineWidth: 4.5, lineCap: .round))
 
         // Leading coin: a soft halo under a solid dot at the arc's head.
         let head = point(center, radius, endAngle.radians)
         let halo = Path(ellipseIn: CGRect(x: head.x - 9, y: head.y - 9, width: 18, height: 18))
-        context.fill(halo, with: .color(.white.opacity(0.3 * entrance)))
+        context.fill(halo, with: .color(tint.opacity(0.3 * entrance)))
         let dot = Path(ellipseIn: CGRect(x: head.x - 4.5, y: head.y - 4.5, width: 9, height: 9))
-        context.fill(dot, with: .color(.white.opacity(entrance)))
+        context.fill(dot, with: .color(tint.opacity(entrance)))
     }
 
     /// The pulsing dollar coin at the center of the orrery.
@@ -102,10 +104,10 @@ struct BudgetHeroAnimation: View {
         let radius = unit * 0.2 * pulse * entrance
         let coin = Path(ellipseIn: CGRect(x: center.x - radius, y: center.y - radius,
                                           width: radius * 2, height: radius * 2))
-        context.stroke(coin, with: .color(.white.opacity(0.95)), lineWidth: 2)
+        context.stroke(coin, with: .color(tint.opacity(0.95)), lineWidth: 2)
         context.draw(
             Text("$").font(.system(size: unit * 0.22 * pulse, weight: .semibold))
-                .foregroundStyle(.white.opacity(entrance)),
+                .foregroundStyle(tint.opacity(entrance)),
             at: center
         )
     }
