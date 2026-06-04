@@ -76,8 +76,8 @@ struct AppLockGate<Content: View>: View {
             Image("lockScreenLogo")
                 .resizable()
                 .scaledToFit()
-                .frame(width: 100, height: 100)
-                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                .frame(width: 76, height: 76)
+                .clipShape(RoundedRectangle(cornerRadius: 17, style: .continuous))
                 .padding(.top, 150)
                 .frame(maxHeight: .infinity, alignment: .top)
 
