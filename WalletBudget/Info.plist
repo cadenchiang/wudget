@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Merged with the Xcode-generated Info.plist (GENERATE_INFOPLIST_FILE = YES).
+	     UIBackgroundModes has no INFOPLIST_KEY_* build setting, so it must live here.
+	     Required: LocationProvider sets allowsBackgroundLocationUpdates, which aborts
+	     at runtime unless the app declares the `location` background mode. -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
+</dict>
+</plist>

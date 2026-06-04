@@ -45,7 +45,8 @@ struct WalletImportIntent: AppIntent {
             throw WalletImportError.invalidAmount(amount)
         }
 
-        let cleanMerchant = merchant.trimmingCharacters(in: .whitespacesAndNewlines)
+        // Strip any trailing store-number suffix (e.g. "Goodwill #110419" -> "Goodwill").
+        let cleanMerchant = MerchantCleaner.clean(merchant)
         guard !cleanMerchant.isEmpty else {
             Log.intent.error("Rejected import: empty merchant (amount \(value))")
             throw WalletImportError.missingMerchant
@@ -72,8 +73,10 @@ struct WalletImportIntent: AppIntent {
         let expense = Expense(amount: value, merchant: cleanMerchant, card: matchedCard)
         expense.viaWalletImport = true
 
-        // Best-effort: tag the purchase with the device's current location (no-op if unauthorized).
-        if let location = await LocationProvider.shared.currentLocation() {
+        // Best-effort: tag the purchase with the device's current location when the user has
+        // location tagging enabled (no-op if disabled or unauthorized).
+        if LocationProvider.isTaggingEnabled,
+           let location = await LocationProvider.shared.currentLocation() {
             expense.latitude = location.coordinate.latitude
             expense.longitude = location.coordinate.longitude
             if let name = await LocationProvider.shared.placeName(for: location) {

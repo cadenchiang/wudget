@@ -53,6 +53,8 @@ struct TotalSpendingCard: View {
     let budgetPerBucket: Double?
     /// The current spending mode (drives the title dropdown).
     @Binding var mode: SpendingMode
+    /// Period noun (day/week/month/year), used for the fallback blurb so the line is never blank.
+    var periodNoun: String = "period"
 
     @State private var selected: String?
 

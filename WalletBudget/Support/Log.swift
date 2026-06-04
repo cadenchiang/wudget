@@ -20,4 +20,7 @@ enum Log {
 
     /// Logs related to UI-facing stores and budget math.
     static let ui = Logger(subsystem: subsystem, category: "ui")
+
+    /// Logs related to capturing device location for transaction tagging.
+    static let location = Logger(subsystem: subsystem, category: "location")
 }

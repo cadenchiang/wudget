@@ -1,15 +1,10 @@
 import SwiftUI
 
-/// The Setup tab, styled like the iOS Settings app: a grouped list whose row opens the
-/// full-screen, step-by-step onboarding flow (`OnboardingFlow`).
+/// The Settings tab: a compact, iOS-Settings-style list whose rows each open a focused sub-page.
+/// Detailed controls (budget, appearance, privacy, notifications, etc.) live on their own screens
+/// so the front page stays short and easy to scan.
 struct SetupGuideView: View {
     @Environment(AccountStore.self) private var account
-    @State private var showingOnboarding = false
-    @AppStorage(Haptics.enabledKey) private var hapticsEnabled = true
-    @AppStorage(AppLock.enabledKey) private var lockEnabled = false
-    @AppStorage(AppTheme.storageKey) private var theme: AppTheme = .system
-    @AppStorage("budget.monthly") private var monthlyBudget = 0.0
-    @AppStorage("budget.enabled") private var budgetEnabled = true
 
     var body: some View {
         NavigationStack {
@@ -18,107 +13,36 @@ struct SetupGuideView: View {
                     NavigationLink {
                         AccountView()
                     } label: {
-                        HStack(spacing: 12) {
-                            Image(systemName: "person.crop.circle.fill")
-                                .font(.system(size: 36))
-                                .foregroundStyle(.gray)
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(account.email ?? "Account")
-                                    .font(.body.weight(.semibold))
-                                    .lineLimit(1)
-                                Text("Manage profile")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
+                        accountRow
                     }
                 } header: {
                     Text("Account").textCase(nil)
                 }
 
                 Section {
-                    Button {
-                        showingOnboarding = true
-                    } label: {
-                        SettingsRow(assetImage: "applewallet", title: "Set up Apple Wallet tracking")
+                    NavigationLink { TrackingSettingsView() } label: {
+                        SettingsRow(icon: "creditcard.fill", tint: .blue, title: "Tracking")
                     }
-                    .buttonStyle(.plain)
-
-                    NavigationLink {
-                        ManageCategoriesView()
-                    } label: {
-                        HStack(spacing: 12) {
-                            // The Wallet asset has ~10% transparent padding, so its visible icon is
-                            // ~23pt inside a 29pt slot. Match that: a 23pt tile centered in a 29pt
-                            // column so both rows' icons read as the same size and stay aligned.
-                            Image(systemName: "tag.fill")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(.white)
-                                .frame(width: 23, height: 23)
-                                .background(RoundedRectangle(cornerRadius: 5, style: .continuous).fill(.purple))
-                                .frame(width: 29, height: 29)
-                            Text("Categories").foregroundStyle(.primary)
-                        }
+                    NavigationLink { BudgetSettingsView() } label: {
+                        SettingsRow(icon: "chart.bar.fill", tint: .green, title: "Budget")
                     }
-                } header: {
-                    Text("Tracking").textCase(nil)
+                    NavigationLink { NotificationSettingsView() } label: {
+                        SettingsRow(icon: "bell.badge.fill", tint: .red, title: "Notifications")
+                    }
                 }
 
                 Section {
-                    NavigationLink {
-                        BudgetEditorView()
-                    } label: {
-                        HStack {
-                            Text("Monthly Budget")
-                            Spacer()
-                            Text(monthlyBudget > 0 ? monthlyBudget.asCurrency() : "None")
-                                .foregroundStyle(.secondary)
-                        }
+                    NavigationLink { AppearanceSettingsView() } label: {
+                        SettingsRow(icon: "paintbrush.fill", tint: .indigo, title: "Appearance")
                     }
-                    Toggle("Use a Budget", isOn: $budgetEnabled)
-                } header: {
-                    Text("Budget").textCase(nil)
+                    NavigationLink { PrivacySecuritySettingsView() } label: {
+                        SettingsRow(icon: "lock.fill", tint: .gray, title: "Privacy & Security")
+                    }
                 }
 
                 Section {
-                    NavigationLink {
-                        NotificationSettingsView()
-                    } label: {
-                        HStack(spacing: 12) {
-                            Image(systemName: "bell.badge.fill")
-                                .font(.system(size: 22))
-                                .foregroundStyle(.red)
-                                .frame(width: 29, height: 29)
-                            Text("Notifications").foregroundStyle(.primary)
-                        }
-                    }
-                } header: {
-                    Text("Notifications").textCase(nil)
-                }
-
-                Section {
-                    Picker("Theme", selection: $theme) {
-                        ForEach(AppTheme.allCases) { option in
-                            Text(option.label).tag(option)
-                        }
-                    }
-                    Toggle("Haptic Feedback", isOn: $hapticsEnabled)
-                    Toggle("Require Face ID", isOn: $lockEnabled)
-                } header: {
-                    Text("Preferences").textCase(nil)
-                }
-
-                Section {
-                    NavigationLink {
-                        AboutView()
-                    } label: {
-                        HStack(spacing: 12) {
-                            Image(systemName: "info.circle")
-                                .font(.system(size: 24))
-                                .foregroundStyle(.orange)
-                                .frame(width: 29, height: 29)
-                            Text("About").foregroundStyle(.primary)
-                        }
+                    NavigationLink { AboutView() } label: {
+                        SettingsRow(icon: "info.circle.fill", tint: .orange, title: "About")
                     }
                 }
             }
@@ -131,15 +55,30 @@ struct SetupGuideView: View {
                     .padding(.bottom, 16)
             }
             .toolbar(.hidden, for: .navigationBar)
-            .fullScreenCover(isPresented: $showingOnboarding) {
-                OnboardingFlow()
+        }
+    }
+
+    /// The account header row: profile glyph, signed-in email, and a "Manage profile" subtitle.
+    private var accountRow: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "person.crop.circle.fill")
+                .font(.system(size: 36))
+                .foregroundStyle(.gray)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(account.email ?? "Account")
+                    .font(.body.weight(.semibold))
+                    .lineLimit(1)
+                Text("Manage profile")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
     }
 }
 
 /// A Settings-style row: a leading icon (asset image or SF Symbol tile), a title, and a chevron.
-private struct SettingsRow: View {
+/// Shared by `SetupGuideView` and its sub-pages.
+struct SettingsRow: View {
     /// Asset-catalog image used as the icon (takes precedence over `icon`/`tint`).
     var assetImage: String? = nil
     /// SF Symbol used when `assetImage` is nil.
@@ -154,9 +93,6 @@ private struct SettingsRow: View {
             Text(title)
                 .foregroundStyle(.primary)
             Spacer()
-            Image(systemName: "chevron.right")
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(.tertiary)
         }
     }
 

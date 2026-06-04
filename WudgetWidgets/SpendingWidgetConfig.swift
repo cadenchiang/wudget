@@ -16,6 +16,21 @@ enum WidgetDisplayMode: String, AppEnum {
     ]
 }
 
+/// Which expenses the widget counts. Mirrors the app's spending mode: everything, or only
+/// variable costs (fixed costs the user marked as excluded are left out).
+enum WidgetSpendingScope: String, AppEnum {
+    /// Every expense this month.
+    case total
+    /// Only variable (non-fixed) costs — the app's "Everyday Spending".
+    case variable
+
+    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Spending"
+    static var caseDisplayRepresentations: [WidgetSpendingScope: DisplayRepresentation] = [
+        .total: "Total spending",
+        .variable: "Everyday spending"
+    ]
+}
+
 /// The widget's user-editable configuration. Adding it (vs a static widget) is what makes the
 /// widget show an "Edit Widget" option on long-press.
 struct SpendingWidgetConfig: WidgetConfigurationIntent {
@@ -25,4 +40,8 @@ struct SpendingWidgetConfig: WidgetConfigurationIntent {
     /// Whether the big number is a dollar amount or a percent of budget.
     @Parameter(title: "Show", default: .amount)
     var displayMode: WidgetDisplayMode
+
+    /// Whether the widget counts all spending or only everyday (variable) spending.
+    @Parameter(title: "Count", default: .total)
+    var scope: WidgetSpendingScope
 }
