@@ -1,12 +1,13 @@
 import Lottie
 import SwiftUI
 
-/// Welcome / landing screen: black and white, with a looping Lottie animation (a piggy bank
-/// saving coins, bundled as welcomeHero.json) in the middle of the screen and simple
-/// Sign up / Log in pills at the bottom. Both buttons raise the same auth sheet
-/// (Apple / Google / Email), which handles new and returning accounts alike.
+/// Welcome / landing screen: black and white, with a looping Lottie animation (Al Boardman's
+/// minimal geometric "9 squares" loop, recolored monochrome and bundled as welcomeHero.json)
+/// in the middle of the screen and simple Sign up / Log in pills at the bottom. Both buttons
+/// raise the same auth sheet (Apple / Google / Email).
 struct WelcomeLandingView: View {
     @Environment(AccountStore.self) private var account
+    @Environment(\.colorScheme) private var colorScheme
 
     /// Whether the sign-in bottom sheet is showing.
     @State private var showingAuth = false
@@ -17,7 +18,15 @@ struct WelcomeLandingView: View {
 
             LottieView(animation: .named("welcomeHero"))
                 .playing(loopMode: .loop)
-                .frame(width: 320, height: 320)
+                // The artwork is authored black; flip every stroke/fill white in dark mode so
+                // the line art stays visible on either system background.
+                .valueProvider(
+                    ColorValueProvider(colorScheme == .dark
+                        ? LottieColor(r: 1, g: 1, b: 1, a: 1)
+                        : LottieColor(r: 0, g: 0, b: 0, a: 1)),
+                    for: AnimationKeypath(keypath: "**.Color")
+                )
+                .frame(width: 300, height: 300)
 
             authButtons
                 .padding(.horizontal, 24)
