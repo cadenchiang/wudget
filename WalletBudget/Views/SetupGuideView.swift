@@ -1,51 +1,41 @@
 import SwiftUI
 
-/// The Settings tab: a compact, iOS-Settings-style list whose rows each open a focused sub-page.
-/// Detailed controls (budget, appearance, privacy, notifications, etc.) live on their own screens
-/// so the front page stays short and easy to scan.
+/// The Settings tab, styled like Robinhood's Menu: airy typography-led rows (title + one-line
+/// summary + chevron) separated by hairlines on the plain background. No icons, no boxes.
+/// Detailed controls (budget, appearance, privacy, notifications, etc.) live on their own screens.
 struct SetupGuideView: View {
     @Environment(AccountStore.self) private var account
 
     var body: some View {
         NavigationStack {
-            List {
-                Section {
-                    NavigationLink {
+            ScrollView {
+                VStack(spacing: 0) {
+                    menuLink(title: account.email ?? "Account", subtitle: "Manage profile") {
                         AccountView()
-                    } label: {
-                        accountRow
                     }
-                } header: {
-                    Text("Account").textCase(nil)
-                }
-
-                Section {
-                    NavigationLink { TrackingSettingsView() } label: {
-                        SettingsRow(icon: "creditcard.fill", tint: .blue, title: "Tracking")
+                    menuLink(title: "Tracking", subtitle: "Apple Wallet automation, spending mode") {
+                        TrackingSettingsView()
                     }
-                    NavigationLink { BudgetSettingsView() } label: {
-                        SettingsRow(icon: "chart.bar.fill", tint: .green, title: "Budget")
+                    menuLink(title: "Budget", subtitle: "Monthly limit and progress") {
+                        BudgetSettingsView()
                     }
-                    NavigationLink { NotificationSettingsView() } label: {
-                        SettingsRow(icon: "bell.badge.fill", tint: .red, title: "Notifications")
+                    menuLink(title: "Notifications", subtitle: "Alerts and summaries") {
+                        NotificationSettingsView()
                     }
-                }
-
-                Section {
-                    NavigationLink { AppearanceSettingsView() } label: {
-                        SettingsRow(icon: "paintbrush.fill", tint: .indigo, title: "Appearance")
+                    menuLink(title: "Appearance", subtitle: "Theme and haptics") {
+                        AppearanceSettingsView()
                     }
-                    NavigationLink { PrivacySecuritySettingsView() } label: {
-                        SettingsRow(icon: "lock.fill", tint: .gray, title: "Privacy & Security")
+                    menuLink(title: "Privacy & Security", subtitle: "Face ID lock, location") {
+                        PrivacySecuritySettingsView()
+                    }
+                    menuLink(title: "About", subtitle: "Version, support, legal", showsDivider: false) {
+                        AboutView()
                     }
                 }
-
-                Section {
-                    NavigationLink { AboutView() } label: {
-                        SettingsRow(icon: "info.circle.fill", tint: .orange, title: "About")
-                    }
-                }
+                .padding(.horizontal, 20)
+                .padding(.top, 4)
             }
+            .background(Color(.systemBackground))
             .topChromeBar {
                 Text("Settings")
                     .font(.title3.weight(.semibold))
@@ -58,19 +48,40 @@ struct SetupGuideView: View {
         }
     }
 
-    /// The account header row: profile glyph, signed-in email, and a "Manage profile" subtitle.
-    private var accountRow: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "person.crop.circle.fill")
-                .font(.system(size: 36))
-                .foregroundStyle(.gray)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(account.email ?? "Account")
-                    .font(.body.weight(.semibold))
-                    .lineLimit(1)
-                Text("Manage profile")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+    /// One menu row: bold title over a one-line gray summary, a trailing chevron, and a hairline
+    /// underneath (except the last row).
+    private func menuLink<Destination: View>(
+        title: String,
+        subtitle: String,
+        showsDivider: Bool = true,
+        @ViewBuilder destination: () -> Destination
+    ) -> some View {
+        VStack(spacing: 0) {
+            NavigationLink {
+                destination()
+            } label: {
+                HStack(alignment: .center, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(title)
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(.primary)
+                            .lineLimit(1)
+                        Text(subtitle)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                    }
+                    Spacer(minLength: 0)
+                    Image(systemName: "chevron.right")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.tertiary)
+                }
+                .padding(.vertical, 18)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            if showsDivider {
+                Divider()
             }
         }
     }

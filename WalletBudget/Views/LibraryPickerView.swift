@@ -95,7 +95,6 @@ struct LibraryPickerView: View {
                 }
                 .padding()
             }
-            .background(Color(.systemGroupedBackground))
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -109,6 +108,9 @@ struct LibraryPickerView: View {
                 prompt: "Search or add \(title.lowercased())"
             )
         }
+        .presentationBackground(.ultraThinMaterial)
+        .presentationCornerRadius(36)
+        .presentationDragIndicator(.visible)
     }
 
     /// Row that adds and selects the typed custom entry.
@@ -119,43 +121,37 @@ struct LibraryPickerView: View {
         } label: {
             Label("Add “\(trimmedQuery)”", systemImage: "plus.circle.fill")
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding()
-                .background(
+                .padding(.vertical, 12)
+                .padding(.horizontal, 16)
+                .overlay(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(Color(.secondarySystemGroupedBackground))
+                        .strokeBorder(Color.primary.opacity(0.2), lineWidth: 1)
                 )
         }
         .tint(.primary)
     }
 
-    /// The Recent section: recent tiles, or a placeholder when there are none yet, in a card.
+    /// The Recent section: recent tiles, or a placeholder when there are none yet.
     private var recentSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 14) {
             Text("Recent").font(.headline)
-            Group {
-                if recentItems.isEmpty {
-                    Text("Recent \(title.lowercased())s will show up here.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                } else {
-                    content(recentItems)
-                }
+            if recentItems.isEmpty {
+                Text("Recent \(title.lowercased())s will show up here.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            } else {
+                content(recentItems)
             }
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(cardBackground)
         }
     }
 
-    /// A titled section of entries (grid tiles or list rows) inside a squircle card.
+    /// A titled section of entries (grid tiles or list rows), plain on the glass background.
     private func section(header: String, entries: [LibraryItem]) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 14) {
             Text(header).font(.headline)
             content(entries)
-                .padding(style == .list ? 8 : 16)
                 .frame(maxWidth: .infinity)
-                .background(cardBackground)
         }
     }
 
@@ -205,12 +201,6 @@ struct LibraryPickerView: View {
         .padding(.vertical, 8)
         .padding(.horizontal, 8)
         .contentShape(Rectangle())
-    }
-
-    /// Squircle card background for sections.
-    private var cardBackground: some View {
-        RoundedRectangle(cornerRadius: 20, style: .continuous)
-            .fill(Color(.secondarySystemGroupedBackground))
     }
 
     /// One icon tile: a real logo (bundled asset or fetched from the logo service) when available,

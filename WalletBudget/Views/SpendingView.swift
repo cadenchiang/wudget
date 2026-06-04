@@ -140,7 +140,7 @@ struct SpendingView: View {
     var body: some View {
         NavigationStack {
             spendingScroll
-                .background(Color(.systemGroupedBackground))
+                .background(Color(.systemBackground))
                 .topChromeBar { topBar }
                 .toolbar(.hidden, for: .navigationBar)
                 .sheet(isPresented: $showingAdd) { AddTransactionSheet() }
@@ -213,10 +213,11 @@ struct SpendingView: View {
         .accessibilityLabel("Time span: \(span.title)")
     }
 
-    /// The spending content: chart card, repeat card, tab selector, and the rows card.
+    /// The spending content, airy and card-free: full-bleed hero + chart, a hairline Repeat row,
+    /// text tabs, and plain transaction rows separated by hairlines.
     private var spendingScroll: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 24) {
                 TotalSpendingCard(
                     total: SpendingSummary.total(displayedCurrent),
                     previousTotal: SpendingSummary.total(comparablePrevious),
@@ -227,55 +228,72 @@ struct SpendingView: View {
                     mode: $spendingMode
                 )
 
-                recurringCard
+                recurringRow
 
-                Picker("View", selection: $tab) {
-                    ForEach(SpendingTab.allCases) { option in
-                        Text(option.title).tag(option)
+                VStack(alignment: .leading, spacing: 4) {
+                    tabRow
+                    if tab == .recent {
+                        recentRows
+                    } else {
+                        groupRows
                     }
                 }
-                .pickerStyle(.segmented)
-
-                if tab == .recent {
-                    recentCard
-                } else {
-                    groupsCard
-                }
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 20)
             .padding(.top, 8)
             .padding(.bottom, 24)
         }
     }
 
-    /// Slim "Repeat" card linking to the recurring-payments list.
-    private var recurringCard: some View {
-        NavigationLink {
-            RecurringPaymentsView()
-        } label: {
-            HStack(spacing: 8) {
-                Text("Repeat")
-                    .font(.subheadline.bold())
-                    .foregroundStyle(.primary)
-                Spacer()
-                Text("\(recurringExpenses.count)")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-                Image(systemName: "chevron.right")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.tertiary)
+    /// Plain "Repeat" row between hairlines, linking to the recurring-payments list.
+    private var recurringRow: some View {
+        VStack(spacing: 0) {
+            Divider()
+            NavigationLink {
+                RecurringPaymentsView()
+            } label: {
+                HStack(spacing: 8) {
+                    Text("Repeat")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.primary)
+                    Spacer()
+                    Text("\(recurringExpenses.count)")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Image(systemName: "chevron.right")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.tertiary)
+                }
+                .padding(.vertical, 14)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
-            .background(card)
+            .buttonStyle(.plain)
+            Divider()
         }
-        .buttonStyle(.plain)
+    }
+
+    /// Robinhood-style text tabs: the active one is bold primary, the rest stay secondary.
+    private var tabRow: some View {
+        HStack(spacing: 18) {
+            ForEach(SpendingTab.allCases) { option in
+                Button {
+                    tab = option
+                } label: {
+                    Text(option.title)
+                        .font(.subheadline.weight(tab == option ? .semibold : .regular))
+                        .foregroundStyle(tab == option ? Color.primary : Color.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.vertical, 8)
+        .animation(.easeInOut(duration: 0.15), value: tab)
     }
 
     /// Flat, date-ordered list of the period's transactions (the Recent tab).
     /// Honors the spending mode so ignored items don't appear in Variable mode.
-    private var recentCard: some View {
-        rowsCard(displayedCurrent.isEmpty) {
+    private var recentRows: some View {
+        rowsList(displayedCurrent.isEmpty) {
             ForEach(Array(displayedCurrent.enumerated()), id: \.element.id) { index, expense in
                 NavigationLink {
                     TransactionDetailView(expense: expense)
@@ -283,18 +301,17 @@ struct SpendingView: View {
                     TransactionRow(expense: expense)
                 }
                 .buttonStyle(.plain)
-                .padding(.horizontal, 16)
 
                 if index < displayedCurrent.count - 1 {
-                    Divider().padding(.leading, 70)
+                    Divider().padding(.leading, 56)
                 }
             }
         }
     }
 
     /// Grouped rows (By Merchant / By Category), each opening the group's transaction list.
-    private var groupsCard: some View {
-        rowsCard(groups.isEmpty) {
+    private var groupRows: some View {
+        rowsList(groups.isEmpty) {
             ForEach(Array(groups.enumerated()), id: \.element.id) { index, group in
                 NavigationLink {
                     GroupDetailView(grouping: grouping, key: group.key, interval: span.interval())
@@ -302,35 +319,27 @@ struct SpendingView: View {
                     SpendingGroupRow(group: group, grouping: grouping)
                 }
                 .buttonStyle(.plain)
-                .padding(.horizontal, 16)
 
                 if index < groups.count - 1 {
-                    Divider().padding(.leading, 70)
+                    Divider().padding(.leading, 56)
                 }
             }
         }
     }
 
-    /// Wraps rows in the shared card, or shows the empty message.
+    /// Plain rows on the page background (no card), or the empty message.
     @ViewBuilder
-    private func rowsCard<Rows: View>(_ isEmpty: Bool, @ViewBuilder rows: () -> Rows) -> some View {
+    private func rowsList<Rows: View>(_ isEmpty: Bool, @ViewBuilder rows: () -> Rows) -> some View {
         LazyVStack(spacing: 0) {
             if isEmpty {
                 Text("No transactions in this period.")
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(16)
+                    .padding(.vertical, 16)
             } else {
                 rows()
             }
         }
-        .background(card)
-    }
-
-    /// Shared rounded card background.
-    private var card: some View {
-        RoundedRectangle(cornerRadius: 20, style: .continuous)
-            .fill(Color(.secondarySystemGroupedBackground))
     }
 
     /// The current-period expenses belonging to a group (mode-aware: excludes ignored in Variable).

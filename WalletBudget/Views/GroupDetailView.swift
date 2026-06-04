@@ -47,22 +47,17 @@ struct GroupDetailView: View {
                             TransactionRow(expense: expense)
                         }
                         .buttonStyle(.plain)
-                        .padding(.horizontal, 16)
 
                         if index < periodExpenses.count - 1 {
-                            Divider().padding(.leading, 70)
+                            Divider().padding(.leading, 56)
                         }
                     }
                 }
             }
-            .background(
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(Color(.secondarySystemGroupedBackground))
-            )
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 20)
             .padding(.top, 8)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(Color(.systemBackground))
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
     }

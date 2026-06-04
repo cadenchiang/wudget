@@ -44,8 +44,11 @@ struct TransactionMapCard: View {
             }
             .buttonStyle(.plain)
         }
-        .background(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color(.secondarySystemGroupedBackground)))
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .strokeBorder(Color.primary.opacity(0.12), lineWidth: 1)
+        )
     }
 
     /// Best label for the located place.

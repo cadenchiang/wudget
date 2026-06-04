@@ -157,7 +157,7 @@ struct TotalSpendingCard: View {
 
             HStack(spacing: 8) {
                 Text(total.asCurrency())
-                    .font(.system(size: 30, weight: .bold))
+                    .font(.system(size: 40, weight: .bold))
                     .foregroundStyle(isOverBudget ? .red : .primary)
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)
@@ -180,12 +180,7 @@ struct TotalSpendingCard: View {
 
             chart
         }
-        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color(.secondarySystemGroupedBackground))
-        )
     }
 
     /// Stacked, category-colored bars over the time buckets, with a budget line + tap selection.

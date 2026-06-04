@@ -30,20 +30,24 @@ struct TransactionDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 24) {
+            VStack(spacing: 20) {
                 header
                 detailsCard
                 if expense.viaWalletImport {
                     TransactionMapCard(expense: expense)
                 }
+                Divider()
                 notesCard
+                Divider()
                 ignoreCard
+                Divider()
                 reportCard
                 deleteButton
             }
-            .padding(16)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
         }
-        .background(Color(.systemGroupedBackground))
+        .background(Color(.systemBackground))
         .navigationBarTitleDisplayMode(.inline)
         .alert("Delete Transaction", isPresented: $confirmingDelete) {
             Button("Delete", role: .destructive) { deleteExpense() }
@@ -113,21 +117,17 @@ struct TransactionDetailView: View {
     private var detailsCard: some View {
         VStack(spacing: 0) {
             merchantRow
-            Divider().padding(.leading, 16)
+            Divider()
             amountRow
-            Divider().padding(.leading, 16)
+            Divider()
             dateRow
-            Divider().padding(.leading, 16)
+            Divider()
             cardRow
-            Divider().padding(.leading, 16)
+            Divider()
             categoryRow
-            Divider().padding(.leading, 16)
+            Divider()
             recurrenceRow
         }
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(.secondarySystemGroupedBackground))
-        )
     }
 
     /// "Merchant" label with a button that opens the merchant picker.
@@ -148,7 +148,7 @@ struct TransactionDetailView: View {
             }
         }
         .tint(.primary)
-        .padding(16)
+        .padding(.vertical, 14)
     }
 
     /// "Amount" label with a button that opens the amount editor alert.
@@ -167,14 +167,14 @@ struct TransactionDetailView: View {
             }
         }
         .tint(.primary)
-        .padding(16)
+        .padding(.vertical, 14)
     }
 
     /// "Date" label with an inline date + time picker.
     private var dateRow: some View {
         DatePicker("Date", selection: $expense.date, displayedComponents: [.date, .hourAndMinute])
             .tint(.primary)
-            .padding(16)
+            .padding(.vertical, 14)
     }
 
     /// "Card Used" label with a button that opens the card picker.
@@ -195,7 +195,7 @@ struct TransactionDetailView: View {
             }
         }
         .tint(.primary)
-        .padding(16)
+        .padding(.vertical, 14)
     }
 
     /// "Category" label with a menu to reassign the category (icons + checkmark on current).
@@ -227,7 +227,7 @@ struct TransactionDetailView: View {
             }
             .tint(.primary)
         }
-        .padding(16)
+        .padding(.vertical, 14)
     }
 
     /// "Repeats" row with a menu to set how often the transaction recurs (Never / Monthly / Yearly …).
@@ -254,7 +254,7 @@ struct TransactionDetailView: View {
             }
             .tint(.primary)
         }
-        .padding(16)
+        .padding(.vertical, 14)
     }
 
     /// "Report an Issue" card: opens the Mail app pre-filled with this transaction's details.
@@ -265,12 +265,8 @@ struct TransactionDetailView: View {
             Text("Report an Issue")
                 .foregroundStyle(.blue)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(16)
+                .padding(.vertical, 14)
         }
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(.secondarySystemGroupedBackground))
-        )
     }
 
     /// Opens the Mail app with a support report pre-filled with this transaction's details.
@@ -295,12 +291,8 @@ struct TransactionDetailView: View {
             TextField("Add a note", text: $expense.notes, axis: .vertical)
                 .lineLimit(1...6)
         }
-        .padding(16)
+        .padding(.vertical, 14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(.secondarySystemGroupedBackground))
-        )
     }
 
     /// Toggle to exclude this transaction from Everyday Spending (fixed costs like rent/bills).
@@ -316,12 +308,8 @@ struct TransactionDetailView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
-        .padding(16)
+        .padding(.vertical, 14)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(.secondarySystemGroupedBackground))
-        )
     }
 
     /// Destructive "Delete Transaction" button (confirmed via dialog).
@@ -330,12 +318,8 @@ struct TransactionDetailView: View {
             Text("Delete Transaction")
                 .foregroundStyle(.red)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(16)
+                .padding(.vertical, 14)
         }
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(Color(.secondarySystemGroupedBackground))
-        )
     }
 
     /// Deletes the expense, saves, and pops back.
