@@ -21,21 +21,13 @@ struct AppLockGate<Content: View>: View {
 
     init(@ViewBuilder content: () -> Content) { self.content = content() }
 
-    /// Whether the lock screen is currently covering the content.
-    private var showingLock: Bool { lockEnabled && !unlocked }
-
     var body: some View {
         ZStack {
-            // The app settles in from a barely-perceptible scale as the lock fades, so the
-            // unlock reads as one smooth motion instead of an instant swap.
             content
-                .scaleEffect(showingLock ? 0.985 : 1)
-            if showingLock {
-                lockScreen
-                    .transition(.opacity.combined(with: .scale(scale: 1.03)))
+            if lockEnabled && !unlocked {
+                lockScreen.transition(.opacity)
             }
         }
-        .animation(.easeOut(duration: 0.5), value: unlocked)
         .onAppear(perform: authenticateIfNeeded)
         .onChange(of: scenePhase) { _, phase in
             switch phase {
@@ -63,8 +55,15 @@ struct AppLockGate<Content: View>: View {
         authenticating = true
         AppLock.authenticate { success in
             authenticating = false
-            unlocked = success
-            if !success { authFailed = true }
+            guard success else {
+                authFailed = true
+                return
+            }
+            // Wait for the system Face ID checkmark HUD to finish its own dismissal before
+            // cross-fading the lock screen away; starting both at once makes the unlock glitch.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                withAnimation(.easeInOut(duration: 0.4)) { unlocked = true }
+            }
         }
     }
 
