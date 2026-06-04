@@ -12,14 +12,15 @@ struct WelcomeLandingView: View {
     @State private var showingAuth = false
 
     /// The swipeable copy: one short pitch per page. Only this block changes on swipe.
+    /// Titles carry an explicit line break so each renders on two lines, Robinhood-style.
     private static let pages: [(title: String, subtitle: String)] = [
-        ("Welcome to Budget",
+        ("Welcome to\nBudget",
          "See every dollar you spend, the moment you spend it."),
-        ("Tracking on autopilot",
+        ("Tracking on\nautopilot",
          "Apple Pay purchases import themselves with the amount, merchant, and card."),
-        ("Budgets that stick",
+        ("Budgets\nthat stick",
          "Set a monthly limit and watch your progress across clear categories."),
-        ("Private by design",
+        ("Private by\ndesign",
          "Your spending stays on your device, locked behind Face ID."),
     ]
 
@@ -62,8 +63,9 @@ struct WelcomeLandingView: View {
     private func pageCopy(_ content: (title: String, subtitle: String), isFirst: Bool) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             Text(content.title)
-                .font(.system(size: 38, weight: .bold))
+                .font(.system(size: 38, weight: .medium))
                 .foregroundStyle(.white)
+                .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true)
             Text(content.subtitle)
                 .font(.system(size: 17))
