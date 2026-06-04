@@ -80,11 +80,20 @@ extension OnboardingStep {
         OnboardingStep(imageName: "onboarding3", title: "Scroll down and tap Wallet"),
         OnboardingStep(imageName: "onboardingCards", title: "Choose your cards, then tap Next"),
         OnboardingStep(imageName: "onboardingCreate", title: "Press “Create New Shortcut”"),
-        OnboardingStep(imageName: "onboardingWalletImport", title: "Press Wallet Import"),
+        // Wiring the "Automatically Log Card Payment" action (screenshots walletImport1…9):
+        // add the action, then connect each field (Amount, Merchant, Card) to Shortcut Input.
+        OnboardingStep(imageName: "walletImport1", title: "Search Log Card, then tap Automatically Log Card Payment"),
+        OnboardingStep(imageName: "walletImport2", title: "Tap Amount, then tap Shortcut Input"),
+        OnboardingStep(imageName: "walletImport3", title: "In the popup, tap Amount"),
+        OnboardingStep(imageName: "walletImport4", title: "Amount should now be checked"),
+        OnboardingStep(imageName: "walletImport5", title: "Tap Merchant, then tap Shortcut Input"),
+        OnboardingStep(imageName: "walletImport6", title: "In the popup, tap Merchant"),
+        OnboardingStep(imageName: "walletImport7", title: "Tap Card, then tap Shortcut Input"),
+        OnboardingStep(imageName: "walletImport8", title: "In the popup, tap Card or Pass"),
         OnboardingStep(imageName: "onboardingFinish", title: "Tap the blue checkmark to finish",
                        highlight: "blue checkmark", highlightSymbol: "checkmark.circle.fill",
                        symbolReplacesHighlight: true),
-        OnboardingStep(imageName: "onboardingDone", title: "This is what it should look like"),
+        OnboardingStep(imageName: "walletImport9", title: "This is what it should look like"),
         OnboardingStep(imageName: "onboarding8", title: "Apple Wallet sync", isSyncCheck: true),
     ]
 }

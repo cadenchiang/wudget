@@ -50,6 +50,7 @@
 		7C2BBC1E20190B798FF45FC9 /* CardMatcherTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 818D19FA56D5DC673FA3F983 /* CardMatcherTests.swift */; };
 		1A2B3C4D5E6F708192A30003 /* MerchantCleanerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708192A30004 /* MerchantCleanerTests.swift */; };
 		1A2B3C4D5E6F708192A30019 /* LogoProviderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708192A3001A /* LogoProviderTests.swift */; };
+		1A2B3C4D5E6F708192A3001B /* OnboardingStepTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708192A3001C /* OnboardingStepTests.swift */; };
 		8E0F1A2B3C4D5E6F70819A20 /* WidgetSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F1A2B3C4D5E6F708192A210 /* WidgetSnapshotTests.swift */; };
 		8635718579EF8A5841DC8189 /* OnboardingFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = B123482C74A4635403DDDD0C /* OnboardingFlow.swift */; };
 		8CB2B7FFB5619BC0508D30A8 /* OnboardingComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FA78760B2C7B04E4ED8CECD /* OnboardingComponents.swift */; };
@@ -173,6 +174,7 @@
 		818D19FA56D5DC673FA3F983 /* CardMatcherTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardMatcherTests.swift; sourceTree = "<group>"; };
 		1A2B3C4D5E6F708192A30004 /* MerchantCleanerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MerchantCleanerTests.swift; sourceTree = "<group>"; };
 		1A2B3C4D5E6F708192A3001A /* LogoProviderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogoProviderTests.swift; sourceTree = "<group>"; };
+		1A2B3C4D5E6F708192A3001C /* OnboardingStepTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingStepTests.swift; sourceTree = "<group>"; };
 		9F1A2B3C4D5E6F708192A210 /* WidgetSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetSnapshotTests.swift; sourceTree = "<group>"; };
 		8260296CE232E54B04D2E451 /* MerchantLogoTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MerchantLogoTile.swift; sourceTree = "<group>"; };
 		83F6022920D4C45574AAACD1 /* RecurrenceFrequency.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecurrenceFrequency.swift; sourceTree = "<group>"; };
@@ -351,6 +353,7 @@
 				818D19FA56D5DC673FA3F983 /* CardMatcherTests.swift */,
 				1A2B3C4D5E6F708192A30004 /* MerchantCleanerTests.swift */,
 				1A2B3C4D5E6F708192A3001A /* LogoProviderTests.swift */,
+				1A2B3C4D5E6F708192A3001C /* OnboardingStepTests.swift */,
 				9F1A2B3C4D5E6F708192A210 /* WidgetSnapshotTests.swift */,
 				E6645A6FE9B8BD276FF68496 /* CurrencyParserTests.swift */,
 				DE85A6AB04548DF2556A07C4 /* ExpenseCategorizerTests.swift */,
@@ -514,6 +517,7 @@
 				7C2BBC1E20190B798FF45FC9 /* CardMatcherTests.swift in Sources */,
 				1A2B3C4D5E6F708192A30003 /* MerchantCleanerTests.swift in Sources */,
 				1A2B3C4D5E6F708192A30019 /* LogoProviderTests.swift in Sources */,
+				1A2B3C4D5E6F708192A3001B /* OnboardingStepTests.swift in Sources */,
 				D42B9E8D64BD20B38C34958D /* CurrencyParserTests.swift in Sources */,
 				A0EED0D6A5E570BAE2348BA0 /* ExpenseCategorizerTests.swift in Sources */,
 				00FF23B68E6F7F4272230738 /* RecurrenceFrequencyTests.swift in Sources */,
