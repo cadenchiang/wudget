@@ -57,6 +57,13 @@ struct AboutView: View {
                     row("Terms of Service", icon: "doc.text", orangeText: true)
                 }
             }
+
+            // Required attribution for the Logo.dev free plan, which serves merchant/card logos.
+            Section("Credits") {
+                Button { openURL(URL(string: "https://logo.dev")!) } label: {
+                    row("Logos provided by Logo.dev", icon: "photo.on.rectangle", orangeText: true)
+                }
+            }
         }
         .navigationTitle("About")
         .navigationBarTitleDisplayMode(.inline)
