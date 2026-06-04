@@ -1,22 +1,26 @@
 import Foundation
 
-/// Resolves real logo image URLs for merchants (and any library item with a known domain).
+/// Resolves real logo image URLs for merchants and cards (any library item with a known domain).
 ///
-/// Logos are fetched at runtime from Google's keyless favicon service by domain (e.g.
-/// "starbucks.com"). An item's explicit `domain` wins; otherwise the merchant name is matched
-/// against `knownDomains` below. Items with no resolvable domain return `nil`, so callers fall
-/// back to the bundled asset or the colored SF Symbol.
+/// Logos are fetched at runtime from Logo.dev's CDN by domain (e.g. "starbucks.com"). An item's
+/// explicit `domain` wins; otherwise the merchant name is matched against `knownDomains` below.
+/// Items with no resolvable domain return `nil`, so callers fall back to the bundled asset or the
+/// colored SF Symbol.
 ///
 /// Tradeoff: this makes a network request per known merchant to render its logo, so logo art is no
 /// longer strictly on-device. The lookup uses a fixed, public merchant list (not the user's data),
 /// and failed/blocked fetches degrade gracefully to the SF Symbol.
 enum LogoProvider {
-    /// High-quality primary logo (Clearbit's logo service, by domain), or `nil` when no domain is
-    /// known. Returns a large, mostly-square brand logo, much sharper than a favicon.
+    /// Logo.dev publishable token (safe to embed client-side, like a Stripe publishable key).
+    /// Free tier: 500k requests/month, attribution link required in production.
+    private static let logoDevToken = "pk_apTGqfnyR8-y889HTWKe7A"
+
+    /// High-quality primary logo (Logo.dev's CDN, by domain), or `nil` when no domain is known.
+    /// Returns a large square brand logo (512px with retina), much sharper than a favicon.
     /// - Parameter item: The merchant/card library item.
     static func logoURL(for item: LibraryItem) -> URL? {
         guard let domain = domain(for: item) else { return nil }
-        return URL(string: "https://logo.clearbit.com/\(domain)?size=256")
+        return URL(string: "https://img.logo.dev/\(domain)?token=\(logoDevToken)&size=256&format=png&retina=true")
     }
 
     /// Higher-quality fallback icon, used only when the primary logo fails to load. icon.horse
