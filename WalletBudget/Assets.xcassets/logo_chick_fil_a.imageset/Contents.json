@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "logo_chick_fil_a.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "logo_peet_s_coffee.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "logo_best_buy.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

@@ -2,15 +2,17 @@ import SwiftUI
 
 /// A pickable library entry (merchant or card) shown as an icon tile with a name.
 ///
-/// `systemImage` is an SF Symbol used as the icon (real brand logos are trademarked and not
-/// bundled). `assetName` is an optional asset-catalog image: if that image exists it's shown
-/// instead of the symbol, so licensed logos can be dropped in later without code changes.
+/// `systemImage` is an SF Symbol fallback icon. `assetName` is the asset-catalog image for the
+/// brand's real logo: when not passed explicitly it defaults to the name-derived
+/// `bundledLogoName(for:)` ("logo_<slug>"), so every known brand renders its bundled logo
+/// instantly with no network fetch. Callers check `UIImage(named:)` before using it, so names
+/// with no matching asset (unknown merchants, "Cash") fall back to the runtime logo or symbol.
 struct LibraryItem: Identifiable {
     var id: String { name }
     let name: String
     let systemImage: String
     let color: Color
-    /// Optional asset-catalog image name for a real logo (preferred over everything when present).
+    /// Asset-catalog image name for the brand logo (preferred over everything when present).
     let assetName: String?
     /// Optional domain used to fetch a real logo at runtime (overrides the name-derived domain).
     let domain: String?
@@ -19,8 +21,28 @@ struct LibraryItem: Identifiable {
         self.name = name
         self.systemImage = systemImage
         self.color = color
-        self.assetName = assetName
+        self.assetName = assetName ?? LibraryItem.bundledLogoName(for: name)
         self.domain = domain
+    }
+
+    /// Asset-catalog name for a brand's bundled logo: "logo_" plus the lowercased name with every
+    /// run of non-alphanumerics collapsed to a single underscore and edges trimmed
+    /// (e.g. "Peet's Coffee" → "logo_peet_s_coffee", "Chick-fil-A" → "logo_chick_fil_a").
+    /// Must stay in sync with the slug rule used to generate the logo imagesets.
+    static func bundledLogoName(for name: String) -> String {
+        var slug = ""
+        var lastWasSeparator = true // trims leading separators
+        for character in name.lowercased() {
+            if character.isLetter || character.isNumber {
+                slug.append(character)
+                lastWasSeparator = false
+            } else if !lastWasSeparator {
+                slug.append("_")
+                lastWasSeparator = true
+            }
+        }
+        if slug.hasSuffix("_") { slug.removeLast() }
+        return "logo_" + slug
     }
 }
 

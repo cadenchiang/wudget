@@ -1,3 +1,4 @@
+import UIKit
 import XCTest
 @testable import WalletBudget
 
@@ -51,6 +52,28 @@ final class LogoProviderTests: XCTestCase {
     func testAllLibraryMerchantsResolveLogoURLs() {
         for item in MerchantLibrary.items {
             XCTAssertNotNil(LogoProvider.logoURL(for: item), "\(item.name) is missing a knownDomains entry")
+        }
+    }
+
+    /// The name → asset-name slug must collapse runs of non-alphanumerics to single underscores
+    /// and trim edges, matching the rule used to generate the bundled logo imagesets.
+    func testBundledLogoNameSlugs() {
+        XCTAssertEqual(LibraryItem.bundledLogoName(for: "Starbucks"), "logo_starbucks")
+        XCTAssertEqual(LibraryItem.bundledLogoName(for: "Peet's Coffee"), "logo_peet_s_coffee")
+        XCTAssertEqual(LibraryItem.bundledLogoName(for: "Chick-fil-A"), "logo_chick_fil_a")
+        XCTAssertEqual(LibraryItem.bundledLogoName(for: "H&M"), "logo_h_m")
+        XCTAssertEqual(LibraryItem.bundledLogoName(for: "Disney+"), "logo_disney")
+        XCTAssertEqual(LibraryItem.bundledLogoName(for: "AT&T"), "logo_at_t")
+        XCTAssertEqual(LibraryItem.bundledLogoName(for: "In-N-Out"), "logo_in_n_out")
+    }
+
+    /// Every library item with a known domain must have its logo bundled in the asset catalog so
+    /// tiles render instantly without a network fetch.
+    func testEveryDomainBackedItemHasBundledLogo() {
+        for item in MerchantLibrary.items + CardLibrary.items where LogoProvider.logoURL(for: item) != nil {
+            let asset = item.assetName ?? ""
+            XCTAssertNotNil(UIImage(named: asset),
+                            "Missing bundled logo \"\(asset)\" for \(item.name)")
         }
     }
 }
