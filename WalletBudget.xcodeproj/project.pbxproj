@@ -16,6 +16,8 @@
 		1A2B3C4D5E6F708192A30017 /* PrivacySecuritySettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708192A30018 /* PrivacySecuritySettingsView.swift */; };
 		0CC863CF863FB44798E30C8B /* AccountStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6598F94957F50DE6C1A046DF /* AccountStore.swift */; };
 		0E77789643850B568BEE2208 /* SetupGuideView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 477070C96FAAB28061BAD0E9 /* SetupGuideView.swift */; };
+		1A2B3C4D5E6F708192A30020 /* welcomeHero.json in Resources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708192A30021 /* welcomeHero.json */; };
+		1A2B3C4D5E6F708192A30022 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 1A2B3C4D5E6F708192A30023 /* Lottie */; };
 		0EC04CBF48CA9FB8C383F854 /* GroupDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 513D61072A882AB8FE7FCAA9 /* GroupDetailView.swift */; };
 		123CD377ECADC136164C79DA /* TimeSpan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88C2AA80CB889F87361E30D5 /* TimeSpan.swift */; };
 		15148BDB8DE237BF7B47A448 /* WelcomeLandingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18A498A728ED6E7A0A538C5A /* WelcomeLandingView.swift */; };
@@ -184,6 +186,7 @@
 		88C2AA80CB889F87361E30D5 /* TimeSpan.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimeSpan.swift; sourceTree = "<group>"; };
 		8F4BAAEE29C82A8177445391 /* BudgetEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BudgetEditorView.swift; sourceTree = "<group>"; };
 		3F8E2A1B9C4D5E6F70819A2B /* AppIcon.icon */ = {isa = PBXFileReference; lastKnownFileType = folder.iconcomposer.icon; path = AppIcon.icon; sourceTree = "<group>"; };
+		1A2B3C4D5E6F708192A30021 /* welcomeHero.json */ = {isa = PBXFileReference; lastKnownFileType = text.json; path = welcomeHero.json; sourceTree = "<group>"; };
 		95DAC38E5C9CF7E5E052497E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		970CFC25D76DD55DB5773DD2 /* AppTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTheme.swift; sourceTree = "<group>"; };
 		97C852F791DC04262D40EDDF /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
@@ -309,6 +312,7 @@
 			children = (
 				3F8E2A1B9C4D5E6F70819A2B /* AppIcon.icon */,
 				95DAC38E5C9CF7E5E052497E /* Assets.xcassets */,
+				1A2B3C4D5E6F708192A30021 /* welcomeHero.json */,
 				A090EDE7CD091C4593296E50 /* WalletBudget.entitlements */,
 				AFBB1AD3AF14ABF14C201ED8 /* WalletBudgetApp.swift */,
 				10E22E6F9E7D02F1151C2FA8 /* Intents */,
@@ -397,6 +401,7 @@
 			buildConfigurationList = C7495B809018E0A9AE62E123 /* Build configuration list for PBXNativeTarget "WalletBudget" */;
 			buildPhases = (
 				48A6FD1D9F968344383EEFC6 /* Sources */,
+				1A2B3C4D5E6F708192A30024 /* Frameworks */,
 				1909F446C38F0005A23D92D8 /* Resources */,
 				14ED72395CF7072FCC712822 /* Embed Foundation Extensions */,
 			);
@@ -407,6 +412,7 @@
 			);
 			name = WalletBudget;
 			packageProductDependencies = (
+				1A2B3C4D5E6F708192A30023 /* Lottie */,
 			);
 			productName = WalletBudget;
 			productReference = AD53A91857295586BE052D9A /* WalletBudget.app */;
@@ -480,6 +486,9 @@
 			);
 			mainGroup = 81F4CC430E7EBFFBD36B9CBF;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				1A2B3C4D5E6F708192A30025 /* XCRemoteSwiftPackageReference "lottie-ios" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 77B49E9C99F244891D47FE98 /* Products */;
 			projectDirPath = "";
@@ -492,6 +501,17 @@
 		};
 /* End PBXProject section */
 
+/* Begin PBXFrameworksBuildPhase section */
+		1A2B3C4D5E6F708192A30024 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A2B3C4D5E6F708192A30022 /* Lottie in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
 /* Begin PBXResourcesBuildPhase section */
 		1909F446C38F0005A23D92D8 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
@@ -499,6 +519,7 @@
 			files = (
 				4A9F3B2C0D5E6F8091A2B3C4 /* AppIcon.icon in Resources */,
 				2D0B694FE0AA8ACAD50FF15A /* Assets.xcassets in Resources */,
+				1A2B3C4D5E6F708192A30020 /* welcomeHero.json in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -631,6 +652,25 @@
 			targetProxy = D7216B51A673556B9F3861B0 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		1A2B3C4D5E6F708192A30025 /* XCRemoteSwiftPackageReference "lottie-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/airbnb/lottie-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.5.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		1A2B3C4D5E6F708192A30023 /* Lottie */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1A2B3C4D5E6F708192A30025 /* XCRemoteSwiftPackageReference "lottie-ios" */;
+			productName = Lottie;
+		};
+/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCBuildConfiguration section */
 		4296F9E82364EA98B12885DD /* Debug */ = {

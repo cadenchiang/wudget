@@ -1,8 +1,10 @@
+import Lottie
 import SwiftUI
 
-/// Welcome / landing screen: black and white, with the animated budget orrery living in the
-/// middle of the screen and simple Sign up / Log in pills at the bottom. Both buttons raise the
-/// same auth sheet (Apple / Google / Email), which handles new and returning accounts alike.
+/// Welcome / landing screen: black and white, with a looping Lottie animation (a piggy bank
+/// saving coins, bundled as welcomeHero.json) in the middle of the screen and simple
+/// Sign up / Log in pills at the bottom. Both buttons raise the same auth sheet
+/// (Apple / Google / Email), which handles new and returning accounts alike.
 struct WelcomeLandingView: View {
     @Environment(AccountStore.self) private var account
 
@@ -13,8 +15,9 @@ struct WelcomeLandingView: View {
         ZStack {
             Color(.systemBackground).ignoresSafeArea()
 
-            BudgetHeroAnimation(tint: .primary)
-                .frame(width: 280, height: 280)
+            LottieView(animation: .named("welcomeHero"))
+                .playing(loopMode: .loop)
+                .frame(width: 320, height: 320)
 
             authButtons
                 .padding(.horizontal, 24)
