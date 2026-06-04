@@ -21,14 +21,21 @@ struct AppLockGate<Content: View>: View {
 
     init(@ViewBuilder content: () -> Content) { self.content = content() }
 
+    /// Whether the lock screen is currently covering the content.
+    private var showingLock: Bool { lockEnabled && !unlocked }
+
     var body: some View {
         ZStack {
+            // The app settles in from a barely-perceptible scale as the lock fades, so the
+            // unlock reads as one smooth motion instead of an instant swap.
             content
-            if lockEnabled && !unlocked {
-                lockScreen.transition(.opacity)
+                .scaleEffect(showingLock ? 0.985 : 1)
+            if showingLock {
+                lockScreen
+                    .transition(.opacity.combined(with: .scale(scale: 1.03)))
             }
         }
-        .animation(.easeInOut, value: unlocked)
+        .animation(.easeOut(duration: 0.5), value: unlocked)
         .onAppear(perform: authenticateIfNeeded)
         .onChange(of: scenePhase) { _, phase in
             switch phase {
@@ -67,11 +74,13 @@ struct AppLockGate<Content: View>: View {
         ZStack {
             Color.brandBlue.ignoresSafeArea()
 
-            Image("AppIconImage")
+            Image("lockScreenLogo")
                 .resizable()
                 .scaledToFit()
-                .frame(width: 120, height: 120)
-                .clipShape(RoundedRectangle(cornerRadius: 27, style: .continuous))
+                .frame(width: 100, height: 100)
+                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                .padding(.top, 150)
+                .frame(maxHeight: .infinity, alignment: .top)
 
             if authFailed {
                 VStack(spacing: 12) {
