@@ -13,6 +13,9 @@ struct AppLockGate<Content: View>: View {
     /// (onAppear + scene-phase both firing), which would cancel each other and leave the
     /// Unlock button looking dead.
     @State private var authenticating = false
+    /// True after a biometric attempt failed or was cancelled; reveals the Unlock and Log out
+    /// buttons. While a prompt is in flight the lock screen shows only the glyph and title.
+    @State private var authFailed = false
     @State private var confirmLogout = false
     private let content: Content
 
@@ -34,7 +37,10 @@ struct AppLockGate<Content: View>: View {
                 // Re-lock on background, but not while a prompt is mid-flight (the biometric
                 // sheet can briefly drop the scene to inactive/background and would otherwise
                 // reset state under the running evaluation).
-                if lockEnabled && !authenticating { unlocked = false }
+                if lockEnabled && !authenticating {
+                    unlocked = false
+                    authFailed = false // next foreground starts with the clean glyph-only state
+                }
             default:
                 break
             }
@@ -49,7 +55,10 @@ struct AppLockGate<Content: View>: View {
         authenticating = true
         AppLock.authenticate { success in
             authenticating = false
-            guard success else { return }
+            guard success else {
+                authFailed = true
+                return
+            }
             // Wait for the system Face ID checkmark HUD to finish its own dismissal before
             // cross-fading the lock screen away; starting both at once makes the unlock glitch.
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
@@ -58,8 +67,8 @@ struct AppLockGate<Content: View>: View {
         }
     }
 
-    /// The simple black-and-white lock screen: lock glyph, "Budget is locked", an Unlock button
-    /// that retries Face ID, and a quiet Log out escape hatch (with confirmation).
+    /// The simple black-and-white lock screen: lock glyph and "Budget is locked". Only after a
+    /// failed/cancelled prompt do the Unlock (retries Face ID) and Log out buttons appear.
     private var lockScreen: some View {
         ZStack {
             Color(.systemBackground).ignoresSafeArea()
@@ -69,15 +78,18 @@ struct AppLockGate<Content: View>: View {
                     .foregroundStyle(.secondary)
                 Text("Budget is locked")
                     .font(.headline)
-                Button("Unlock") { authenticateIfNeeded() }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.large)
-                    .tint(.primary)
-                Button("Log out") { confirmLogout = true }
-                    .font(.subheadline.weight(.medium))
-                    .foregroundStyle(.secondary)
+                if authFailed {
+                    Button("Unlock") { authenticateIfNeeded() }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.large)
+                        .tint(.primary)
+                    Button("Log out") { confirmLogout = true }
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.secondary)
+                }
             }
         }
+        .animation(.easeInOut(duration: 0.25), value: authFailed)
         .alert("Log out of Budget?", isPresented: $confirmLogout) {
             Button("Log Out", role: .destructive) { account.signOut() }
             Button("Cancel", role: .cancel) {}
