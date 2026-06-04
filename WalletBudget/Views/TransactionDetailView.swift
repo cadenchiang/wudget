@@ -280,7 +280,7 @@ struct TransactionDetailView: View {
         components.scheme = "mailto"
         components.path = "cadenchiang@gmail.com"
         components.queryItems = [
-            URLQueryItem(name: "subject", value: "Wudget Issue Report"),
+            URLQueryItem(name: "subject", value: "Budget Issue Report"),
             URLQueryItem(name: "body", value: "\n\n\nTransaction: \(expense.merchant) \(expense.amount.asCurrency()) on \(dateString)")
         ]
         if let url = components.url { openURL(url) }

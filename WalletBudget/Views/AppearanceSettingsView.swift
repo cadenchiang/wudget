@@ -16,7 +16,7 @@ struct AppearanceSettingsView: View {
                 }
                 Toggle("Haptic Feedback", isOn: $hapticsEnabled)
             } footer: {
-                Text("Choose how Wudget looks and whether it responds with haptic taps.")
+                Text("Choose how Budget looks and whether it responds with haptic taps.")
             }
         }
         .navigationTitle("Appearance")

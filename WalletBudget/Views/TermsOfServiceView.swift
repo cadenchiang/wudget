@@ -1,12 +1,12 @@
 import SwiftUI
 
-/// In-app terms of service for Wudget.
+/// In-app terms of service for Budget.
 struct TermsOfServiceView: View {
     var body: some View {
         LegalDocumentView(
             title: "Terms of Service",
             updated: "May 29, 2026",
-            intro: "By using Wudget, you agree to these terms. Please read them.",
+            intro: "By using Budget, you agree to these terms. Please read them.",
             sections: sections
         )
     }
@@ -15,7 +15,7 @@ struct TermsOfServiceView: View {
         [
             LegalSection(
                 heading: "The service",
-                body: "Wudget helps you track and budget your spending on your device. It is a personal-finance tool, not a bank or financial institution, and it does not move, hold, or transfer money."
+                body: "Budget helps you track and budget your spending on your device. It is a personal-finance tool, not a bank or financial institution, and it does not move, hold, or transfer money."
             ),
             LegalSection(
                 heading: "Not financial advice",

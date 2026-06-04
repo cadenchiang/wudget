@@ -1,12 +1,12 @@
 import SwiftUI
 
-/// In-app privacy policy for Wudget. Reflects the app's on-device, no-backend model.
+/// In-app privacy policy for Budget. Reflects the app's on-device, no-backend model.
 struct PrivacyPolicyView: View {
     var body: some View {
         LegalDocumentView(
             title: "Privacy Policy",
             updated: "May 29, 2026",
-            intro: "Wudget is built to keep your financial data private. Everything you track stays on your device. We don't run servers that store your data, and we never sell or share it.",
+            intro: "Budget is built to keep your financial data private. Everything you track stays on your device. We don't run servers that store your data, and we never sell or share it.",
             sections: sections
         )
     }
@@ -43,7 +43,7 @@ struct PrivacyPolicyView: View {
             ),
             LegalSection(
                 heading: "Children",
-                body: "Wudget is not directed to children under 13 and does not knowingly collect information from them."
+                body: "Budget is not directed to children under 13 and does not knowingly collect information from them."
             ),
             LegalSection(
                 heading: "Changes to this policy",

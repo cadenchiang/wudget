@@ -15,7 +15,7 @@ enum AppLock {
     /// If no biometrics or passcode are available the user is *not* locked out, `completion(true)`
     /// is returned so the app stays usable.
     /// - Parameter completion: Called on the main thread with whether authentication succeeded.
-    static func authenticate(reason: String = "Unlock Wudget", completion: @escaping (Bool) -> Void) {
+    static func authenticate(reason: String = "Unlock Budget", completion: @escaping (Bool) -> Void) {
         let context = LAContext()
         var error: NSError?
         guard context.canEvaluatePolicy(.deviceOwnerAuthentication, error: &error) else {

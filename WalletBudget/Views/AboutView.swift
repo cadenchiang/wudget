@@ -10,7 +10,7 @@ struct AboutView: View {
     private var appName: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
             ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
-            ?? "Wudget"
+            ?? "Budget"
     }
 
     /// "Version 1.0 (1)"-style string from the bundle.
@@ -86,7 +86,7 @@ struct AboutView: View {
         components.scheme = "mailto"
         components.path = "cadenchiang@gmail.com"
         components.queryItems = [
-            URLQueryItem(name: "subject", value: "Wudget Support"),
+            URLQueryItem(name: "subject", value: "Budget Support"),
             URLQueryItem(name: "body", value: "\n\n\n\(appName) \(versionString)")
         ]
         if let url = components.url {

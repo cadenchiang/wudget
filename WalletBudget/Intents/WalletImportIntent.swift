@@ -12,7 +12,7 @@ import SwiftData
 struct WalletImportIntent: AppIntent {
     static var title: LocalizedStringResource = "Automatically Log Card Payment"
     static var description = IntentDescription(
-        "Imports an Apple Wallet transaction into Wudget. Map the Wallet automation's Amount, Merchant, and Card onto these fields."
+        "Imports an Apple Wallet transaction into Budget. Map the Wallet automation's Amount, Merchant, and Card onto these fields."
     )
 
     /// Amount as delivered by the automation (often a currency-formatted string, e.g. "$6.22").

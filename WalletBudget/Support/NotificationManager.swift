@@ -160,7 +160,7 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
     func sendTestNotification() {
         deliverNow(id: "test." + UUID().uuidString,
                    title: "Test notification",
-                   body: "This is how Wudget will alert you. You're all set!")
+                   body: "This is how Budget will alert you. You're all set!")
     }
 
     // MARK: - Low-level helpers (used here and by the builders extension)

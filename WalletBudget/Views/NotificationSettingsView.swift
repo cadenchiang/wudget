@@ -57,7 +57,7 @@ struct NotificationSettingsView: View {
         Section {
             Button("Open Settings to Enable") { openSystemSettings() }
         } footer: {
-            Text("Notifications are turned off for Wudget in iOS Settings.")
+            Text("Notifications are turned off for Budget in iOS Settings.")
         }
     }
 

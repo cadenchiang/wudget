@@ -801,7 +801,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WalletBudget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Wudget;
+				INFOPLIST_KEY_CFBundleDisplayName = Budget;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Wudget uses Face ID to lock the app so only you can open it and see your spending.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Wudget records where each Apple Pay purchase happened, even when the import runs in the background. Locations stay on your device and are never shared.";
@@ -863,7 +863,7 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WalletBudget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Wudget;
+				INFOPLIST_KEY_CFBundleDisplayName = Budget;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Wudget uses Face ID to lock the app so only you can open it and see your spending.";
 				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Wudget records where each Apple Pay purchase happened, even when the import runs in the background. Locations stay on your device and are never shared.";
