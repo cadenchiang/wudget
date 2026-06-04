@@ -1,9 +1,5 @@
 import SwiftUI
 
-/// The app icon's background blue, sampled from the icon artwork (RGB 99/191/240) so the lock
-/// screen's centered logo blends seamlessly into the full-bleed background.
-private let lockScreenBlue = Color(red: 99 / 255, green: 191 / 255, blue: 240 / 255)
-
 /// Wraps content behind a biometric/passcode lock when "Require Face ID" is enabled.
 ///
 /// Locks on entering the background and prompts to unlock when the app becomes active. If no
@@ -69,7 +65,7 @@ struct AppLockGate<Content: View>: View {
     /// white Unlock capsule (retries Face ID) and an outlined Log out button appear at the bottom.
     private var lockScreen: some View {
         ZStack {
-            lockScreenBlue.ignoresSafeArea()
+            Color.brandBlue.ignoresSafeArea()
 
             Image("AppIconImage")
                 .resizable()
