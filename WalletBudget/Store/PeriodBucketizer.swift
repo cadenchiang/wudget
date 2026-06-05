@@ -29,9 +29,32 @@ enum PeriodBucketizer {
             return weekBuckets(now: now, calendar: calendar)
         case .month:
             return monthBuckets(now: now, calendar: calendar)
+        case .threeMonths:
+            return trailingMonthBuckets(count: 3, now: now, calendar: calendar)
+        case .yearToDate:
+            // January through the current month.
+            return trailingMonthBuckets(count: calendar.component(.month, from: now), now: now, calendar: calendar)
         case .year:
             return yearBuckets(now: now, calendar: calendar)
+        case .all:
+            // All time is unbounded; the chart shows the trailing twelve months (totals upstream
+            // still count everything).
+            return trailingMonthBuckets(count: 12, now: now, calendar: calendar)
         }
+    }
+
+    /// The last `count` calendar months ending with the current month, labeled by short month
+    /// name (unique for count ≤ 12).
+    private static func trailingMonthBuckets(count: Int, now: Date, calendar: Calendar) -> [PeriodBucket] {
+        guard count > 0, let currentMonth = calendar.dateInterval(of: .month, for: now) else { return [] }
+        var buckets: [PeriodBucket] = []
+        for offset in stride(from: count - 1, through: 0, by: -1) {
+            guard let start = calendar.date(byAdding: .month, value: -offset, to: currentMonth.start),
+                  let end = calendar.date(byAdding: .month, value: 1, to: start) else { continue }
+            let monthIndex = calendar.component(.month, from: start) - 1
+            buckets.append(PeriodBucket(label: calendar.shortMonthSymbols[monthIndex], interval: DateInterval(start: start, end: end)))
+        }
+        return buckets
     }
 
     /// Eight three-hour buckets across the day, labeled by start hour (12a, 3a, … 9p).

@@ -15,6 +15,45 @@ struct SpendingProjection {
 
     /// Green when projected to stay within budget, gray otherwise (or when no budget).
     var amountColor: Color { isWithinBudget == true ? .green : .gray }
+
+    /// A one-sentence budget summary: how much is left to spend this period (and over how many
+    /// days), or how much over budget; `nil` when no budget is set. The dollar amount is colored
+    /// green (under) or red (over); the rest of the sentence stays primary.
+    var budgetSentence: Text? {
+        guard let remaining else { return nil }
+        // Tail framing per span: "today" reads naturally for a day; a year shows a per-month pace
+        // (a big yearly remainder with "days left" isn't actionable); other spans use days-left.
+        let tail: Text = {
+            switch periodNoun {
+            case "day":
+                return Text(" today.").foregroundStyle(.primary)
+            case "year":
+                if remaining > 0 {
+                    let monthsLeft = max(1, Int((Double(daysRemaining) / 30.4).rounded()))
+                    let perMonth = remaining / Double(monthsLeft)
+                    return Text(" this year, about \(perMonth.asCurrency()) a month.").foregroundStyle(.primary)
+                }
+                return Text(" this year.").foregroundStyle(.primary)
+            default:
+                let dayWord = daysRemaining == 1 ? "day" : "days"
+                return Text(" with \(daysRemaining) \(dayWord) left this \(periodNoun).").foregroundStyle(.primary)
+            }
+        }()
+        if remaining >= 0.005 {
+            return Text("You have ").foregroundStyle(.primary)
+                + Text(remaining.asCurrency()).foregroundStyle(.green).fontWeight(.semibold)
+                + Text(" left to spend").foregroundStyle(.primary)
+                + tail
+        } else if remaining <= -0.005 {
+            return Text("You're ").foregroundStyle(.primary)
+                + Text(abs(remaining).asCurrency()).foregroundStyle(.red).fontWeight(.semibold)
+                + Text(" over budget").foregroundStyle(.primary)
+                + tail
+        } else {
+            // Spent right at the budget (within a cent).
+            return Text("You've hit your budget").foregroundStyle(.primary) + tail
+        }
+    }
 }
 
 /// Whether the spending card counts everything or only variable (non-fixed) costs.
@@ -76,58 +115,6 @@ struct TotalSpendingCard: View {
     /// Whether there's previous-period spending to compare against.
     private var hasComparison: Bool { previousTotal > 0 }
 
-    /// One-line comparison versus the previous period (only meaningful when `hasComparison`).
-    ///
-    /// The "$144.70 less"/"$144.70 more" phrase is colored green when you've spent *less* than last
-    /// period (good) and red when you've spent *more* (bad); the rest of the sentence is primary.
-    private var comparison: Text {
-        let spentLess = delta <= 0
-        let highlight: Color = spentLess ? .green : .red
-        let direction = spentLess ? "less" : "more"
-        return Text("So far, you've spent ").foregroundStyle(.primary)
-            + Text("\(abs(delta).asCurrency()) \(direction)").foregroundStyle(highlight).fontWeight(.semibold)
-            + Text(" than last period at this time.").foregroundStyle(.primary)
-    }
-
-    /// A one-sentence budget summary: how much is left to spend this period (and over how many
-    /// days), or how much over budget. The dollar amount is colored green (under) or red (over).
-    private func budgetSentence(remaining: Double, periodNoun: String, daysRemaining: Int) -> Text {
-        // Tail framing per span: "today" reads naturally for a day; a year shows a per-month pace
-        // (a big yearly remainder with "days left" isn't actionable); week/month use days-left.
-        // Sentence text is primary (black) to match the comparison line; only the dollar amount is
-        // colored (green under / red over) and bolded.
-        let tail: Text = {
-            switch periodNoun {
-            case "day":
-                return Text(" today.").foregroundStyle(.primary)
-            case "year":
-                if remaining > 0 {
-                    let monthsLeft = max(1, Int((Double(daysRemaining) / 30.4).rounded()))
-                    let perMonth = remaining / Double(monthsLeft)
-                    return Text(" this year, about \(perMonth.asCurrency()) a month.").foregroundStyle(.primary)
-                }
-                return Text(" this year.").foregroundStyle(.primary)
-            default:
-                let dayWord = daysRemaining == 1 ? "day" : "days"
-                return Text(" with \(daysRemaining) \(dayWord) left this \(periodNoun).").foregroundStyle(.primary)
-            }
-        }()
-        if remaining >= 0.005 {
-            return Text("You have ").foregroundStyle(.primary)
-                + Text(remaining.asCurrency()).foregroundStyle(.green).fontWeight(.semibold)
-                + Text(" left to spend").foregroundStyle(.primary)
-                + tail
-        } else if remaining <= -0.005 {
-            return Text("You're ").foregroundStyle(.primary)
-                + Text(abs(remaining).asCurrency()).foregroundStyle(.red).fontWeight(.semibold)
-                + Text(" over budget").foregroundStyle(.primary)
-                + tail
-        } else {
-            // Spent right at the budget (within a cent).
-            return Text("You've hit your budget").foregroundStyle(.primary) + tail
-        }
-    }
-
     /// Upper bound for the y-axis. Falls back to a fixed value when there's no spending so the
     /// axis (and its baseline above the dates) still renders; otherwise adds a little headroom.
     private var yMax: Double {
@@ -158,7 +145,7 @@ struct TotalSpendingCard: View {
             HStack(spacing: 8) {
                 Text(total.asCurrency())
                     .font(.system(size: 40, weight: .bold))
-                    .foregroundStyle(isOverBudget ? .red : .primary)
+                    .foregroundStyle(.primary)
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)
                 if hasComparison {
@@ -168,15 +155,6 @@ struct TotalSpendingCard: View {
                 }
             }
 
-            if let projection, let remaining = projection.remaining {
-                budgetSentence(remaining: remaining, periodNoun: projection.periodNoun, daysRemaining: projection.daysRemaining)
-                    .font(.subheadline)
-                    .fixedSize(horizontal: false, vertical: true)
-            } else if hasComparison {
-                comparison
-                    .font(.subheadline)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
 
             chart
         }

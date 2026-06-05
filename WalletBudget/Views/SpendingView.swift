@@ -117,7 +117,10 @@ struct SpendingView: View {
         case .today: return monthlyBudget / 30.4
         case .week: return monthlyBudget * 7.0 / 30.4
         case .month: return monthlyBudget
+        case .threeMonths: return monthlyBudget * 3.0
+        case .yearToDate: return monthlyBudget * Double(Calendar.current.component(.month, from: Date()))
         case .year: return monthlyBudget * 12.0
+        case .all: return nil // no bounded period to budget against
         }
     }
 
@@ -127,7 +130,9 @@ struct SpendingView: View {
         case .today: return "day"
         case .week: return "week"
         case .month: return "month"
-        case .year: return "year"
+        case .threeMonths: return "quarter"
+        case .yearToDate, .year: return "year"
+        case .all: return "period"
         }
     }
 
@@ -198,51 +203,86 @@ struct SpendingView: View {
         }
     }
 
-    /// Robinhood-style period chips under the chart: 1D 1W 1M 1Y, with a filled pill that
-    /// slides to the active span.
+    /// Robinhood-style period chips under the chart (1D 1W 1M 3M YTD 1Y All): a horizontally
+    /// scrollable row of small chips with a filled pill that slides to the active span.
     private var spanSelector: some View {
-        HStack(spacing: 0) {
-            ForEach(TimeSpan.allCases) { option in
-                Button {
-                    span = option
-                } label: {
-                    Text(option.shortLabel)
-                        .font(.footnote.weight(.bold))
-                        .foregroundStyle(span == option ? Color(.systemBackground) : Color.secondary)
-                        .padding(.vertical, 7)
-                        .frame(maxWidth: .infinity)
-                        .background {
-                            if span == option {
-                                Capsule()
-                                    .fill(Color.primary)
-                                    .matchedGeometryEffect(id: "spanPill", in: spanPillNamespace)
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 4) {
+                ForEach(TimeSpan.allCases) { option in
+                    Button {
+                        span = option
+                    } label: {
+                        Text(option.shortLabel)
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(span == option ? Color(.systemBackground) : Color.secondary)
+                            .padding(.horizontal, 13)
+                            .padding(.vertical, 6)
+                            .background {
+                                if span == option {
+                                    Capsule()
+                                        .fill(Color.primary)
+                                        .matchedGeometryEffect(id: "spanPill", in: spanPillNamespace)
+                                }
                             }
-                        }
-                        .contentShape(Capsule())
+                            .contentShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Time span: \(option.title)")
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Time span: \(option.title)")
             }
         }
         .animation(.spring(response: 0.3, dampingFraction: 0.85), value: span)
+    }
+
+    /// The budget blurb as a friendly card under the period chips: a banknote glyph beside the
+    /// "left to spend" sentence on soft glass. Hidden when no budget is set.
+    @ViewBuilder
+    private var budgetBlurbCard: some View {
+        if let sentence = projection?.budgetSentence {
+            HStack(spacing: 14) {
+                Image(systemName: "banknote")
+                    .font(.system(size: 24, weight: .regular))
+                    .foregroundStyle(.primary)
+                sentence
+                    .font(.subheadline)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+            }
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(.thinMaterial)
+                    .shadow(color: .black.opacity(0.06), radius: 10, y: 4)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+            )
+        }
     }
 
     /// The spending content, airy and card-free: full-bleed hero + chart, a hairline Repeat row,
     /// text tabs, and plain transaction rows separated by hairlines.
     private var spendingScroll: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 24) {
-                TotalSpendingCard(
-                    total: SpendingSummary.total(displayedCurrent),
-                    previousTotal: SpendingSummary.total(comparablePrevious),
-                    segments: SpendingSummary.categorySegments(displayedCurrent, buckets: periodBuckets),
-                    bucketLabels: periodBuckets.map(\.label),
-                    projection: projection,
-                    budgetPerBucket: budgetPerBucket,
-                    mode: $spendingMode
-                )
+            VStack(alignment: .leading, spacing: 16) {
+                // The chart and its period chips hug tightly, Robinhood-style, with the hairline
+                // row following close beneath.
+                VStack(alignment: .leading, spacing: 8) {
+                    TotalSpendingCard(
+                        total: SpendingSummary.total(displayedCurrent),
+                        previousTotal: SpendingSummary.total(comparablePrevious),
+                        segments: SpendingSummary.categorySegments(displayedCurrent, buckets: periodBuckets),
+                        bucketLabels: periodBuckets.map(\.label),
+                        projection: projection,
+                        budgetPerBucket: budgetPerBucket,
+                        mode: $spendingMode
+                    )
 
-                spanSelector
+                    spanSelector
+                }
+
+                budgetBlurbCard
 
                 recurringRow
 
