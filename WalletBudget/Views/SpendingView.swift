@@ -257,11 +257,11 @@ struct SpendingView: View {
         .animation(.spring(response: 0.3, dampingFraction: 0.85), value: span)
     }
 
-    /// The budget blurb as a friendly card under the period chips: a banknote glyph beside the
-    /// "left to spend" sentence on soft glass. Hidden when no budget is set.
+    /// The budget blurb as a friendly card under the Repeat row: a banknote glyph beside the
+    /// per-day allowance sentence. Hidden when no budget is set.
     @ViewBuilder
     private var budgetBlurbCard: some View {
-        if let sentence = projection?.budgetSentence {
+        if let sentence = projection?.perDaySentence {
             HStack(spacing: 14) {
                 Image(systemName: "banknote")
                     .font(.system(size: 24, weight: .regular))
@@ -303,9 +303,9 @@ struct SpendingView: View {
                     spanSelector
                 }
 
-                budgetBlurbCard
-
                 recurringRow
+
+                budgetBlurbCard
 
                 VStack(alignment: .leading, spacing: 4) {
                     tabRow

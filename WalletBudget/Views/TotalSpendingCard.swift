@@ -16,43 +16,28 @@ struct SpendingProjection {
     /// Green when projected to stay within budget, gray otherwise (or when no budget).
     var amountColor: Color { isWithinBudget == true ? .green : .gray }
 
-    /// A one-sentence budget summary: how much is left to spend this period (and over how many
-    /// days), or how much over budget; `nil` when no budget is set. The dollar amount is colored
-    /// green (under) or red (over); the rest of the sentence stays primary.
-    var budgetSentence: Text? {
+    /// A one-sentence allowance: the remaining budget averaged over the days left, so staying
+    /// under budget reads as a simple daily number. All primary text with the amount in bold
+    /// (no green/red).
+    var perDaySentence: Text? {
         guard let remaining else { return nil }
-        // Tail framing per span: "today" reads naturally for a day; a year shows a per-month pace
-        // (a big yearly remainder with "days left" isn't actionable); other spans use days-left.
-        let tail: Text = {
-            switch periodNoun {
-            case "day":
-                return Text(" today.").foregroundStyle(.primary)
-            case "year":
-                if remaining > 0 {
-                    let monthsLeft = max(1, Int((Double(daysRemaining) / 30.4).rounded()))
-                    let perMonth = remaining / Double(monthsLeft)
-                    return Text(" this year, about \(perMonth.asCurrency()) a month.").foregroundStyle(.primary)
-                }
-                return Text(" this year.").foregroundStyle(.primary)
-            default:
-                let dayWord = daysRemaining == 1 ? "day" : "days"
-                return Text(" with \(daysRemaining) \(dayWord) left this \(periodNoun).").foregroundStyle(.primary)
-            }
-        }()
         if remaining >= 0.005 {
-            return Text("You have ").foregroundStyle(.primary)
-                + Text(remaining.asCurrency()).foregroundStyle(.green).fontWeight(.semibold)
-                + Text(" left to spend").foregroundStyle(.primary)
-                + tail
+            let perDay = remaining / Double(max(1, daysRemaining))
+            if periodNoun == "day" || daysRemaining <= 1 {
+                return Text("You have ")
+                    + Text(perDay.asCurrency()).fontWeight(.bold)
+                    + Text(" left to spend today.")
+            }
+            let dayWord = daysRemaining == 1 ? "day" : "days"
+            return Text("You can spend ")
+                + Text(perDay.asCurrency()).fontWeight(.bold)
+                + Text(" a day for the next \(daysRemaining) \(dayWord) and stay under budget.")
         } else if remaining <= -0.005 {
-            return Text("You're ").foregroundStyle(.primary)
-                + Text(abs(remaining).asCurrency()).foregroundStyle(.red).fontWeight(.semibold)
-                + Text(" over budget").foregroundStyle(.primary)
-                + tail
-        } else {
-            // Spent right at the budget (within a cent).
-            return Text("You've hit your budget").foregroundStyle(.primary) + tail
+            return Text("You're ")
+                + Text(abs(remaining).asCurrency()).fontWeight(.bold)
+                + Text(" over budget this \(periodNoun).")
         }
+        return Text("You've hit your budget for this \(periodNoun).")
     }
 }
 
