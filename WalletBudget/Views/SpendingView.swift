@@ -248,15 +248,14 @@ struct SpendingView: View {
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 0)
             }
-            .padding(16)
+            .padding(20)
             .background(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .fill(.thinMaterial)
-                    .shadow(color: .black.opacity(0.06), radius: 10, y: 4)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+                // Solid white card (elevated gray in dark mode) lifted by a soft shadow, no outline.
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(Color(uiColor: UIColor { traits in
+                        traits.userInterfaceStyle == .dark ? .secondarySystemBackground : .white
+                    }))
+                    .shadow(color: .black.opacity(0.08), radius: 14, y: 6)
             )
         }
     }
