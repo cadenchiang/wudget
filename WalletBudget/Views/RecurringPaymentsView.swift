@@ -129,7 +129,7 @@ private struct RecurringRow: View {
             Spacer(minLength: 8)
             AmountBadge(amount: expense.amount)
         }
-        .padding(.vertical, 12)
+        .padding(.vertical, 14)
         .opacity(expense.excludedFromBudget ? 0.55 : 1)
     }
 }
