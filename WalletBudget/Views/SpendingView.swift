@@ -93,7 +93,7 @@ struct SpendingView: View {
 
     /// The period's transactions as chart entries (exact timestamps drive the line).
     private var chartEntries: [SpendingChartEntry] {
-        displayedCurrent.map { SpendingChartEntry(date: $0.date, amount: $0.amount, category: $0.category) }
+        displayedCurrent.map { SpendingChartEntry(date: $0.date, amount: $0.amount, category: $0.category, merchant: $0.merchant) }
     }
 
     /// Transactions marked as recurring (across all time).
@@ -340,8 +340,8 @@ struct SpendingView: View {
                 let segment = geo.size.width / CGFloat(tabs.count)
                 Capsule()
                     .fill(Color.primary)
-                    .frame(width: segment - 6, height: geo.size.height - 6)
-                    .offset(x: 3 + segment * CGFloat(selectedIndex), y: 3)
+                    .frame(width: segment, height: geo.size.height)
+                    .offset(x: segment * CGFloat(selectedIndex))
                     .animation(.spring(response: 0.28, dampingFraction: 0.9), value: tab)
             }
             HStack(spacing: 0) {
@@ -365,7 +365,7 @@ struct SpendingView: View {
             }
         }
         .frame(height: 36)
-        .overlay(Capsule().strokeBorder(Color.primary, lineWidth: 1))
+        .overlay(Capsule().strokeBorder(Color.primary, lineWidth: 0.5))
         .padding(.vertical, 6)
     }
 

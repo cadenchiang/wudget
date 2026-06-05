@@ -48,6 +48,8 @@ struct SpendingChartEntry {
     let date: Date
     let amount: Double
     let category: String
+    /// Merchant name, shown by the scrub card when this entry is the snapped moment.
+    var merchant: String = ""
 }
 
 /// The spending hero: the period total over a Robinhood-style cumulative line built from the
@@ -365,7 +367,7 @@ struct TotalSpendingCard: View {
                        let scrubY = proxy.position(forY: cumulativeTotal(at: snappedDate)) {
                         pulsingDot
                             .position(x: plot.minX + scrubX, y: plot.minY + scrubY)
-                        let cardWidth: CGFloat = 150
+                        let cardWidth: CGFloat = 176
                         let gap: CGFloat = 18
                         let x = plot.minX + scrubX
                         let preferRight = x < plot.midX
@@ -396,15 +398,36 @@ struct TotalSpendingCard: View {
         }
     }
 
-    /// Floating card describing the scrubbed moment: timestamp, spent-so-far, top categories.
+    /// Floating card describing the scrubbed moment: timestamp, spent-so-far with budget
+    /// progress, the purchase that just landed, and the top categories.
     private func infoCard(at date: Date) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            VStack(alignment: .leading, spacing: 2) {
+        let cumulative = cumulativeTotal(at: date)
+        let justAdded = entries.filter { abs($0.date.timeIntervalSince(date)) < 1 }
+        return VStack(alignment: .leading, spacing: 9) {
+            VStack(alignment: .leading, spacing: 3) {
                 Text(date.formatted(.dateTime.month(.abbreviated).day().hour().minute()))
-                    .font(.caption.weight(.semibold))
+                    .font(.caption2)
                     .foregroundStyle(.secondary)
-                Text(cumulativeTotal(at: date).asCurrency())
-                    .font(.headline)
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(cumulative.asCurrency())
+                        .font(.headline)
+                    if let periodBudget, periodBudget > 0 {
+                        Text("\(Int((cumulative / periodBudget * 100).rounded()))% of budget")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+            }
+
+            if let purchase = justAdded.first {
+                HStack(spacing: 4) {
+                    Image(systemName: "plus")
+                        .font(.system(size: 8, weight: .bold))
+                    Text("\(purchase.amount.asCurrency())\(purchase.merchant.isEmpty ? "" : "  ·  \(purchase.merchant)")")
+                        .lineLimit(1)
+                }
+                .font(.caption.weight(.medium))
+                .foregroundStyle(.green)
             }
 
             let rows = breakdown(at: date)
@@ -437,12 +460,12 @@ struct TotalSpendingCard: View {
                 }
             }
         }
-        .padding(10)
+        .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
                 .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.15), radius: 8, y: 2)
+                .shadow(color: .black.opacity(0.15), radius: 10, y: 3)
         )
     }
 }
