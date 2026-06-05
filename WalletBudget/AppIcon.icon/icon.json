@@ -1,149 +1,37 @@
 {
-  "fill" : {
-    "solid" : "display-p3:0.47920,0.73870,0.92145,1.00000"
+  "fill": {
+    "solid": "display-p3:1.00000,1.00000,1.00000,1.00000"
   },
-  "groups" : [
+  "groups": [
     {
-      "blur-material" : 0.5,
-      "layers" : [
+      "blur-material": 0.5,
+      "layers": [
         {
-          "image-name" : "5-front-pocket.svg",
-          "name" : "5-front-pocket",
-          "position" : {
-            "scale" : 0.95,
-            "translation-in-points" : [
-              23.699415000076442,
-              -2.9804968444236692
+          "image-name": "rings.svg",
+          "name": "rings",
+          "position": {
+            "scale": 0.92,
+            "translation-in-points": [
+              0,
+              0
             ]
           }
         }
       ],
-      "shadow" : {
-        "kind" : "layer-color",
-        "opacity" : 0.72
+      "shadow": {
+        "kind": "none",
+        "opacity": 0.5
       },
-      "translucency" : {
-        "enabled" : true,
-        "value" : 0.1
-      }
-    },
-    {
-      "blur-material" : 0.5,
-      "layers" : [
-        {
-          "image-name" : "3-yellow-card.svg",
-          "name" : "3-yellow-card",
-          "position" : {
-            "scale" : 0.95,
-            "translation-in-points" : [
-              23.699415000076442,
-              -2.9804968444236692
-            ]
-          }
-        },
-        {
-          "image-name" : "4-blue-card.svg",
-          "name" : "4-blue-card",
-          "position" : {
-            "scale" : 0.95,
-            "translation-in-points" : [
-              22.58065905050148,
-              -19.888091153853793
-            ]
-          }
-        }
-      ],
-      "shadow" : {
-        "kind" : "layer-color",
-        "opacity" : 1
-      },
-      "translucency" : {
-        "enabled" : true,
-        "value" : 0.2
-      }
-    },
-    {
-      "blur-material" : 0.5,
-      "layers" : [
-        {
-          "image-name" : "lines.svg",
-          "name" : "lines",
-          "opacity" : 0.23,
-          "position" : {
-            "scale" : 0.95,
-            "translation-in-points" : [
-              23.699415000076442,
-              -25.469911504377706
-            ]
-          }
-        },
-        {
-          "blend-mode-specializations" : [
-            {
-              "appearance" : "dark",
-              "value" : "normal"
-            }
-          ],
-          "fill-specializations" : [
-            {
-              "appearance" : "dark",
-              "value" : "none"
-            }
-          ],
-          "image-name" : "rec.svg",
-          "name" : "rec",
-          "position" : {
-            "scale" : 0.95,
-            "translation-in-points" : [
-              22.23350216606093,
-              -26.51828116445097
-            ]
-          }
-        }
-      ],
-      "shadow" : {
-        "kind" : "neutral",
-        "opacity" : 1
-      },
-      "translucency" : {
-        "enabled" : true,
-        "value" : 0.3
-      }
-    },
-    {
-      "blur-material" : 0.5,
-      "layers" : [
-        {
-          "fill" : {
-            "solid" : "display-p3:0.75447,0.75628,0.64177,1.00000"
-          },
-          "glass" : true,
-          "image-name" : "1-back-flap.svg",
-          "name" : "1-back-flap",
-          "position" : {
-            "scale" : 0.95,
-            "translation-in-points" : [
-              23.699415000076442,
-              -2.9804968444236692
-            ]
-          }
-        }
-      ],
-      "shadow" : {
-        "kind" : "none",
-        "opacity" : 0.5
-      },
-      "specular" : true,
-      "translucency" : {
-        "enabled" : true,
-        "value" : 0.1
+      "translucency": {
+        "enabled": true,
+        "value": 0.1
       }
     }
   ],
-  "supported-platforms" : {
-    "circles" : [
+  "supported-platforms": {
+    "circles": [
       "watchOS"
     ],
-    "squares" : "shared"
+    "squares": "shared"
   }
 }
