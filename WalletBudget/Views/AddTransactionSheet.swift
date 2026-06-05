@@ -87,7 +87,7 @@ struct AddTransactionSheet: View {
             LibraryPickerView(title: "Merchant", items: MerchantLibrary.items, fallbackIcon: "tag.fill") { merchant = $0 }
         }
         .sheet(isPresented: $showingCardPicker) {
-            LibraryPickerView(title: "Card", items: CardLibrary.items, fallbackIcon: "creditcard.fill", style: .list) { card = $0 }
+            MyCardPickerSheet { card = $0 }
         }
     }
 
@@ -366,4 +366,116 @@ private extension View {
 #Preview {
     AddTransactionSheet()
         .modelContainer(for: Expense.self, inMemory: true)
+}
+
+/// Card chooser for the add flow: only the cards in My Cards, contact-list style, plus an
+/// "Add another card" row that opens the full library and saves the pick into My Cards.
+private struct MyCardPickerSheet: View {
+    @Environment(\.modelContext) private var context
+    @Environment(\.dismiss) private var dismiss
+    @Query(sort: \UserCard.createdAt) private var cards: [UserCard]
+    @State private var browsingAll = false
+    let onSelect: (String) -> Void
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 0) {
+                    ForEach(Array(cards.enumerated()), id: \.element.persistentModelID) { index, card in
+                        Button {
+                            choose(card.name)
+                        } label: {
+                            row(card.name)
+                        }
+                        .buttonStyle(.plain)
+                        if index < cards.count - 1 {
+                            Divider().padding(.leading, 62)
+                        }
+                    }
+                    if !cards.isEmpty { Divider() }
+                    Button {
+                        browsingAll = true
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 26))
+                                .foregroundStyle(.secondary)
+                                .frame(width: 38)
+                            Text("Add another card")
+                                .foregroundStyle(.primary)
+                            Spacer(minLength: 0)
+                        }
+                        .padding(.vertical, 12)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 20)
+            }
+            .navigationTitle("Card")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Cancel") { dismiss() }
+                }
+            }
+        }
+        .glassSheetBackground(cornerRadius: 36)
+        .presentationCornerRadius(36)
+        .presentationDragIndicator(.visible)
+        .sheet(isPresented: $browsingAll) {
+            LibraryPickerView(title: "Card", items: CardLibrary.items, fallbackIcon: "creditcard.fill", style: .list) { name in
+                addIfNeeded(name)
+                choose(name)
+            }
+        }
+    }
+
+    /// One owned-card row: logo + name, like a contacts entry.
+    private func row(_ name: String) -> some View {
+        HStack(spacing: 12) {
+            if let item = CardLibrary.item(named: name),
+               let asset = item.assetName, UIImage(named: asset) != nil {
+                ZStack {
+                    Color.white
+                    Image(asset).resizable().scaledToFill()
+                }
+                .frame(width: 38, height: 38)
+                .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+            } else {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 9, style: .continuous)
+                        .fill(Color.gray.gradient)
+                    Image(systemName: "creditcard.fill")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.white)
+                }
+                .frame(width: 38, height: 38)
+            }
+            Text(name)
+                .font(.body)
+                .foregroundStyle(.primary)
+            Spacer(minLength: 0)
+        }
+        .padding(.vertical, 10)
+        .contentShape(Rectangle())
+    }
+
+    /// Saves a brand-new card into My Cards so the pick sticks for next time.
+    private func addIfNeeded(_ name: String) {
+        guard !cards.contains(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) else { return }
+        context.insert(UserCard(name: name))
+        do {
+            try context.save()
+        } catch {
+            Log.ui.error("Failed to save new card: \(error.localizedDescription, privacy: .public)")
+        }
+    }
+
+    /// Reports the selection and closes.
+    private func choose(_ name: String) {
+        Haptics.tap()
+        onSelect(name)
+        dismiss()
+    }
 }

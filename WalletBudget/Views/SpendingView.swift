@@ -168,7 +168,7 @@ struct SpendingView: View {
                 .topChromeBar { topBar }
                 .toolbar(.hidden, for: .navigationBar)
                 .sheet(isPresented: $showingAdd) { AddTransactionSheet() }
-                .sheet(isPresented: $showingCards) { CardsView() }
+                .navigationDestination(isPresented: $showingCards) { CardsView() }
                 .onChange(of: span) { _, _ in Haptics.selection() }
                 .onChange(of: tab) { _, _ in Haptics.selection() }
         }

@@ -11,7 +11,7 @@ enum SharedModelContainer {
     /// The process-wide container. Construction failure is unrecoverable, so we log and trap.
     static let container: ModelContainer = {
         do {
-            let schema = Schema([Expense.self, SpendingCategory.self])
+            let schema = Schema([Expense.self, SpendingCategory.self, UserCard.self])
             let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
             let container = try ModelContainer(for: schema, configurations: [configuration])
             Log.store.info("SwiftData container initialized")
