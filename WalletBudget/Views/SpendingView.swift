@@ -164,13 +164,12 @@ struct SpendingView: View {
         }
     }
 
-    /// Transparent top bar: title with the selected period's date range, add button trailing.
-    /// (Period selection lives in the chip slider under the chart.)
+    /// Transparent top bar: the Total/Everyday Spending mode dropdown with the selected period's
+    /// date range beneath it, add button trailing. (Period selection lives in the chip slider.)
     private var topBar: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 1) {
-                Text("Spending")
-                    .font(.title3.weight(.semibold))
+                modeMenu
                 Text(span.dateRange())
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -201,6 +200,27 @@ struct SpendingView: View {
         } else {
             button.background(Circle().fill(.thinMaterial))
         }
+    }
+
+    /// The Total/Everyday Spending dropdown shown as the screen title.
+    private var modeMenu: some View {
+        Menu {
+            Picker("Spending mode", selection: $spendingMode) {
+                ForEach(SpendingMode.allCases) { option in
+                    Text(option.title).tag(option)
+                }
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Text(spendingMode.title)
+                    .font(.title3.weight(.semibold))
+                Image(systemName: "chevron.down")
+                    .font(.subheadline.weight(.semibold))
+            }
+            .foregroundStyle(.primary)
+        }
+        .tint(.primary)
+        .accessibilityLabel("Spending mode: \(spendingMode.title)")
     }
 
     /// Robinhood-style period chips under the chart (1D 1W 1M 3M YTD 1Y All): a horizontally
@@ -274,8 +294,7 @@ struct SpendingView: View {
                         segments: SpendingSummary.categorySegments(displayedCurrent, buckets: periodBuckets),
                         bucketLabels: periodBuckets.map(\.label),
                         projection: projection,
-                        budgetPerBucket: budgetPerBucket,
-                        mode: $spendingMode
+                        budgetPerBucket: budgetPerBucket
                     )
 
                     spanSelector
@@ -322,7 +341,6 @@ struct SpendingView: View {
                 .padding(.vertical, 14)
             }
             .buttonStyle(.plain)
-            Divider()
         }
     }
 

@@ -90,8 +90,6 @@ struct TotalSpendingCard: View {
     let projection: SpendingProjection?
     /// Optional per-bucket budget target; draws a budget line with green/gray gradients.
     let budgetPerBucket: Double?
-    /// The current spending mode (drives the title dropdown).
-    @Binding var mode: SpendingMode
     /// Period noun (day/week/month/year), used for the fallback blurb so the line is never blank.
     var periodNoun: String = "period"
 
@@ -125,23 +123,6 @@ struct TotalSpendingCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Menu {
-                Picker("Spending mode", selection: $mode) {
-                    ForEach(SpendingMode.allCases) { option in
-                        Text(option.title).tag(option)
-                    }
-                }
-            } label: {
-                HStack(spacing: 4) {
-                    Text(mode.title)
-                        .font(.subheadline)
-                    Image(systemName: "chevron.down")
-                        .font(.caption2.weight(.bold))
-                }
-                .foregroundStyle(.primary)
-            }
-            .tint(.primary)
-
             HStack(spacing: 8) {
                 Text(total.asCurrency())
                     .font(.system(size: 40, weight: .bold))
@@ -363,8 +344,7 @@ struct TotalSpendingCard: View {
         ],
         bucketLabels: ["1-7", "8-14", "15-21", "22-28", "29-31"],
         projection: SpendingProjection(amount: 2100, periodNoun: "month", isWithinBudget: false, remaining: -420, daysRemaining: 12),
-        budgetPerBucket: 400,
-        mode: .constant(.total)
+        budgetPerBucket: 400
     )
     .padding()
     .background(Color(.systemGroupedBackground))

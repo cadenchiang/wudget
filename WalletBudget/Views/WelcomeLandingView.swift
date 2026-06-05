@@ -11,8 +11,6 @@ struct WelcomeLandingView: View {
 
     /// Whether the sign-in bottom sheet is showing.
     @State private var showingAuth = false
-    /// Drives the gentle breathing of the centered dollar sign.
-    @State private var dollarPulsing = false
 
     var body: some View {
         ZStack {
@@ -54,13 +52,18 @@ struct WelcomeLandingView: View {
                 )
                 .frame(width: 300, height: 300)
 
-            Text("$")
-                .font(.system(size: 54, weight: .semibold, design: .rounded))
-                .foregroundStyle(.primary)
-                .scaleEffect(dollarPulsing ? 1.07 : 0.93)
-                .animation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true), value: dollarPulsing)
-                .onAppear { dollarPulsing = true }
-                .accessibilityHidden(true)
+            // The dollar floats organically — a slow Lissajous drift with breathing scale and a
+            // slight tilt — so it lives inside the ring motion instead of sitting frozen.
+            TimelineView(.animation) { timeline in
+                let t = timeline.date.timeIntervalSinceReferenceDate
+                Text("$")
+                    .font(.system(size: 54, weight: .semibold, design: .rounded))
+                    .foregroundStyle(.primary)
+                    .scaleEffect(1 + 0.07 * sin(t * 1.5))
+                    .rotationEffect(.degrees(5 * sin(t * 0.9)))
+                    .offset(x: 5 * sin(t * 0.7), y: 6 * sin(t * 1.13))
+            }
+            .accessibilityHidden(true)
         }
     }
 
