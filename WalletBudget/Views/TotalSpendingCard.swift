@@ -221,7 +221,7 @@ struct TotalSpendingCard: View {
         VStack(alignment: .leading, spacing: 10) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(total.asCurrency())
-                    .font(.system(size: 34, weight: .semibold))
+                    .font(.system(size: 34, weight: .medium))
                     .foregroundStyle(.primary)
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)

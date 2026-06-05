@@ -16,7 +16,7 @@ struct AmountBadge: View {
 
     var body: some View {
         Text(amount.asCurrency())
-            .font(.subheadline.weight(.medium))
+            .font(.footnote.weight(.medium))
             .foregroundStyle(.white)
             .lineLimit(1)
             .padding(.horizontal, 10)
@@ -37,7 +37,7 @@ struct SpendingGroupRow: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(group.key)
-                    .font(.body.weight(.medium))
+                    .font(.callout)
                     .lineLimit(1)
                 HStack(spacing: 6) {
                     Text("\(group.count) Transaction\(group.count == 1 ? "" : "s")")
@@ -102,7 +102,7 @@ struct TransactionRow: View {
             MerchantLogoTile(merchant: expense.merchant)
             VStack(alignment: .leading, spacing: 2) {
                 Text(expense.merchant.isEmpty ? "Unknown" : expense.merchant)
-                    .font(.body.weight(.medium))
+                    .font(.callout)
                     .lineLimit(1)
                 Text(expense.date, format: .dateTime.month().day())
                     .font(.subheadline)
