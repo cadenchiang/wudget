@@ -90,6 +90,9 @@ struct OnboardingFlow: View {
         Button(action: advance) {
             Text(isLastStep ? "Done" : "Continue")
                 .fontWeight(.semibold)
+                // Explicit label color: on the primary-tinted fill the label must invert with
+                // the scheme (black on white in dark mode), which borderedProminent won't do.
+                .foregroundStyle(isLastStep ? Color.white : Color(.systemBackground))
                 .frame(maxWidth: .infinity)
         }
         .buttonStyle(.borderedProminent)
