@@ -387,10 +387,9 @@ struct SpendingView: View {
                     TransactionRow(expense: expense)
                 }
                 .buttonStyle(.plain)
-                .padding(.horizontal, 16)
 
                 if index < displayedCurrent.count - 1 {
-                    Divider().padding(.leading, 72)
+                    Divider().padding(.leading, 56)
                 }
             }
         }
@@ -406,16 +405,15 @@ struct SpendingView: View {
                     SpendingGroupRow(group: group, grouping: grouping)
                 }
                 .buttonStyle(.plain)
-                .padding(.horizontal, 16)
 
                 if index < groups.count - 1 {
-                    Divider().padding(.leading, 72)
+                    Divider().padding(.leading, 56)
                 }
             }
         }
     }
 
-    /// Rows grouped in a Settings-style rounded card on subtle Apple gray, or the empty message.
+    /// Plain rows on the page background, or the empty message.
     @ViewBuilder
     private func rowsList<Rows: View>(_ isEmpty: Bool, @ViewBuilder rows: () -> Rows) -> some View {
         LazyVStack(spacing: 0) {
@@ -423,16 +421,11 @@ struct SpendingView: View {
                 Text("No transactions in this period.")
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(16)
+                    .padding(.vertical, 16)
             } else {
                 rows()
             }
         }
-        .padding(.vertical, 6)
-        .background(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(Color(.secondarySystemBackground))
-        )
     }
 
     /// The current-period expenses belonging to a group (mode-aware: excludes ignored in Variable).

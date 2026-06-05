@@ -43,15 +43,10 @@ struct CardsView: View {
                         ForEach(Array(summaries.enumerated()), id: \.element.id) { index, summary in
                             row(summary)
                             if index < summaries.count - 1 {
-                                Divider().padding(.leading, 72)
+                                Divider().padding(.leading, 56)
                             }
                         }
                     }
-                    .padding(.vertical, 6)
-                    .background(
-                        RoundedRectangle(cornerRadius: 22, style: .continuous)
-                            .fill(Color(.secondarySystemBackground))
-                    )
                     .padding(.horizontal, 20)
                     .padding(.bottom, 24)
                 }
@@ -103,7 +98,6 @@ struct CardsView: View {
             Text(summary.total.asCurrency())
                 .font(.body.weight(.semibold))
         }
-        .padding(.horizontal, 16)
         .padding(.vertical, 10)
     }
 

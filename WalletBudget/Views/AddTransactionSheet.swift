@@ -36,11 +36,18 @@ struct AddTransactionSheet: View {
         _showDetails = State(initialValue: recurrenceDefault != .none || !categoryDefault.isEmpty)
     }
 
+    /// Step gates: each later step stays blurred until the one before it is complete.
+    private var amountDone: Bool {
+        CurrencyParser.parse(amountText).map { $0 != 0 } == true
+    }
+    private var merchantDone: Bool {
+        !merchant.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+    private var cardDone: Bool { !card.isEmpty }
+
     /// Whether the required steps (a parseable amount, a merchant, and a card) are complete.
     private var canSave: Bool {
-        CurrencyParser.parse(amountText).map { $0 != 0 } == true
-            && !merchant.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            && !card.isEmpty
+        amountDone && merchantDone && cardDone
     }
 
     var body: some View {
@@ -50,8 +57,11 @@ struct AddTransactionSheet: View {
                 VStack(alignment: .leading, spacing: 28) {
                     amountStep
                     merchantStep
+                        .stepGate(unlocked: amountDone)
                     cardStep
+                        .stepGate(unlocked: amountDone && merchantDone)
                     detailsStep
+                        .stepGate(unlocked: canSave)
                     if let errorMessage {
                         Text(errorMessage)
                             .font(.subheadline)
@@ -339,6 +349,17 @@ struct AddTransactionSheet: View {
             errorMessage = "Could not save. Please try again."
             Log.ui.error("Manual save failed: \(error.localizedDescription, privacy: .public)")
         }
+    }
+}
+
+private extension View {
+    /// Sequential-step treatment: locked steps sit blurred, faded, and untappable until the
+    /// previous step completes, then ease in.
+    func stepGate(unlocked: Bool) -> some View {
+        blur(radius: unlocked ? 0 : 2.5)
+            .opacity(unlocked ? 1 : 0.45)
+            .disabled(!unlocked)
+            .animation(.easeInOut(duration: 0.25), value: unlocked)
     }
 }
 
