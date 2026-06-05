@@ -318,7 +318,8 @@ struct TransactionDetailView: View {
                 Text("Ignore in Everyday Spending")
                     .foregroundStyle(.primary)
             }
-            .tint(.primary)
+            // A concrete color: .primary doesn't resolve on Toggle tracks and renders white.
+            .tint(.green)
             Text("Fixed costs like rent and bills can be ignored so they don't count toward Everyday Spending.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
