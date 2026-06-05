@@ -24,15 +24,9 @@ struct SpendingView: View {
     @Query(sort: \Expense.date, order: .reverse) private var expenses: [Expense]
     @AppStorage("budget.monthly") private var monthlyBudget = 0.0
     @AppStorage("budget.enabled") private var budgetEnabled = true
-    @AppStorage(ProfileKeys.variableDefault) private var variableDefault = false
     @State private var span: TimeSpan = .month
     @State private var tab: SpendingTab = .recent
-    @AppStorage("spending.mode") private var spendingMode: SpendingMode = .total
-    @AppStorage("spending.modeSeeded") private var modeSeeded = false
     @State private var showingAdd = false
-    /// Anchors the sliding pill of the period selector.
-    @Namespace private var spanPillNamespace
-
     /// Expenses within the selected period (already date-descending from the query).
     private var currentExpenses: [Expense] {
         SpendingSummary.filter(expenses, in: span.interval())
@@ -43,24 +37,21 @@ struct SpendingView: View {
         SpendingSummary.filter(expenses, in: span.previousInterval())
     }
 
-    /// Current-period expenses honoring the spending mode (Everyday excludes fixed costs;
-    /// Fixed shows only them).
+    /// Current-period expenses (everything shows; fixed costs raise the budget line instead
+    /// of being filtered out).
     private var displayedCurrent: [Expense] {
-        filtered(currentExpenses)
+        currentExpenses
     }
 
-    /// Previous-period expenses honoring the spending mode.
+    /// Previous-period expenses.
     private var displayedPrevious: [Expense] {
-        filtered(previousExpenses)
+        previousExpenses
     }
 
-    /// Applies the spending mode's filter to a set of expenses.
-    private func filtered(_ expenses: [Expense]) -> [Expense] {
-        switch spendingMode {
-        case .total: return expenses
-        case .variable: return expenses.filter { !$0.excludedFromBudget }
-        case .fixed: return expenses.filter { $0.excludedFromBudget }
-        }
+    /// Fixed costs in the current period (transactions marked "ignore"): rather than hiding
+    /// them, they push the budget ceiling up, since that money was committed regardless.
+    private var fixedSpent: Double {
+        SpendingSummary.total(currentExpenses.filter { $0.excludedFromBudget })
     }
 
     /// Previous-period expenses truncated to the same elapsed point we've reached in the current
@@ -133,16 +124,20 @@ struct SpendingView: View {
     /// `nil` when the user has turned the budget off or hasn't set one, which removes the
     /// budget line, the over/under coloring, and the remaining-to-spend sentence everywhere.
     private var periodBudget: Double? {
-        guard budgetEnabled, monthlyBudget > 0, spendingMode != .fixed else { return nil }
+        guard budgetEnabled, monthlyBudget > 0 else { return nil }
+        let base: Double?
         switch span {
-        case .today: return monthlyBudget / 30.4
-        case .week: return monthlyBudget * 7.0 / 30.4
-        case .month: return monthlyBudget
-        case .threeMonths: return monthlyBudget * 3.0
-        case .yearToDate: return monthlyBudget * Double(Calendar.current.component(.month, from: Date()))
-        case .year: return monthlyBudget * 12.0
-        case .all: return nil // no bounded period to budget against
+        case .today: base = monthlyBudget / 30.4
+        case .week: base = monthlyBudget * 7.0 / 30.4
+        case .month: base = monthlyBudget
+        case .threeMonths: base = monthlyBudget * 3.0
+        case .yearToDate: base = monthlyBudget * Double(Calendar.current.component(.month, from: Date()))
+        case .year: base = monthlyBudget * 12.0
+        case .all: base = nil // no bounded period to budget against
         }
+        // Fixed costs lift the ceiling: the line tracks ALL spending, so the budget allows
+        // the committed fixed amount on top of the everyday budget.
+        return base.map { $0 + fixedSpent }
     }
 
     /// Period noun used in the prediction copy.
@@ -166,15 +161,6 @@ struct SpendingView: View {
                 .sheet(isPresented: $showingAdd) { AddTransactionSheet() }
                 .onChange(of: span) { _, _ in Haptics.selection() }
                 .onChange(of: tab) { _, _ in Haptics.selection() }
-                .onChange(of: spendingMode) { _, _ in Haptics.selection() }
-                .onAppear {
-                    // Seed the mode from the onboarding preference only once, ever. After that the
-                    // user's last choice is restored from @AppStorage on every launch.
-                    if !modeSeeded {
-                        spendingMode = variableDefault ? .variable : .total
-                        modeSeeded = true
-                    }
-                }
         }
     }
 
@@ -237,86 +223,22 @@ struct SpendingView: View {
         .accessibilityLabel("Time span: \(span.title)")
     }
 
-    /// Mode chips under the chart (Total / Everyday / Fixed) with a filled pill that slides to
-    /// the active mode.
-    private var modeSelector: some View {
-        HStack(spacing: 4) {
-            ForEach(SpendingMode.allCases) { option in
-                Button {
-                    spendingMode = option
-                } label: {
-                    Text(option.chipLabel)
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(spendingMode == option ? Color(.systemBackground) : Color.secondary)
-                        .padding(.horizontal, 13)
-                        .padding(.vertical, 6)
-                        .background {
-                            if spendingMode == option {
-                                Capsule()
-                                    .fill(Color.primary)
-                                    .matchedGeometryEffect(id: "modePill", in: spanPillNamespace)
-                            }
-                        }
-                        .contentShape(Capsule())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(option.title)
-            }
-            Spacer(minLength: 0)
-        }
-        .animation(.spring(response: 0.3, dampingFraction: 0.85), value: spendingMode)
-    }
-
-    /// The budget blurb as a friendly card under the Repeat row: a banknote glyph beside the
-    /// per-day allowance sentence. Hidden when no budget is set.
-    @ViewBuilder
-    private var budgetBlurbCard: some View {
-        if let sentence = projection?.perDaySentence {
-            HStack(spacing: 14) {
-                Image(systemName: "banknote")
-                    .font(.system(size: 24, weight: .regular))
-                    .foregroundStyle(.primary)
-                sentence
-                    .font(.subheadline)
-                    .fixedSize(horizontal: false, vertical: true)
-                Spacer(minLength: 0)
-            }
-            .padding(20)
-            .background(
-                // Solid white card (elevated gray in dark mode) lifted by a soft shadow, no outline.
-                RoundedRectangle(cornerRadius: 20, style: .continuous)
-                    .fill(Color(uiColor: UIColor { traits in
-                        traits.userInterfaceStyle == .dark ? .secondarySystemBackground : .white
-                    }))
-                    .shadow(color: .black.opacity(0.08), radius: 14, y: 6)
-            )
-        }
-    }
-
     /// The spending content, airy and card-free: full-bleed hero + chart, a hairline Repeat row,
-    /// text tabs, and plain transaction rows separated by hairlines.
+    /// the list dropdown, and plain transaction rows separated by hairlines.
     private var spendingScroll: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                // The chart and its period chips hug tightly, Robinhood-style, with the hairline
-                // row following close beneath.
-                VStack(alignment: .leading, spacing: 8) {
-                    TotalSpendingCard(
-                        total: SpendingSummary.total(displayedCurrent),
-                        previousTotal: SpendingSummary.total(comparablePrevious),
-                        entries: chartEntries,
-                        domain: chartDomain,
-                        buckets: PeriodBucketizer.buckets(for: span),
-                        projection: projection,
-                        periodBudget: periodBudget
-                    )
-
-                    modeSelector
-                }
+                TotalSpendingCard(
+                    total: SpendingSummary.total(displayedCurrent),
+                    previousTotal: SpendingSummary.total(comparablePrevious),
+                    entries: chartEntries,
+                    domain: chartDomain,
+                    buckets: PeriodBucketizer.buckets(for: span),
+                    projection: projection,
+                    periodBudget: periodBudget
+                )
 
                 recurringRow
-
-                budgetBlurbCard
 
                 VStack(alignment: .leading, spacing: 4) {
                     tabMenu
@@ -333,7 +255,7 @@ struct SpendingView: View {
         }
     }
 
-    /// Plain "Repeat" row between hairlines, linking to the recurring-payments list.
+    /// Plain "Repeat" row above a hairline, linking to the recurring-payments list.
     private var recurringRow: some View {
         VStack(spacing: 0) {
             Divider()
