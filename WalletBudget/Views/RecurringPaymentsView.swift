@@ -40,16 +40,17 @@ struct RecurringPaymentsView: View {
                             .tint(.gray)
                         }
                     }
-                }
-                .listStyle(.plain)
-                .safeAreaInset(edge: .bottom) {
+
                     Text("Swipe left on a payment to ignore or delete it. Ignored fixed costs raise your budget line instead of counting against it.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal, 32)
-                        .padding(.vertical, 10)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 14)
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 0, leading: 32, bottom: 16, trailing: 32))
                 }
+                .listStyle(.plain)
             }
         }
         .navigationTitle("Repeat")
