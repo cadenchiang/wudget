@@ -318,7 +318,7 @@ struct SpendingView: View {
                 budgetBlurbCard
 
                 VStack(alignment: .leading, spacing: 4) {
-                    tabRow
+                    tabMenu
                     if tab == .recent {
                         recentRows
                     } else {
@@ -357,25 +357,26 @@ struct SpendingView: View {
         }
     }
 
-    /// Robinhood-style text tabs, sized like the screen title: the active one is bold primary,
-    /// the rest stay secondary. Scrolls horizontally when the titles outgrow the screen.
-    private var tabRow: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 20) {
+    /// The list selector as a dropdown: Recent / By Merchant / By Category.
+    private var tabMenu: some View {
+        Menu {
+            Picker("List", selection: $tab) {
                 ForEach(SpendingTab.allCases) { option in
-                    Button {
-                        tab = option
-                    } label: {
-                        Text(option.title)
-                            .font(.title3.weight(tab == option ? .semibold : .regular))
-                            .foregroundStyle(tab == option ? Color.primary : Color.secondary)
-                    }
-                    .buttonStyle(.plain)
+                    Text(option.title).tag(option)
                 }
             }
+        } label: {
+            HStack(spacing: 4) {
+                Text(tab.title)
+                    .font(.title3.weight(.semibold))
+                Image(systemName: "chevron.down")
+                    .font(.subheadline.weight(.semibold))
+            }
+            .foregroundStyle(.primary)
         }
+        .tint(.primary)
         .padding(.vertical, 8)
-        .animation(.easeInOut(duration: 0.15), value: tab)
+        .accessibilityLabel("List: \(tab.title)")
     }
 
     /// Flat, date-ordered list of the period's transactions (the Recent tab).
