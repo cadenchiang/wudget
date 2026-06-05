@@ -258,6 +258,7 @@ struct SpendingView: View {
                         groupRows
                     }
                 }
+                .padding(.top, 12) // extra air between the allowance card and the list
             }
             .padding(.horizontal, 20)
             .padding(.top, 8)
