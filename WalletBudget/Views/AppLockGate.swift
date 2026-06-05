@@ -75,7 +75,7 @@ struct AppLockGate<Content: View>: View {
             VStack(spacing: 18) {
                 Image(systemName: "lock.fill")
                     .font(.system(size: 44))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(.primary)
                 Text("Budget is locked")
                     .font(.headline)
                 if authFailed {
