@@ -32,6 +32,15 @@ struct CardsView: View {
                                 }
                             }
                     }
+
+                    Text("Tap a card to set its credit limit. Keeping utilization under 30% is healthy for your credit score.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 14)
+                            .listRowSeparator(.hidden)
+                            .listRowInsets(EdgeInsets(top: 0, leading: 32, bottom: 16, trailing: 32))
                 }
                 .listStyle(.plain)
             }
@@ -45,16 +54,6 @@ struct CardsView: View {
                     .tint(.primary)
                     .accessibilityLabel("Add card")
             }
-        }
-        .safeAreaInset(edge: .bottom) {
-            Text("Tap a card to set its credit limit. Keeping utilization under 30% is healthy for your credit score.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-                .padding(.vertical, 10)
-                .frame(maxWidth: .infinity)
-                .background(.bar)
         }
         .sheet(item: $editing) { card in
             CardEditorSheet(card: card)
