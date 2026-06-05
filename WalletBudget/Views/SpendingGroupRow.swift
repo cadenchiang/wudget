@@ -4,8 +4,11 @@ import SwiftUI
 /// everyday amounts, orange for notable ones, red for big-ticket charges.
 struct AmountBadge: View {
     let amount: Double
+    /// Muted (ignored) amounts render gray and struck through, since they don't count.
+    var muted: Bool = false
 
     private var color: Color {
+        guard !muted else { return .gray }
         switch amount {
         case ..<15: return .gray
         case ..<75: return .green
@@ -17,6 +20,7 @@ struct AmountBadge: View {
     var body: some View {
         Text(amount.asCurrency())
             .font(.footnote.weight(.medium))
+            .strikethrough(muted)
             .foregroundStyle(.white)
             .lineLimit(1)
             .padding(.horizontal, 10)

@@ -117,19 +117,35 @@ private struct RecurringRow: View {
     var body: some View {
         HStack(spacing: 12) {
             MerchantLogoTile(merchant: expense.merchant)
+                .saturation(expense.excludedFromBudget ? 0 : 1)
             VStack(alignment: .leading, spacing: 2) {
-                Text(expense.merchant.isEmpty ? "Unknown" : expense.merchant)
-                    .font(.callout)
-                    .lineLimit(1)
-                Text(expense.excludedFromBudget ? "Ignored · \(subtitle)" : subtitle)
+                HStack(spacing: 6) {
+                    Text(expense.merchant.isEmpty ? "Unknown" : expense.merchant)
+                        .font(.callout)
+                        .foregroundStyle(expense.excludedFromBudget ? Color.secondary : .primary)
+                        .lineLimit(1)
+                    if expense.excludedFromBudget {
+                        HStack(spacing: 3) {
+                            Image(systemName: "eye.slash.fill")
+                                .font(.system(size: 8, weight: .semibold))
+                            Text("IGNORED")
+                                .font(.system(size: 9, weight: .bold))
+                        }
+                        .foregroundStyle(.secondary)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
+                        .background(Capsule().fill(Color(.tertiarySystemFill)))
+                    }
+                }
+                Text(subtitle)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
             Spacer(minLength: 8)
-            AmountBadge(amount: expense.amount)
+            AmountBadge(amount: expense.amount, muted: expense.excludedFromBudget)
         }
         .padding(.vertical, 14)
-        .opacity(expense.excludedFromBudget ? 0.55 : 1)
+        .opacity(expense.excludedFromBudget ? 0.6 : 1)
     }
 }
