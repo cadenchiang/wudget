@@ -342,24 +342,25 @@ struct SpendingView: View {
     /// slides between chips (positioned via anchor preferences rather than
     /// matchedGeometryEffect, which stutters when the heavy row list swaps in the same frame).
     private var tabSelector: some View {
-        HStack(spacing: 4) {
-            ForEach(SpendingTab.allCases) { option in
-                Button {
-                    tab = option
-                } label: {
-                    Text(option.title)
-                        .font(.caption.weight(.bold))
-                        .foregroundStyle(tab == option ? Color(.systemBackground) : Color.secondary)
-                        .animation(.easeInOut(duration: 0.15), value: tab)
-                        .padding(.horizontal, 13)
-                        .padding(.vertical, 6)
-                        .contentShape(Capsule())
-                        .anchorPreference(key: TabChipBoundsKey.self, value: .bounds) { [option: $0] }
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 6) {
+                ForEach(SpendingTab.allCases) { option in
+                    Button {
+                        tab = option
+                    } label: {
+                        Text(option.title)
+                            .font(.title3.weight(.semibold))
+                            .foregroundStyle(tab == option ? Color(.systemBackground) : Color.secondary)
+                            .animation(.easeInOut(duration: 0.15), value: tab)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 7)
+                            .contentShape(Capsule())
+                            .anchorPreference(key: TabChipBoundsKey.self, value: .bounds) { [option: $0] }
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("List: \(option.title)")
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel("List: \(option.title)")
             }
-            Spacer(minLength: 0)
         }
         .backgroundPreferenceValue(TabChipBoundsKey.self) { anchors in
             GeometryReader { geo in

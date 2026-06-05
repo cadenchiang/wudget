@@ -50,6 +50,8 @@ struct CardsView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
                 .padding(.vertical, 10)
+                .frame(maxWidth: .infinity)
+                .background(.bar)
         }
         .sheet(item: $editing) { card in
             CardEditorSheet(card: card)

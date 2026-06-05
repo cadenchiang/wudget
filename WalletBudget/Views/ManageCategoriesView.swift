@@ -33,6 +33,8 @@ struct ManageCategoriesView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 32)
                 .padding(.vertical, 10)
+                .frame(maxWidth: .infinity)
+                .background(.bar)
         }
         .sheet(item: $editing) { CategoryEditorView(category: $0) }
         .sheet(isPresented: $addingNew) { CategoryEditorView(category: nil) }
