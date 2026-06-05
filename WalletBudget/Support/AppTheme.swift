@@ -36,3 +36,19 @@ extension Color {
     /// and the Face ID lock screen so both blend seamlessly with the icon artwork.
     static let brandBlue = Color(red: 99 / 255, green: 191 / 255, blue: 240 / 255)
 }
+
+extension View {
+    /// The app's liquid-glass sheet treatment: real Liquid Glass on iOS 26 (refracts the content
+    /// behind the sheet), falling back to the thin material blur on earlier systems.
+    /// - Parameter cornerRadius: Must match the sheet's `presentationCornerRadius`.
+    @ViewBuilder
+    func glassSheetBackground(cornerRadius: CGFloat) -> some View {
+        if #available(iOS 26.0, *) {
+            presentationBackground {
+                Color.clear.glassEffect(.regular, in: .rect(cornerRadius: cornerRadius))
+            }
+        } else {
+            presentationBackground(.thinMaterial)
+        }
+    }
+}

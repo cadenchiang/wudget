@@ -108,7 +108,7 @@ struct LibraryPickerView: View {
                 prompt: "Search or add \(title.lowercased())"
             )
         }
-        .presentationBackground(.ultraThinMaterial)
+        .glassSheetBackground(cornerRadius: 36)
         .presentationCornerRadius(36)
         .presentationDragIndicator(.visible)
     }

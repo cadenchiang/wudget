@@ -63,9 +63,10 @@ struct AddTransactionSheet: View {
             addButton
         }
         // Rises as a partial-height glass sheet (the screen behind stays visible and ghosts
-        // through the material), expandable to full height by dragging.
+        // through), expandable to full height by dragging. On iOS 26 this is real Liquid Glass
+        // (refraction, not just blur); earlier systems fall back to the thin material.
         .presentationDetents([.fraction(0.82), .large])
-        .presentationBackground(.ultraThinMaterial)
+        .glassSheetBackground(cornerRadius: 36)
         .presentationCornerRadius(36)
         .presentationDragIndicator(.visible)
         .onAppear { amountFocused = true }
