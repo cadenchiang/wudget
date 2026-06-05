@@ -18,19 +18,22 @@ struct CardsView: View {
             if cards.isEmpty {
                 emptyState
             } else {
-                ScrollView {
-                    VStack(spacing: 0) {
-                        ForEach(Array(sortedCards.enumerated()), id: \.element.persistentModelID) { index, card in
-                            Button { editing = card } label: { row(card) }
-                                .buttonStyle(.plain)
-                            if index < sortedCards.count - 1 {
-                                Divider().padding(.leading, 56)
+                List {
+                    ForEach(Array(sortedCards.enumerated()), id: \.element.persistentModelID) { index, card in
+                        Button { editing = card } label: { row(card) }
+                            .buttonStyle(.plain)
+                            .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
+                            // Full-width hairline (under the logo too); none above the first row.
+                            .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
+                            .listRowSeparator(index == 0 ? .hidden : .visible, edges: .top)
+                            .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                Button(role: .destructive) { delete(card) } label: {
+                                    Label("Delete", systemImage: "trash")
+                                }
                             }
-                        }
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 24)
                 }
+                .listStyle(.plain)
             }
         }
         .background(Color(.systemBackground))
@@ -152,6 +155,13 @@ struct CardsView: View {
                 .foregroundStyle(.tertiary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+
+    /// Deletes a card (its transactions stay) and saves.
+    private func delete(_ card: UserCard) {
+        Log.ui.info("Deleting card \(card.name, privacy: .public)")
+        context.delete(card)
+        save(context: context, action: "delete card")
     }
 
     /// Returns the existing card with this name, or inserts (and returns) a new one.
