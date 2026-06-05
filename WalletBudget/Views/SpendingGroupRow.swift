@@ -54,7 +54,7 @@ struct SpendingGroupRow: View {
 
             AmountBadge(amount: group.total)
         }
-        .padding(.vertical, 14)
+        .padding(.vertical, 18)
     }
 
     /// The leading tile. When grouping by merchant it's the shared merchant logo (so it matches the
@@ -112,7 +112,7 @@ struct TransactionRow: View {
             Spacer(minLength: 8)
             AmountBadge(amount: expense.amount)
         }
-        .padding(.vertical, 14)
+        .padding(.vertical, 18)
     }
 }
 
