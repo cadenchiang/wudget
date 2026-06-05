@@ -67,7 +67,7 @@ struct AppLockGate<Content: View>: View {
         }
     }
 
-    /// The simple black-and-white lock screen: lock glyph and "Budget is locked". Only after a
+    /// The simple black-and-white lock screen: lock glyph and "Orbit is locked". Only after a
     /// failed/cancelled prompt do the Unlock (retries Face ID) and Log out buttons appear.
     private var lockScreen: some View {
         ZStack {
@@ -76,7 +76,7 @@ struct AppLockGate<Content: View>: View {
                 Image(systemName: "lock.fill")
                     .font(.system(size: 44))
                     .foregroundStyle(.primary)
-                Text("Budget is locked")
+                Text("Orbit is locked")
                     .font(.headline)
                 if authFailed {
                     Button("Unlock") { authenticateIfNeeded() }

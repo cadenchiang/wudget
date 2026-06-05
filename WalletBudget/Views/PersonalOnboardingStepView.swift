@@ -320,7 +320,7 @@ private struct RatingStepView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
-            OnboardingHeading(title: "Enjoying Budget?", subtitle: "Tap to rate us, it really helps.")
+            OnboardingHeading(title: "Enjoying Orbit?", subtitle: "Tap to rate us, it really helps.")
             StarRatingRow(rating: $rating)
                 .onChange(of: rating) { _, value in
                     if value >= 4 { requestReview() }
