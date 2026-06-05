@@ -16,13 +16,18 @@ struct RecurringPaymentsView: View {
                 emptyState
             } else {
                 List {
-                    ForEach(expenses) { expense in
-                        NavigationLink {
-                            TransactionDetailView(expense: expense)
-                        } label: {
+                    ForEach(Array(expenses.enumerated()), id: \.element.id) { index, expense in
+                        // Hidden NavigationLink so the row keeps its badge instead of the
+                        // system chevron.
+                        ZStack {
+                            NavigationLink { TransactionDetailView(expense: expense) } label: { EmptyView() }
+                                .opacity(0)
                             RecurringRow(expense: expense)
                         }
-                        .listRowInsets(EdgeInsets(top: 6, leading: 20, bottom: 6, trailing: 20))
+                        .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
+                        // Full-width hairlines (under the logo too); nothing above the first row.
+                        .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
+                        .listRowSeparator(index == 0 ? .hidden : .visible, edges: .top)
                         // Left swipe only: ignore or delete. No leading (right-swipe) actions.
                         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                             Button(role: .destructive) { delete(expense) } label: {
@@ -113,26 +118,18 @@ private struct RecurringRow: View {
         HStack(spacing: 12) {
             MerchantLogoTile(merchant: expense.merchant)
             VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
-                    Text(expense.merchant.isEmpty ? "Unknown" : expense.merchant)
-                        .font(.body.weight(.semibold))
-                    if expense.excludedFromBudget {
-                        Text("Ignored")
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Capsule().fill(Color(.tertiarySystemFill)))
-                    }
-                }
-                Text(subtitle)
+                Text(expense.merchant.isEmpty ? "Unknown" : expense.merchant)
+                    .font(.body.weight(.semibold))
+                    .lineLimit(1)
+                Text(expense.excludedFromBudget ? "Ignored · \(subtitle)" : subtitle)
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
             }
-            Spacer()
-            Text(expense.amount.asCurrency())
-                .font(.body.weight(.medium))
+            Spacer(minLength: 8)
+            AmountBadge(amount: expense.amount)
         }
+        .padding(.vertical, 8)
         .opacity(expense.excludedFromBudget ? 0.55 : 1)
     }
 }

@@ -49,7 +49,7 @@ struct GroupDetailView: View {
                         .buttonStyle(.plain)
 
                         if index < periodExpenses.count - 1 {
-                            Divider().padding(.leading, 56)
+                            Divider()
                         }
                     }
                 }

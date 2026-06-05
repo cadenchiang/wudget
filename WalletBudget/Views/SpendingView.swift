@@ -389,7 +389,7 @@ struct SpendingView: View {
                 .buttonStyle(.plain)
 
                 if index < displayedCurrent.count - 1 {
-                    Divider().padding(.leading, 56)
+                    Divider()
                 }
             }
         }
@@ -407,7 +407,7 @@ struct SpendingView: View {
                 .buttonStyle(.plain)
 
                 if index < groups.count - 1 {
-                    Divider().padding(.leading, 56)
+                    Divider()
                 }
             }
         }

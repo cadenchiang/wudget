@@ -1,5 +1,30 @@
 import SwiftUI
 
+/// The amount rendered in a small color-coded squircle: gray for negligible spends, green for
+/// everyday amounts, orange for notable ones, red for big-ticket charges.
+struct AmountBadge: View {
+    let amount: Double
+
+    private var color: Color {
+        switch amount {
+        case ..<15: return .gray
+        case ..<75: return .green
+        case ..<200: return .orange
+        default: return .red
+        }
+    }
+
+    var body: some View {
+        Text(amount.asCurrency())
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(.white)
+            .lineLimit(1)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(color))
+    }
+}
+
 /// A single grouped-spending row: a colored icon tile, the group name and transaction
 /// count, the period total, an optional delta-versus-last-period line, and a chevron.
 struct SpendingGroupRow: View {
@@ -13,26 +38,23 @@ struct SpendingGroupRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(group.key)
                     .font(.body.weight(.semibold))
-                Text("\(group.count) Transaction\(group.count == 1 ? "" : "s")")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
-            }
-
-            Spacer()
-
-            VStack(alignment: .trailing, spacing: 2) {
-                Text(group.total.asCurrency())
-                    .font(.body.weight(.semibold))
-                if group.hasComparison {
-                    deltaLabel
+                    .lineLimit(1)
+                HStack(spacing: 6) {
+                    Text("\(group.count) Transaction\(group.count == 1 ? "" : "s")")
+                    if group.hasComparison {
+                        deltaLabel
+                    }
                 }
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
             }
 
-            Image(systemName: "chevron.right")
-                .font(.footnote.weight(.semibold))
-                .foregroundStyle(.tertiary)
+            Spacer(minLength: 8)
+
+            AmountBadge(amount: group.total)
         }
-        .padding(.vertical, 12)
+        .padding(.vertical, 14)
     }
 
     /// The leading tile. When grouping by merchant it's the shared merchant logo (so it matches the
@@ -71,12 +93,9 @@ struct SpendingGroupRow: View {
 }
 
 /// A single transaction row styled like `SpendingGroupRow`: colored icon tile, merchant, date,
-/// amount, and a chevron. Used by the Recent tab so it matches the grouped tabs.
+/// and the color-coded amount badge. Used by the Recent tab so it matches the grouped tabs.
 struct TransactionRow: View {
     let expense: Expense
-    /// Whether to draw the trailing chevron. Off when inside a `List` `NavigationLink`, which
-    /// supplies its own chevron (avoids a double chevron).
-    var showsChevron: Bool = true
 
     var body: some View {
         HStack(spacing: 12) {
@@ -84,20 +103,16 @@ struct TransactionRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(expense.merchant.isEmpty ? "Unknown" : expense.merchant)
                     .font(.body.weight(.semibold))
+                    .lineLimit(1)
                 Text(expense.date, format: .dateTime.month().day())
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
             }
-            Spacer()
-            Text(expense.amount.asCurrency())
-                .font(.body.weight(.semibold))
-            if showsChevron {
-                Image(systemName: "chevron.right")
-                    .font(.footnote.weight(.semibold))
-                    .foregroundStyle(.tertiary)
-            }
+            Spacer(minLength: 8)
+            AmountBadge(amount: expense.amount)
         }
-        .padding(.vertical, 12)
+        .padding(.vertical, 14)
     }
 }
 
