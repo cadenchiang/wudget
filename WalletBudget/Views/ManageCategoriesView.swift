@@ -16,6 +16,15 @@ struct ManageCategoriesView: View {
             }
             .onDelete(perform: delete)
             .onMove(perform: move)
+
+            Text("Tap a category to edit it. Swipe left to delete one; its transactions move to Other.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .frame(maxWidth: .infinity)
+                .padding(.top, 14)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 0, leading: 32, bottom: 16, trailing: 32))
         }
         .navigationTitle("Categories")
         .navigationBarTitleDisplayMode(.inline)
@@ -25,16 +34,6 @@ struct ManageCategoriesView: View {
                     .tint(.primary)
                     .accessibilityLabel("Add category")
             }
-        }
-        .safeAreaInset(edge: .bottom) {
-            Text("Tap a category to edit it. Swipe left to delete one; its transactions move to Other.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
-                .padding(.vertical, 10)
-                .frame(maxWidth: .infinity)
-                .background(.bar)
         }
         .sheet(item: $editing) { CategoryEditorView(category: $0) }
         .sheet(isPresented: $addingNew) { CategoryEditorView(category: nil) }
