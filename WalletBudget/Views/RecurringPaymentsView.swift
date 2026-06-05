@@ -119,7 +119,7 @@ private struct RecurringRow: View {
             MerchantLogoTile(merchant: expense.merchant)
             VStack(alignment: .leading, spacing: 2) {
                 Text(expense.merchant.isEmpty ? "Unknown" : expense.merchant)
-                    .font(.body.weight(.semibold))
+                    .font(.body.weight(.medium))
                     .lineLimit(1)
                 Text(expense.excludedFromBudget ? "Ignored · \(subtitle)" : subtitle)
                     .font(.subheadline)
