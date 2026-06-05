@@ -296,8 +296,8 @@ struct TotalSpendingCard: View {
                     .annotation(position: .top, alignment: .trailing, spacing: 3) {
                         Text(periodBudget.asCurrency())
                             .font(.caption2.weight(.semibold))
-                            .foregroundStyle(.secondary)
-                            .padding(.trailing, 24) // clear the edge-to-edge bleed
+                            .foregroundStyle(.secondary.opacity(0.6)) // same color as the line
+                            .padding(.trailing, 2)
                     }
             }
             if let snappedDate {
