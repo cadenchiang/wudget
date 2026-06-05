@@ -35,6 +35,7 @@ struct SpendingView: View {
     @State private var span: TimeSpan = .month
     @State private var tab: SpendingTab = .recent
     @State private var showingAdd = false
+    @State private var showingCards = false
     /// Expenses within the selected period (already date-descending from the query).
     private var currentExpenses: [Expense] {
         SpendingSummary.filter(expenses, in: span.interval())
@@ -167,6 +168,7 @@ struct SpendingView: View {
                 .topChromeBar { topBar }
                 .toolbar(.hidden, for: .navigationBar)
                 .sheet(isPresented: $showingAdd) { AddTransactionSheet() }
+                .sheet(isPresented: $showingCards) { CardsView() }
                 .onChange(of: span) { _, _ in Haptics.selection() }
                 .onChange(of: tab) { _, _ in Haptics.selection() }
         }
@@ -185,10 +187,30 @@ struct SpendingView: View {
                     .animation(.easeInOut(duration: 0.2), value: span)
             }
             Spacer()
+            cardsButton
             addButton
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 8)
+    }
+
+    /// The credit-card button beside add, opening the My Cards sheet (same glass circle).
+    @ViewBuilder
+    private var cardsButton: some View {
+        let button = Button { Haptics.tap(); showingCards = true } label: {
+            Image(systemName: "creditcard")
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.primary)
+                .frame(width: 40, height: 40)
+        }
+        .tint(.primary)
+        .accessibilityLabel("My cards")
+
+        if #available(iOS 26.0, *) {
+            button.glassEffect(.regular.interactive(), in: .circle)
+        } else {
+            button.background(Circle().fill(.thinMaterial))
+        }
     }
 
     /// The add (+) button on a Liquid Glass circle (falls back to a material circle pre-iOS 26).
