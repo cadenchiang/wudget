@@ -154,9 +154,11 @@ struct TotalSpendingCard: View {
         return (linePoints.last?.total ?? 0) <= periodBudget ? .green : .red
     }
 
-    /// Transaction timestamps inside the drawn line — the snap targets for scrubbing.
+    /// Snap targets for scrubbing: every logged transaction plus the live end of the line, so a
+    /// drag can ride the flat tail to "now" even when nothing is logged there.
     private var snapDates: [Date] {
-        entries.map(\.date).filter { $0 >= domain.lowerBound && $0 <= lineEnd }.sorted()
+        let logged = entries.map(\.date).filter { $0 >= domain.lowerBound && $0 <= lineEnd }
+        return (logged + [lineEnd]).sorted()
     }
 
     /// The logged moment nearest to a raw scrub position.
@@ -172,22 +174,51 @@ struct TotalSpendingCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(total.asCurrency())
-                    .font(.system(size: 40, weight: .bold))
+                    .font(.system(size: 34, weight: .bold))
                     .foregroundStyle(.primary)
                     .minimumScaleFactor(0.6)
                     .lineLimit(1)
-                if hasComparison {
-                    Image(systemName: delta <= 0 ? "arrow.down.circle.fill" : "arrow.up.circle.fill")
-                        .foregroundStyle(delta <= 0 ? .green : .red)
-                        .font(.title3)
-                }
+                deltaLine
             }
 
             chart
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// Robinhood-style line under the total: a small triangle plus the amount you're below or
+    /// over budget (green/red), falling back to the vs-last-period delta when no budget is set.
+    @ViewBuilder
+    private var deltaLine: some View {
+        if let periodBudget {
+            let diff = periodBudget - total
+            let under = diff >= 0
+            HStack(spacing: 5) {
+                Image(systemName: under ? "arrowtriangle.down.fill" : "arrowtriangle.up.fill")
+                    .font(.caption2)
+                    .foregroundStyle(under ? Color.green : Color.red)
+                Text(abs(diff).asCurrency())
+                    .fontWeight(.semibold)
+                    .foregroundStyle(under ? Color.green : Color.red)
+                Text(under ? "below budget" : "over budget")
+                    .foregroundStyle(.secondary)
+            }
+            .font(.subheadline)
+        } else if hasComparison {
+            HStack(spacing: 5) {
+                Image(systemName: delta <= 0 ? "arrowtriangle.down.fill" : "arrowtriangle.up.fill")
+                    .font(.caption2)
+                    .foregroundStyle(delta <= 0 ? Color.green : Color.red)
+                Text(abs(delta).asCurrency())
+                    .fontWeight(.semibold)
+                    .foregroundStyle(delta <= 0 ? Color.green : Color.red)
+                Text("vs last period")
+                    .foregroundStyle(.secondary)
+            }
+            .font(.subheadline)
+        }
     }
 
     /// The bare, edge-to-edge market-style chart.
