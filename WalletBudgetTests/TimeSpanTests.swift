@@ -57,17 +57,37 @@ final class TimeSpanTests: XCTestCase {
         XCTAssertEqual(TimeSpan.all.dateRange(now: date(2026, 5, 15), calendar: utcCalendar), "All time")
     }
 
-    /// The new spans bucket into trailing months: 3 for 3M, months-elapsed for YTD, 12 for All.
+    /// The new spans bucket fine-grained: weekly for 3M and YTD, trailing 12 months for All.
     func testNewSpanBuckets() {
-        // English locale so month symbols are "Mar"-style, not the locale-less "M03" fallback.
+        // English locale so labels are "Mar 1"-style, not the locale-less fallback.
         var calendar = utcCalendar
         calendar.locale = Locale(identifier: "en_US")
         let now = date(2026, 5, 15)
-        XCTAssertEqual(PeriodBucketizer.buckets(for: .threeMonths, now: now, calendar: calendar).map(\.label), ["Mar", "Apr", "May"])
-        XCTAssertEqual(PeriodBucketizer.buckets(for: .yearToDate, now: now, calendar: calendar).count, 5)
+        let threeMonths = PeriodBucketizer.buckets(for: .threeMonths, now: now, calendar: calendar)
+        XCTAssertEqual(threeMonths.first?.label, "Mar 1")
+        XCTAssertEqual(threeMonths.count, 14) // 92 days in weekly steps
+        let ytd = PeriodBucketizer.buckets(for: .yearToDate, now: now, calendar: calendar)
+        XCTAssertEqual(ytd.first?.label, "Jan 1")
+        XCTAssertEqual(ytd.count, 20) // Jan 1 through May 15 in weekly steps
         let all = PeriodBucketizer.buckets(for: .all, now: now, calendar: calendar)
         XCTAssertEqual(all.count, 12)
         XCTAssertEqual(all.last?.label, "May")
+    }
+
+    /// The cumulative chart line anchors at zero, steps at each transaction's exact timestamp,
+    /// and runs flat to the line's end; entries beyond the end are ignored.
+    func testCumulativeLine() {
+        let start = date(2026, 5, 1)
+        let end = date(2026, 5, 15)
+        let entries = [
+            SpendingChartEntry(date: date(2026, 5, 10), amount: 20, category: "Coffee"),
+            SpendingChartEntry(date: date(2026, 5, 3), amount: 10, category: "Dining"),
+            SpendingChartEntry(date: date(2026, 5, 20), amount: 99, category: "Ignored"), // after end
+        ]
+        let line = TotalSpendingCard.cumulativeLine(entries: entries, from: start, to: end)
+        XCTAssertEqual(line.map(\.total), [0, 10, 30, 30])
+        XCTAssertEqual(line.first?.date, start)
+        XCTAssertEqual(line.last?.date, end)
     }
 
     func testMonthBoundsToCalendarMonth() {

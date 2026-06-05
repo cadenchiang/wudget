@@ -78,9 +78,20 @@ struct SpendingView: View {
         return SpendingSummary.groups(current: displayedCurrent, previous: displayedPrevious, by: grouping)
     }
 
-    /// Time buckets for the chart x-axis (days for week, day-ranges for month, months for year).
-    private var periodBuckets: [PeriodBucket] {
-        PeriodBucketizer.buckets(for: span)
+    /// The chart's x-domain: the selected period, or first-transaction-to-now for All time.
+    private var chartDomain: ClosedRange<Date> {
+        let now = Date()
+        if let interval = span.interval(), interval.start < interval.end {
+            return interval.start...interval.end
+        }
+        // All time is unbounded: span from the earliest transaction (or a month back) to now.
+        let earliest = expenses.last?.date ?? Calendar.current.date(byAdding: .day, value: -30, to: now) ?? now
+        return min(earliest, now)...now
+    }
+
+    /// The period's transactions as chart entries (exact timestamps drive the line).
+    private var chartEntries: [SpendingChartEntry] {
+        displayedCurrent.map { SpendingChartEntry(date: $0.date, amount: $0.amount, category: $0.category) }
     }
 
     /// Transactions marked as recurring (across all time).
@@ -134,14 +145,6 @@ struct SpendingView: View {
         case .yearToDate, .year: return "year"
         case .all: return "period"
         }
-    }
-
-    /// The monthly budget scaled to a per-bucket target for the current span (nil when unset).
-    private var budgetPerBucket: Double? {
-        guard let periodBudget else { return nil }
-        let bucketCount = periodBuckets.count
-        guard bucketCount > 0 else { return nil }
-        return periodBudget / Double(bucketCount)
     }
 
     var body: some View {
@@ -291,10 +294,10 @@ struct SpendingView: View {
                     TotalSpendingCard(
                         total: SpendingSummary.total(displayedCurrent),
                         previousTotal: SpendingSummary.total(comparablePrevious),
-                        segments: SpendingSummary.categorySegments(displayedCurrent, buckets: periodBuckets),
-                        bucketLabels: periodBuckets.map(\.label),
+                        entries: chartEntries,
+                        domain: chartDomain,
                         projection: projection,
-                        budgetPerBucket: budgetPerBucket
+                        periodBudget: periodBudget
                     )
 
                     spanSelector

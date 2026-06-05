@@ -55,24 +55,29 @@ final class SpendingGroupingTests: XCTestCase {
     }
 
     func testMonthBucketsCoverEveryDay() {
-        let buckets = PeriodBucketizer.buckets(for: .month, now: date(2026, 5, 15), calendar: utcCalendar)
-        XCTAssertEqual(buckets.first?.label, "1-7")
-        XCTAssertEqual(buckets.last?.label, "29-31")
-        XCTAssertTrue(buckets.first!.interval.contains(date(2026, 5, 3)))
+        var calendar = utcCalendar
+        calendar.locale = Locale(identifier: "en_US")
+        let buckets = PeriodBucketizer.buckets(for: .month, now: date(2026, 5, 15), calendar: calendar)
+        XCTAssertEqual(buckets.count, 31) // daily buckets
+        XCTAssertEqual(buckets.first?.label, "May 1")
+        XCTAssertEqual(buckets.last?.label, "May 31")
+        XCTAssertTrue(buckets.first!.interval.contains(date(2026, 5, 1)))
         XCTAssertTrue(buckets.last!.interval.contains(date(2026, 5, 31)))
     }
 
     func testBucketTotalsSumIntoBuckets() {
-        let buckets = PeriodBucketizer.buckets(for: .month, now: date(2026, 5, 15), calendar: utcCalendar)
+        var calendar = utcCalendar
+        calendar.locale = Locale(identifier: "en_US")
+        let buckets = PeriodBucketizer.buckets(for: .month, now: date(2026, 5, 15), calendar: calendar)
         let expenses = [
-            Expense(amount: 10, merchant: "A", date: date(2026, 5, 2)),  // 1-7
-            Expense(amount: 5, merchant: "B", date: date(2026, 5, 3)),   // 1-7
+            Expense(amount: 10, merchant: "A", date: date(2026, 5, 2)),  // May 2
+            Expense(amount: 5, merchant: "B", date: date(2026, 5, 3)),   // May 3
             Expense(amount: 7, merchant: "C", date: date(2026, 5, 30)),  // 29-31
         ]
         let totals = SpendingSummary.bucketTotals(expenses, buckets: buckets)
-        XCTAssertEqual(totals.first { $0.label == "1-7" }?.total, 15)
-        XCTAssertEqual(totals.first { $0.label == "29-31" }?.total, 7)
-        XCTAssertEqual(totals.first { $0.label == "8-14" }?.total, 0)
+        XCTAssertEqual(totals.first { $0.label == "May 2" }?.total, 10)
+        XCTAssertEqual(totals.first { $0.label == "May 3" }?.total, 5)
+        XCTAssertEqual(totals.first { $0.label == "May 8" }?.total, 0)
     }
 
     func testYearBucketsAreTwelveMonths() {
@@ -81,21 +86,23 @@ final class SpendingGroupingTests: XCTestCase {
     }
 
     func testCategorySegmentsSplitBucketsByCategory() {
-        let buckets = PeriodBucketizer.buckets(for: .month, now: date(2026, 5, 15), calendar: utcCalendar)
+        var calendar = utcCalendar
+        calendar.locale = Locale(identifier: "en_US")
+        let buckets = PeriodBucketizer.buckets(for: .month, now: date(2026, 5, 15), calendar: calendar)
         let expenses = [
-            Expense(amount: 10, merchant: "Starbucks", date: date(2026, 5, 2)),       // Coffee, 1-7
-            Expense(amount: 30, merchant: "Whole Foods Market", date: date(2026, 5, 3)), // Groceries, 1-7
-            Expense(amount: 7, merchant: "Peet's Coffee", date: date(2026, 5, 30)),    // Coffee, 29-31
+            Expense(amount: 10, merchant: "Starbucks", date: date(2026, 5, 2)),          // Coffee, May 2
+            Expense(amount: 30, merchant: "Whole Foods Market", date: date(2026, 5, 2)), // Groceries, May 2
+            Expense(amount: 7, merchant: "Peet's Coffee", date: date(2026, 5, 30)),      // Coffee, May 30
         ]
         let segments = SpendingSummary.categorySegments(expenses, buckets: buckets)
 
-        let firstBucket = segments.filter { $0.bucketLabel == "1-7" }
+        let firstBucket = segments.filter { $0.bucketLabel == "May 2" }
         XCTAssertEqual(firstBucket.count, 2)
         // Sorted by total descending → Groceries (30) before Coffee (10).
         XCTAssertEqual(firstBucket.first?.category, "Groceries")
         XCTAssertEqual(firstBucket.first?.total, 30)
 
-        XCTAssertEqual(segments.first { $0.bucketLabel == "29-31" }?.total, 7)
+        XCTAssertEqual(segments.first { $0.bucketLabel == "May 30" }?.total, 7)
         XCTAssertTrue(segments.allSatisfy { $0.total > 0 })
     }
 }

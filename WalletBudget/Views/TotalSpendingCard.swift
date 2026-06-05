@@ -71,52 +71,103 @@ enum SpendingMode: String, CaseIterable, Identifiable {
     }
 }
 
-/// The spending hero: the period total and a Robinhood-style cumulative line graph over the
-/// period's time buckets. Dragging across the chart scrubs a hairline + dot along the line and
-/// raises a breakdown card for that bucket; tapping empty space clears the selection.
+/// One transaction's contribution to the spending line: its exact timestamp, amount, and category.
+struct SpendingChartEntry {
+    let date: Date
+    let amount: Double
+    let category: String
+}
+
+/// The spending hero: the period total over a Robinhood-style cumulative line built from the
+/// exact timestamps of every transaction. The line stops at "now" with a live dot (the future
+/// stays blank); dragging scrubs a hairline with a pulsing dot along the line and raises a
+/// breakdown card for that moment. A dotted horizontal line marks the period budget.
 struct TotalSpendingCard: View {
     /// Total spent in the current period.
     let total: Double
-    /// Total spent in the previous period (for the comparison line).
+    /// Total spent in the previous period (for the comparison arrow).
     let previousTotal: Double
-    /// Per-bucket, per-category segments to stack.
-    let segments: [CategorySegment]
-    /// Ordered bucket labels (defines the x-axis, including empty buckets).
-    let bucketLabels: [String]
-    /// Optional forward-looking projection shown under the amount (amount colored by budget).
+    /// The period's transactions (any order; the card sorts by time).
+    let entries: [SpendingChartEntry]
+    /// The period's full date range — the x-axis domain, so unelapsed time stays blank.
+    let domain: ClosedRange<Date>
+    /// Optional forward-looking projection (used by the blurb card outside this view).
     let projection: SpendingProjection?
-    /// Optional per-bucket budget target; draws a budget line with green/gray gradients.
-    let budgetPerBucket: Double?
-    /// Period noun (day/week/month/year), used for the fallback blurb so the line is never blank.
-    var periodNoun: String = "period"
+    /// Optional total budget for the period; drawn as a dotted horizontal line.
+    let periodBudget: Double?
 
-    @State private var selected: String?
-
-    /// Gray for the budget line and its matching y-axis value label (same color/darkness).
-    /// A dark gray in light mode; lighter/whiter in dark mode so it stays visible on either.
-    private var budgetColor: Color {
-        Color(uiColor: UIColor { traits in
-            traits.userInterfaceStyle == .dark
-                ? UIColor(white: 0.92, alpha: 1.0)
-                : UIColor(white: 0.32, alpha: 1.0)
-        })
-    }
-
-    /// Whether the period is projected to finish over budget (a budget must be set).
-    private var isOverBudget: Bool { projection?.isWithinBudget == false }
+    /// The raw drag position from the chart (continuous).
+    @State private var selectedDate: Date?
+    /// The drag position snapped to the nearest logged transaction.
+    @State private var snappedDate: Date?
 
     private var delta: Double { total - previousTotal }
 
     /// Whether there's previous-period spending to compare against.
     private var hasComparison: Bool { previousTotal > 0 }
 
-    /// Upper bound for the y-axis: the cumulative total or the full budget pace, whichever is
-    /// larger, with headroom. Falls back to a fixed value when both are zero so the axis renders.
+    /// Where the line ends: now, clamped into the domain (a period fully in the past ends at its
+    /// own end).
+    private var lineEnd: Date { min(Date(), domain.upperBound) }
+
+    /// The cumulative line: starts at zero, steps up at each transaction, and runs flat to now.
+    private var linePoints: [(date: Date, total: Double)] {
+        Self.cumulativeLine(entries: entries, from: domain.lowerBound, to: lineEnd)
+    }
+
+    /// Builds the cumulative line for `entries` between `start` and `end`: a zero anchor at
+    /// `start`, a point at each transaction's exact timestamp (entries after `end` are ignored,
+    /// earlier ones clamp to `start`), and a final point at `end` so the line runs flat to "now".
+    static func cumulativeLine(entries: [SpendingChartEntry], from start: Date, to end: Date) -> [(date: Date, total: Double)] {
+        let sorted = entries
+            .filter { $0.date <= end }
+            .sorted { $0.date < $1.date }
+        var points: [(date: Date, total: Double)] = [(start, 0)]
+        var running = 0.0
+        for entry in sorted {
+            running += entry.amount
+            points.append((max(entry.date, start), running))
+        }
+        if let last = points.last, last.date < end {
+            points.append((end, running))
+        }
+        return points
+    }
+
+    /// Cumulative total at the scrubbed moment (the last line point at or before it).
+    private func cumulativeTotal(at date: Date) -> Double {
+        linePoints.last(where: { $0.date <= date })?.total ?? 0
+    }
+
+    /// Per-category totals up to the scrubbed moment, largest first (top three).
+    private func breakdown(at date: Date) -> [(category: String, total: Double)] {
+        var totals: [String: Double] = [:]
+        for entry in entries where entry.date <= date {
+            totals[entry.category, default: 0] += entry.amount
+        }
+        return totals.sorted { $0.value > $1.value }.prefix(3).map { ($0.key, $0.value) }
+    }
+
+    /// The line/dot color: green while under budget, red when over; monochrome with no budget.
+    private var lineColor: Color {
+        guard let periodBudget else { return .primary }
+        return (linePoints.last?.total ?? 0) <= periodBudget ? .green : .red
+    }
+
+    /// Transaction timestamps inside the drawn line — the snap targets for scrubbing.
+    private var snapDates: [Date] {
+        entries.map(\.date).filter { $0 >= domain.lowerBound && $0 <= lineEnd }.sorted()
+    }
+
+    /// The logged moment nearest to a raw scrub position.
+    private func snap(_ date: Date) -> Date? {
+        snapDates.min(by: { abs($0.timeIntervalSince(date)) < abs($1.timeIntervalSince(date)) })
+    }
+
+    /// Upper y-bound: the spent total or the budget, whichever is larger, with headroom.
     private var yMax: Double {
-        let cumulativeMax = cumulativePoints.last?.total ?? 0
-        let budgetEnd = (budgetPerBucket ?? 0) * Double(bucketLabels.count)
-        let ceiling = max(cumulativeMax, budgetEnd)
-        return ceiling > 0 ? ceiling * 1.1 : 100
+        let ceiling = max(linePoints.last?.total ?? 0, periodBudget ?? 0)
+        return ceiling > 0 ? ceiling * 1.15 : 100
     }
 
     var body: some View {
@@ -134,61 +185,37 @@ struct TotalSpendingCard: View {
                 }
             }
 
-
             chart
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    /// Cumulative points for the line: running total of spending at the end of each bucket.
-    private var cumulativePoints: [(label: String, total: Double)] {
-        var running = 0.0
-        return bucketLabels.map { label in
-            running += bucketTotal(label)
-            return (label, running)
-        }
-    }
-
-    /// Robinhood-style line graph: cumulative spending across the period, scrubbed by dragging
-    /// (a hairline + dot track the finger while the breakdown card describes that bucket), with
-    /// a dashed budget pace line when a budget is set.
+    /// The bare, edge-to-edge market-style chart.
     private var chart: some View {
         Chart {
-            ForEach(cumulativePoints, id: \.label) { point in
+            ForEach(Array(linePoints.enumerated()), id: \.offset) { _, point in
                 LineMark(
-                    x: .value("Period", point.label),
-                    y: .value("Spent", point.total),
-                    series: .value("Series", "spent")
-                )
-                .foregroundStyle(.primary)
-                .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
-            }
-            if let budgetPerBucket {
-                ForEach(Array(bucketLabels.enumerated()), id: \.element) { index, label in
-                    LineMark(
-                        x: .value("Period", label),
-                        y: .value("Budget", budgetPerBucket * Double(index + 1)),
-                        series: .value("Series", "budget")
-                    )
-                    .foregroundStyle(budgetColor.opacity(0.6))
-                    .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [2, 4]))
-                }
-            }
-            if let selected, let point = cumulativePoints.first(where: { $0.label == selected }) {
-                RuleMark(x: .value("Period", selected))
-                    .foregroundStyle(.secondary.opacity(0.5))
-                    .lineStyle(StrokeStyle(lineWidth: 1))
-                PointMark(
-                    x: .value("Period", point.label),
+                    x: .value("Time", point.date),
                     y: .value("Spent", point.total)
                 )
-                .foregroundStyle(.primary)
-                .symbolSize(70)
+                .foregroundStyle(lineColor)
+                .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+            }
+            // The budget: one dotted horizontal line straight across.
+            if let periodBudget {
+                RuleMark(y: .value("Budget", periodBudget))
+                    .foregroundStyle(.secondary.opacity(0.6))
+                    .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [1, 4]))
+            }
+            if let snappedDate {
+                RuleMark(x: .value("Time", snappedDate))
+                    .foregroundStyle(.secondary.opacity(0.5))
+                    .lineStyle(StrokeStyle(lineWidth: 1))
             }
         }
-        .chartXScale(domain: bucketLabels)
+        .chartXScale(domain: domain.lowerBound...domain.upperBound)
         .chartYScale(domain: 0...yMax)
-        .chartXSelection(value: $selected)
+        .chartXSelection(value: $selectedDate)
         .chartLegend(.hidden)
         .chartXAxis(.hidden)
         .chartYAxis(.hidden)
@@ -196,63 +223,86 @@ struct TotalSpendingCard: View {
         .padding(.top, 8)
         // Bleed past the page gutter so the line runs edge to edge, Robinhood-style.
         .padding(.horizontal, -20)
-        .onChange(of: selected) { _, newValue in
-            if newValue != nil { Haptics.selection() }
+        // Snap the scrub to the nearest logged transaction and tick once per point.
+        .onChange(of: selectedDate) { _, newValue in
+            guard let newValue else {
+                snappedDate = nil
+                return
+            }
+            let snapped = snap(newValue)
+            if snapped != snappedDate {
+                snappedDate = snapped
+                Haptics.selection()
+            }
         }
         .chartOverlay { proxy in
             GeometryReader { geo in
-                if let selected,
-                   let plotAnchor = proxy.plotFrame,
-                   let xPosition = proxy.position(forX: selected) {
+                if let plotAnchor = proxy.plotFrame {
                     let plot = geo[plotAnchor]
-                    let cardWidth: CGFloat = 150
-                    let gap: CGFloat = 18
-                    let scrubX = plot.minX + xPosition
-                    // Place the card beside the scrub line (right when on the left half, else
-                    // left) so it never covers the tracked point.
-                    let preferRight = scrubX < plot.midX
-                    let sideX = preferRight ? scrubX + gap + cardWidth / 2 : scrubX - gap - cardWidth / 2
-                    let clampedX = min(max(sideX, plot.minX + cardWidth / 2), plot.maxX - cardWidth / 2)
-                    infoCard(bucket: selected)
-                        .frame(width: cardWidth)
-                        .position(x: clampedX, y: plot.minY + 30)
+                    // Live dot at the end of the line.
+                    if let endX = proxy.position(forX: lineEnd),
+                       let endY = proxy.position(forY: linePoints.last?.total ?? 0) {
+                        Circle()
+                            .fill(lineColor)
+                            .frame(width: 9, height: 9)
+                            .position(x: plot.minX + endX, y: plot.minY + endY)
+                    }
+                    // Pulsing dot + breakdown card at the snapped transaction.
+                    if let snappedDate,
+                       let scrubX = proxy.position(forX: snappedDate),
+                       let scrubY = proxy.position(forY: cumulativeTotal(at: snappedDate)) {
+                        pulsingDot
+                            .position(x: plot.minX + scrubX, y: plot.minY + scrubY)
+                        let cardWidth: CGFloat = 150
+                        let gap: CGFloat = 18
+                        let x = plot.minX + scrubX
+                        let preferRight = x < plot.midX
+                        let sideX = preferRight ? x + gap + cardWidth / 2 : x - gap - cardWidth / 2
+                        let clampedX = min(max(sideX, plot.minX + cardWidth / 2), plot.maxX - cardWidth / 2)
+                        infoCard(at: snappedDate)
+                            .frame(width: cardWidth)
+                            .position(x: clampedX, y: plot.minY + 34)
+                    }
                 }
             }
         }
     }
 
-    /// Total spent within a bucket (sum of its segments).
-    private func bucketTotal(_ label: String) -> Double {
-        segments.filter { $0.bucketLabel == label }.reduce(0) { $0 + $1.total }
+    /// The scrub indicator: a solid dot inside a halo that softly pulses while the finger is down.
+    private var pulsingDot: some View {
+        TimelineView(.animation) { timeline in
+            let t = timeline.date.timeIntervalSinceReferenceDate
+            ZStack {
+                Circle()
+                    .fill(lineColor.opacity(0.18))
+                    .frame(width: 26, height: 26)
+                    .scaleEffect(1 + 0.18 * sin(t * 4))
+                Circle()
+                    .fill(lineColor)
+                    .frame(width: 10, height: 10)
+            }
+        }
     }
 
-    /// Per-category amounts within a bucket, largest first (for the breakdown card).
-    private func bucketBreakdown(_ label: String) -> [(category: String, total: Double)] {
-        segments
-            .filter { $0.bucketLabel == label && $0.total > 0 }
-            .sorted { $0.total > $1.total }
-            .map { ($0.category, $0.total) }
-    }
-
-    /// Floating card describing the selected bucket: the bucket total plus a per-category breakdown.
-    private func infoCard(bucket: String) -> some View {
+    /// Floating card describing the scrubbed moment: timestamp, spent-so-far, top categories.
+    private func infoCard(at date: Date) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(bucket)
+                Text(date.formatted(.dateTime.month(.abbreviated).day().hour().minute()))
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
-                Text(bucketTotal(bucket).asCurrency())
+                Text(cumulativeTotal(at: date).asCurrency())
                     .font(.headline)
             }
 
-            let breakdown = bucketBreakdown(bucket)
-            if breakdown.isEmpty {
-                Text("No spending")
+            let rows = breakdown(at: date)
+            if rows.isEmpty {
+                Text("No spending yet")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             } else {
                 VStack(alignment: .leading, spacing: 3) {
-                    ForEach(breakdown, id: \.category) { row in
+                    ForEach(rows, id: \.category) { row in
                         HStack(spacing: 5) {
                             Circle()
                                 .fill(CategoryStyle.color(for: row.category))
@@ -280,21 +330,20 @@ struct TotalSpendingCard: View {
 }
 
 #Preview {
-    TotalSpendingCard(
-        total: 1679.44,
-        previousTotal: 1707.49,
-        segments: [
-            CategorySegment(bucketLabel: "1-7", category: "Shopping", total: 200),
-            CategorySegment(bucketLabel: "1-7", category: "Coffee", total: 60),
-            CategorySegment(bucketLabel: "8-14", category: "Dining", total: 120),
-            CategorySegment(bucketLabel: "15-21", category: "Shopping", total: 700),
-            CategorySegment(bucketLabel: "15-21", category: "Transport", total: 200),
-            CategorySegment(bucketLabel: "22-28", category: "Health", total: 80),
+    let now = Date()
+    return TotalSpendingCard(
+        total: 1240,
+        previousTotal: 1407.49,
+        entries: [
+            SpendingChartEntry(date: now.addingTimeInterval(-86400 * 20), amount: 260, category: "Shopping"),
+            SpendingChartEntry(date: now.addingTimeInterval(-86400 * 16), amount: 60, category: "Coffee"),
+            SpendingChartEntry(date: now.addingTimeInterval(-86400 * 12), amount: 420, category: "Dining"),
+            SpendingChartEntry(date: now.addingTimeInterval(-86400 * 6), amount: 200, category: "Transport"),
+            SpendingChartEntry(date: now.addingTimeInterval(-86400 * 2), amount: 300, category: "Shopping"),
         ],
-        bucketLabels: ["1-7", "8-14", "15-21", "22-28", "29-31"],
-        projection: SpendingProjection(amount: 2100, periodNoun: "month", isWithinBudget: false, remaining: -420, daysRemaining: 12),
-        budgetPerBucket: 400
+        domain: now.addingTimeInterval(-86400 * 25)...now.addingTimeInterval(86400 * 5),
+        projection: nil,
+        periodBudget: 1600
     )
-    .padding()
-    .background(Color(.systemGroupedBackground))
+    .padding(20)
 }
