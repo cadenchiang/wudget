@@ -10,5 +10,19 @@
 	<array>
 		<string>location</string>
 	</array>
+	<!-- Custom URL scheme for the Supabase OAuth redirect (orbit://auth-callback).
+	     CFBundleURLTypes also has no INFOPLIST_KEY_* build setting. The same URL
+	     must be allowlisted in the Supabase dashboard under Auth → URL Configuration. -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.cadenchiang.walletbudget.auth</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>orbit</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

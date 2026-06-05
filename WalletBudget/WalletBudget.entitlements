@@ -6,5 +6,12 @@
 	<array>
 		<string>group.com.cadenchiang.walletbudget</string>
 	</array>
+	<!-- Sign in with Apple: required for the native ASAuthorization flow used by AuthSheet.
+	     Xcode must also have the capability enabled on the App ID (automatic signing handles
+	     this when the Apple Developer Program membership is active). -->
+	<key>com.apple.developer.applesignin</key>
+	<array>
+		<string>Default</string>
+	</array>
 </dict>
 </plist>

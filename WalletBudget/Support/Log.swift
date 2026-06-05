@@ -23,4 +23,7 @@ enum Log {
 
     /// Logs related to capturing device location for transaction tagging.
     static let location = Logger(subsystem: subsystem, category: "location")
+
+    /// Logs related to authentication (sign-in, sign-up, session restore, sign-out).
+    static let auth = Logger(subsystem: subsystem, category: "auth")
 }

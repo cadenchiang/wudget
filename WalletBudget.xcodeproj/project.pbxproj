@@ -21,6 +21,7 @@
 		1A2B3C4D5E6F708192A3002A /* UserCardTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708192A3002B /* UserCardTests.swift */; };
 		1A2B3C4D5E6F708192A30020 /* welcomeHero.json in Resources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708192A30021 /* welcomeHero.json */; };
 		1A2B3C4D5E6F708192A30022 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 1A2B3C4D5E6F708192A30023 /* Lottie */; };
+		1A2B3C4D5E6F708192A30040 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 1A2B3C4D5E6F708192A30041 /* Supabase */; };
 		0EC04CBF48CA9FB8C383F854 /* GroupDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 513D61072A882AB8FE7FCAA9 /* GroupDetailView.swift */; };
 		123CD377ECADC136164C79DA /* TimeSpan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88C2AA80CB889F87361E30D5 /* TimeSpan.swift */; };
 		15148BDB8DE237BF7B47A448 /* WelcomeLandingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 18A498A728ED6E7A0A538C5A /* WelcomeLandingView.swift */; };
@@ -93,6 +94,14 @@
 		DF1F8D54188C1AD9C32FD029 /* SpendingSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = 75F2CD1F77B1A32E659A47AE /* SpendingSummary.swift */; };
 		DF673D1CED3DC1D7D87BD2EC /* CategoryEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6161035EB2EF7AE12F8CBEBE /* CategoryEditorView.swift */; };
 		E13B5B8CFAB4A226792ACCF9 /* Haptics.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E060A2833E96C8B2AB706AF /* Haptics.swift */; };
+		1A2B3C4D5E6F708192A30043 /* SupabaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708192A30044 /* SupabaseService.swift */; };
+		1A2B3C4D5E6F708192A30045 /* SupabaseServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708192A30046 /* SupabaseServiceTests.swift */; };
+		1A2B3C4D5E6F708192A30047 /* AuthNonce.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708192A30048 /* AuthNonce.swift */; };
+		1A2B3C4D5E6F708192A30049 /* EmailAuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708192A3004A /* EmailAuthView.swift */; };
+		1A2B3C4D5E6F708192A3004B /* AuthLogicTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708192A3004C /* AuthLogicTests.swift */; };
+		1A2B3C4D5E6F708192A3004D /* ProfileAvatarStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708192A3004E /* ProfileAvatarStore.swift */; };
+		1A2B3C4D5E6F708192A3004F /* ProfileAvatarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708192A30050 /* ProfileAvatarView.swift */; };
+		1A2B3C4D5E6F708192A30051 /* ProfileAvatarStoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708192A30052 /* ProfileAvatarStoreTests.swift */; };
 		E451E5CC8A5D41F71B8B522F /* AuthSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 433F75625EE33E963002A1A4 /* AuthSheet.swift */; };
 		EF55EA78470B6286D277D42F /* BudgetEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F4BAAEE29C82A8177445391 /* BudgetEditorView.swift */; };
 		F15FED507DDAEEF5329A84AF /* AccountView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BF0F719047A32A4C6647E27 /* AccountView.swift */; };
@@ -200,6 +209,14 @@
 		9B77BCB77E691C3C7CFE5323 /* ExpenseCategorizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpenseCategorizer.swift; sourceTree = "<group>"; };
 		9C3125566C5DA9010F2F5E38 /* RecurringPaymentsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecurringPaymentsView.swift; sourceTree = "<group>"; };
 		9E060A2833E96C8B2AB706AF /* Haptics.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Haptics.swift; sourceTree = "<group>"; };
+		1A2B3C4D5E6F708192A30044 /* SupabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseService.swift; sourceTree = "<group>"; };
+		1A2B3C4D5E6F708192A30046 /* SupabaseServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseServiceTests.swift; sourceTree = "<group>"; };
+		1A2B3C4D5E6F708192A30048 /* AuthNonce.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthNonce.swift; sourceTree = "<group>"; };
+		1A2B3C4D5E6F708192A3004A /* EmailAuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmailAuthView.swift; sourceTree = "<group>"; };
+		1A2B3C4D5E6F708192A3004C /* AuthLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthLogicTests.swift; sourceTree = "<group>"; };
+		1A2B3C4D5E6F708192A3004E /* ProfileAvatarStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileAvatarStore.swift; sourceTree = "<group>"; };
+		1A2B3C4D5E6F708192A30050 /* ProfileAvatarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileAvatarView.swift; sourceTree = "<group>"; };
+		1A2B3C4D5E6F708192A30052 /* ProfileAvatarStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileAvatarStoreTests.swift; sourceTree = "<group>"; };
 		A090EDE7CD091C4593296E50 /* WalletBudget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WalletBudget.entitlements; sourceTree = "<group>"; };
 		A4D5C0D39610BC264A208FF3 /* WudgetWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WudgetWidgetBundle.swift; sourceTree = "<group>"; };
 		AD53A91857295586BE052D9A /* WalletBudget.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = WalletBudget.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -242,6 +259,8 @@
 				33CE0757DE390AD3D6B754D3 /* AddTransactionSheet.swift */,
 				541A06AD300D4C3214FF46F9 /* AppLockGate.swift */,
 				433F75625EE33E963002A1A4 /* AuthSheet.swift */,
+				1A2B3C4D5E6F708192A3004A /* EmailAuthView.swift */,
+				1A2B3C4D5E6F708192A30050 /* ProfileAvatarView.swift */,
 				8F4BAAEE29C82A8177445391 /* BudgetEditorView.swift */,
 				6161035EB2EF7AE12F8CBEBE /* CategoryEditorView.swift */,
 				513D61072A882AB8FE7FCAA9 /* GroupDetailView.swift */,
@@ -368,6 +387,9 @@
 				818D19FA56D5DC673FA3F983 /* CardMatcherTests.swift */,
 				1A2B3C4D5E6F708192A30004 /* MerchantCleanerTests.swift */,
 				1A2B3C4D5E6F708192A3001A /* LogoProviderTests.swift */,
+				1A2B3C4D5E6F708192A30046 /* SupabaseServiceTests.swift */,
+				1A2B3C4D5E6F708192A3004C /* AuthLogicTests.swift */,
+				1A2B3C4D5E6F708192A30052 /* ProfileAvatarStoreTests.swift */,
 				1A2B3C4D5E6F708192A3001C /* OnboardingStepTests.swift */,
 				1A2B3C4D5E6F708192A3002B /* UserCardTests.swift */,
 				9F1A2B3C4D5E6F708192A210 /* WidgetSnapshotTests.swift */,
@@ -389,6 +411,9 @@
 				70C7567F1438CB4167E01182 /* CategoryStyle.swift */,
 				B132FD63D002121492B3FF69 /* CurrencyFormatting.swift */,
 				9E060A2833E96C8B2AB706AF /* Haptics.swift */,
+				1A2B3C4D5E6F708192A30044 /* SupabaseService.swift */,
+				1A2B3C4D5E6F708192A30048 /* AuthNonce.swift */,
+				1A2B3C4D5E6F708192A3004E /* ProfileAvatarStore.swift */,
 				1DAEF2B5A1BDA490806C3C71 /* LocationProvider.swift */,
 				4D4FD4B30A50FDDE3E9173E1 /* Log.swift */,
 				0734563CDB8FA69F0AA30B50 /* LogoProvider.swift */,
@@ -422,6 +447,7 @@
 			name = WalletBudget;
 			packageProductDependencies = (
 				1A2B3C4D5E6F708192A30023 /* Lottie */,
+				1A2B3C4D5E6F708192A30041 /* Supabase */,
 			);
 			productName = WalletBudget;
 			productReference = AD53A91857295586BE052D9A /* WalletBudget.app */;
@@ -497,6 +523,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				1A2B3C4D5E6F708192A30025 /* XCRemoteSwiftPackageReference "lottie-ios" */,
+				1A2B3C4D5E6F708192A30042 /* XCRemoteSwiftPackageReference "supabase-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 77B49E9C99F244891D47FE98 /* Products */;
@@ -516,6 +543,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1A2B3C4D5E6F708192A30022 /* Lottie in Frameworks */,
+				1A2B3C4D5E6F708192A30040 /* Supabase in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -550,6 +578,9 @@
 				7C2BBC1E20190B798FF45FC9 /* CardMatcherTests.swift in Sources */,
 				1A2B3C4D5E6F708192A30003 /* MerchantCleanerTests.swift in Sources */,
 				1A2B3C4D5E6F708192A30019 /* LogoProviderTests.swift in Sources */,
+				1A2B3C4D5E6F708192A30045 /* SupabaseServiceTests.swift in Sources */,
+				1A2B3C4D5E6F708192A3004B /* AuthLogicTests.swift in Sources */,
+				1A2B3C4D5E6F708192A30051 /* ProfileAvatarStoreTests.swift in Sources */,
 				1A2B3C4D5E6F708192A3001B /* OnboardingStepTests.swift in Sources */,
 				1A2B3C4D5E6F708192A3002A /* UserCardTests.swift in Sources */,
 				D42B9E8D64BD20B38C34958D /* CurrencyParserTests.swift in Sources */,
@@ -578,6 +609,10 @@
 				CBA2DD8CAC5E4BFDBA061C5F /* AppLockGate.swift in Sources */,
 				759682447208897EFBFEFA3A /* AppTheme.swift in Sources */,
 				E451E5CC8A5D41F71B8B522F /* AuthSheet.swift in Sources */,
+				1A2B3C4D5E6F708192A30049 /* EmailAuthView.swift in Sources */,
+				1A2B3C4D5E6F708192A30047 /* AuthNonce.swift in Sources */,
+				1A2B3C4D5E6F708192A3004D /* ProfileAvatarStore.swift in Sources */,
+				1A2B3C4D5E6F708192A3004F /* ProfileAvatarView.swift in Sources */,
 				EF55EA78470B6286D277D42F /* BudgetEditorView.swift in Sources */,
 				96C2FC2518C3C93F36DB9206 /* CardMatcher.swift in Sources */,
 				1A2B3C4D5E6F708192A30001 /* MerchantCleaner.swift in Sources */,
@@ -592,6 +627,7 @@
 				32557C525F911334C1D11B88 /* ExpenseCategorizer.swift in Sources */,
 				0EC04CBF48CA9FB8C383F854 /* GroupDetailView.swift in Sources */,
 				E13B5B8CFAB4A226792ACCF9 /* Haptics.swift in Sources */,
+				1A2B3C4D5E6F708192A30043 /* SupabaseService.swift in Sources */,
 				3F75F32A55E6F127A88D6414 /* LegalDocumentView.swift in Sources */,
 				CE8B91204F3A6476A55E0B79 /* LibraryPickerView.swift in Sources */,
 				59EABBC6C49BBC0C436948D7 /* LocationProvider.swift in Sources */,
@@ -674,6 +710,14 @@
 				minimumVersion = 4.5.0;
 			};
 		};
+		1A2B3C4D5E6F708192A30042 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -681,6 +725,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1A2B3C4D5E6F708192A30025 /* XCRemoteSwiftPackageReference "lottie-ios" */;
 			productName = Lottie;
+		};
+		1A2B3C4D5E6F708192A30041 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1A2B3C4D5E6F708192A30042 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
 		};
 /* End XCSwiftPackageProductDependency section */
 
@@ -857,11 +906,11 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WalletBudget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Budget;
+				INFOPLIST_KEY_CFBundleDisplayName = Orbit;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				INFOPLIST_KEY_NSFaceIDUsageDescription = "Wudget uses Face ID to lock the app so only you can open it and see your spending.";
-				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Wudget records where each Apple Pay purchase happened, even when the import runs in the background. Locations stay on your device and are never shared.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Wudget adds the location of each Apple Pay purchase so you can see where you spent. Locations stay on your device.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Orbit uses Face ID to lock the app so only you can open it and see your spending.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Orbit records where each Apple Pay purchase happened, even when the import runs in the background. Locations stay on your device and are never shared.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Orbit adds the location of each Apple Pay purchase so you can see where you spent. Locations stay on your device.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -919,11 +968,11 @@
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = WalletBudget/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = Budget;
+				INFOPLIST_KEY_CFBundleDisplayName = Orbit;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
-				INFOPLIST_KEY_NSFaceIDUsageDescription = "Wudget uses Face ID to lock the app so only you can open it and see your spending.";
-				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Wudget records where each Apple Pay purchase happened, even when the import runs in the background. Locations stay on your device and are never shared.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Wudget adds the location of each Apple Pay purchase so you can see where you spent. Locations stay on your device.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "Orbit uses Face ID to lock the app so only you can open it and see your spending.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Orbit records where each Apple Pay purchase happened, even when the import runs in the background. Locations stay on your device and are never shared.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Orbit adds the location of each Apple Pay purchase so you can see where you spent. Locations stay on your device.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;

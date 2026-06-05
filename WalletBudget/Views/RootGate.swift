@@ -8,7 +8,12 @@ struct RootGate: View {
 
     var body: some View {
         Group {
-            if account.isSignedIn {
+            if account.isRestoringSession {
+                // Hold a neutral splash while Supabase restores the persisted
+                // session, so cold launches don't flash the welcome screen.
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else if account.isSignedIn {
                 AppLockGate { RootView() }
             } else {
                 WelcomeLandingView()
