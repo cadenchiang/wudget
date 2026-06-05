@@ -43,14 +43,24 @@ struct SpendingView: View {
         SpendingSummary.filter(expenses, in: span.previousInterval())
     }
 
-    /// Current-period expenses honoring the spending mode (Variable excludes fixed costs).
+    /// Current-period expenses honoring the spending mode (Everyday excludes fixed costs;
+    /// Fixed shows only them).
     private var displayedCurrent: [Expense] {
-        spendingMode == .variable ? currentExpenses.filter { !$0.excludedFromBudget } : currentExpenses
+        filtered(currentExpenses)
     }
 
     /// Previous-period expenses honoring the spending mode.
     private var displayedPrevious: [Expense] {
-        spendingMode == .variable ? previousExpenses.filter { !$0.excludedFromBudget } : previousExpenses
+        filtered(previousExpenses)
+    }
+
+    /// Applies the spending mode's filter to a set of expenses.
+    private func filtered(_ expenses: [Expense]) -> [Expense] {
+        switch spendingMode {
+        case .total: return expenses
+        case .variable: return expenses.filter { !$0.excludedFromBudget }
+        case .fixed: return expenses.filter { $0.excludedFromBudget }
+        }
     }
 
     /// Previous-period expenses truncated to the same elapsed point we've reached in the current
@@ -123,7 +133,7 @@ struct SpendingView: View {
     /// `nil` when the user has turned the budget off or hasn't set one, which removes the
     /// budget line, the over/under coloring, and the remaining-to-spend sentence everywhere.
     private var periodBudget: Double? {
-        guard budgetEnabled, monthlyBudget > 0 else { return nil }
+        guard budgetEnabled, monthlyBudget > 0, spendingMode != .fixed else { return nil }
         switch span {
         case .today: return monthlyBudget / 30.4
         case .week: return monthlyBudget * 7.0 / 30.4
@@ -156,6 +166,7 @@ struct SpendingView: View {
                 .sheet(isPresented: $showingAdd) { AddTransactionSheet() }
                 .onChange(of: span) { _, _ in Haptics.selection() }
                 .onChange(of: tab) { _, _ in Haptics.selection() }
+                .onChange(of: spendingMode) { _, _ in Haptics.selection() }
                 .onAppear {
                     // Seed the mode from the onboarding preference only once, ever. After that the
                     // user's last choice is restored from @AppStorage on every launch.
@@ -167,12 +178,12 @@ struct SpendingView: View {
         }
     }
 
-    /// Transparent top bar: the Total/Everyday Spending mode dropdown with the selected period's
-    /// date range beneath it, add button trailing. (Period selection lives in the chip slider.)
+    /// Transparent top bar: the time-span dropdown with the selected period's date range beneath
+    /// it, add button trailing. (Mode selection lives in the chip slider under the chart.)
     private var topBar: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 1) {
-                modeMenu
+                spanMenu
                 Text(span.dateRange())
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
@@ -205,17 +216,17 @@ struct SpendingView: View {
         }
     }
 
-    /// The Total/Everyday Spending dropdown shown as the screen title.
-    private var modeMenu: some View {
+    /// The time-span dropdown shown as the screen title (Today … All Time).
+    private var spanMenu: some View {
         Menu {
-            Picker("Spending mode", selection: $spendingMode) {
-                ForEach(SpendingMode.allCases) { option in
+            Picker("Time span", selection: $span) {
+                ForEach(TimeSpan.allCases) { option in
                     Text(option.title).tag(option)
                 }
             }
         } label: {
             HStack(spacing: 4) {
-                Text(spendingMode.title)
+                Text(span.title)
                     .font(.title3.weight(.semibold))
                 Image(systemName: "chevron.down")
                     .font(.subheadline.weight(.semibold))
@@ -223,38 +234,37 @@ struct SpendingView: View {
             .foregroundStyle(.primary)
         }
         .tint(.primary)
-        .accessibilityLabel("Spending mode: \(spendingMode.title)")
+        .accessibilityLabel("Time span: \(span.title)")
     }
 
-    /// Robinhood-style period chips under the chart (1D 1W 1M 3M YTD 1Y All): a horizontally
-    /// scrollable row of small chips with a filled pill that slides to the active span.
-    private var spanSelector: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 4) {
-                ForEach(TimeSpan.allCases) { option in
-                    Button {
-                        span = option
-                    } label: {
-                        Text(option.shortLabel)
-                            .font(.caption.weight(.bold))
-                            .foregroundStyle(span == option ? Color(.systemBackground) : Color.secondary)
-                            .padding(.horizontal, 13)
-                            .padding(.vertical, 6)
-                            .background {
-                                if span == option {
-                                    Capsule()
-                                        .fill(Color.primary)
-                                        .matchedGeometryEffect(id: "spanPill", in: spanPillNamespace)
-                                }
+    /// Mode chips under the chart (Total / Everyday / Fixed) with a filled pill that slides to
+    /// the active mode.
+    private var modeSelector: some View {
+        HStack(spacing: 4) {
+            ForEach(SpendingMode.allCases) { option in
+                Button {
+                    spendingMode = option
+                } label: {
+                    Text(option.chipLabel)
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(spendingMode == option ? Color(.systemBackground) : Color.secondary)
+                        .padding(.horizontal, 13)
+                        .padding(.vertical, 6)
+                        .background {
+                            if spendingMode == option {
+                                Capsule()
+                                    .fill(Color.primary)
+                                    .matchedGeometryEffect(id: "modePill", in: spanPillNamespace)
                             }
-                            .contentShape(Capsule())
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Time span: \(option.title)")
+                        }
+                        .contentShape(Capsule())
                 }
+                .buttonStyle(.plain)
+                .accessibilityLabel(option.title)
             }
+            Spacer(minLength: 0)
         }
-        .animation(.spring(response: 0.3, dampingFraction: 0.85), value: span)
+        .animation(.spring(response: 0.3, dampingFraction: 0.85), value: spendingMode)
     }
 
     /// The budget blurb as a friendly card under the Repeat row: a banknote glyph beside the
@@ -300,7 +310,7 @@ struct SpendingView: View {
                         periodBudget: periodBudget
                     )
 
-                    spanSelector
+                    modeSelector
                 }
 
                 recurringRow

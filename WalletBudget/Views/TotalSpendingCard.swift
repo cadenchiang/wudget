@@ -41,10 +41,12 @@ struct SpendingProjection {
     }
 }
 
-/// Whether the spending card counts everything or only variable (non-fixed) costs.
+/// What the spending screen counts: everything, only everyday (variable) costs, or only the
+/// fixed costs excluded from everyday spending (rent, bills, subscriptions).
 enum SpendingMode: String, CaseIterable, Identifiable {
     case total
     case variable
+    case fixed
 
     var id: String { rawValue }
 
@@ -52,6 +54,16 @@ enum SpendingMode: String, CaseIterable, Identifiable {
         switch self {
         case .total: return "Total Spending"
         case .variable: return "Everyday Spending"
+        case .fixed: return "Fixed Costs"
+        }
+    }
+
+    /// Compact label for the mode chips under the chart.
+    var chipLabel: String {
+        switch self {
+        case .total: return "Total"
+        case .variable: return "Everyday"
+        case .fixed: return "Fixed"
         }
     }
 }
