@@ -20,15 +20,19 @@ struct ManageCategoriesView: View {
         .navigationTitle("Categories")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                EditButton()
-                    .tint(.blue)
-            }
             ToolbarItem(placement: .topBarTrailing) {
                 Button { addingNew = true } label: { Image(systemName: "plus") }
                     .tint(.primary)
                     .accessibilityLabel("Add category")
             }
+        }
+        .safeAreaInset(edge: .bottom) {
+            Text("Tap a category to edit it. Swipe left to delete one; its transactions move to Other.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+                .padding(.vertical, 10)
         }
         .sheet(item: $editing) { CategoryEditorView(category: $0) }
         .sheet(isPresented: $addingNew) { CategoryEditorView(category: nil) }

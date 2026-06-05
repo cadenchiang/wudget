@@ -16,36 +16,42 @@ struct RecurringPaymentsView: View {
                 emptyState
             } else {
                 List {
-                    Section {
-                        ForEach(expenses) { expense in
-                            NavigationLink {
-                                TransactionDetailView(expense: expense)
-                            } label: {
-                                RecurringRow(expense: expense)
-                            }
-                            .swipeActions(edge: .leading) {
-                                Button { toggleExcluded(expense) } label: {
-                                    Label(expense.excludedFromBudget ? "Include" : "Ignore",
-                                          systemImage: expense.excludedFromBudget ? "eye" : "eye.slash")
-                                }
-                                .tint(.gray)
-                            }
+                    ForEach(expenses) { expense in
+                        NavigationLink {
+                            TransactionDetailView(expense: expense)
+                        } label: {
+                            RecurringRow(expense: expense)
                         }
-                        .onDelete(perform: delete)
-                    } footer: {
-                        Text("Swipe a payment right to ignore it, ignored fixed costs (rent, bills) are left out of Everyday Spending.")
+                        .listRowInsets(EdgeInsets(top: 6, leading: 20, bottom: 6, trailing: 20))
+                        .listRowSeparator(.hidden, edges: expense == expenses.last ? .bottom : [])
+                        // Left swipe only: ignore or delete. No leading (right-swipe) actions.
+                        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                            Button(role: .destructive) { delete(expense) } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                            Button { toggleExcluded(expense) } label: {
+                                Label(expense.excludedFromBudget ? "Include" : "Ignore",
+                                      systemImage: expense.excludedFromBudget ? "eye" : "eye.slash")
+                            }
+                            .tint(.gray)
+                        }
                     }
+                }
+                .listStyle(.plain)
+                .safeAreaInset(edge: .bottom) {
+                    Text("Swipe left on a payment to ignore or delete it. Ignored fixed costs raise your budget line instead of counting against it.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 32)
+                        .padding(.vertical, 10)
                 }
             }
         }
         .navigationTitle("Repeat")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItemGroup(placement: .topBarTrailing) {
-                // Edit toggles swipe-to-delete/ignore editing. Hidden when there's nothing to edit.
-                if !expenses.isEmpty {
-                    EditButton().tint(.blue)
-                }
+            ToolbarItem(placement: .topBarTrailing) {
                 Button { showingAdd = true } label: {
                     Image(systemName: "plus")
                 }
@@ -81,17 +87,14 @@ struct RecurringPaymentsView: View {
         }
     }
 
-    /// Deletes the recurring expenses at the given offsets and saves.
-    /// - Parameter offsets: Index set provided by `onDelete`, relative to `expenses`.
-    private func delete(at offsets: IndexSet) {
-        for expense in offsets.map({ expenses[$0] }) {
-            Log.ui.info("Deleting recurring payment at \(expense.merchant, privacy: .public)")
-            context.delete(expense)
-        }
+    /// Deletes one recurring expense and saves.
+    private func delete(_ expense: Expense) {
+        Log.ui.info("Deleting recurring payment at \(expense.merchant, privacy: .public)")
+        context.delete(expense)
         do {
             try context.save()
         } catch {
-            Log.ui.error("Failed to delete recurring payment(s): \(error.localizedDescription, privacy: .public)")
+            Log.ui.error("Failed to delete recurring payment: \(error.localizedDescription, privacy: .public)")
         }
     }
 }
@@ -109,7 +112,7 @@ private struct RecurringRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            MerchantLogoTile(merchant: expense.merchant, size: 38, cornerRadius: 9)
+            MerchantLogoTile(merchant: expense.merchant)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Text(expense.merchant.isEmpty ? "Unknown" : expense.merchant)
@@ -131,7 +134,6 @@ private struct RecurringRow: View {
             Text(expense.amount.asCurrency())
                 .font(.body.weight(.medium))
         }
-        .padding(.vertical, 6)
         .opacity(expense.excludedFromBudget ? 0.55 : 1)
     }
 }

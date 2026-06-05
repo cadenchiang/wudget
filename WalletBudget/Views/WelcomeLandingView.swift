@@ -56,8 +56,12 @@ struct WelcomeLandingView: View {
             // and a slight tilt — so it lives inside the ring motion instead of sitting frozen.
             TimelineView(.animation) { timeline in
                 let t = timeline.date.timeIntervalSinceReferenceDate
-                PiggyBankIcon()
-                    .frame(width: 64, height: 54)
+                Image("welcomePiggy")
+                    .resizable()
+                    .renderingMode(.template)
+                    .scaledToFit()
+                    .frame(width: 62, height: 62)
+                    .foregroundStyle(.primary)
                     .scaleEffect(1 + 0.06 * sin(t * 1.5))
                     .rotationEffect(.degrees(4 * sin(t * 0.9)))
                     .offset(x: 5 * sin(t * 0.7), y: 6 * sin(t * 1.13))
@@ -93,55 +97,6 @@ struct WelcomeLandingView: View {
             }
         }
         .buttonStyle(.plain)
-    }
-}
-
-/// A super-minimal line-art piggy bank, drawn to match the welcome rings: body, snout, ear,
-/// eye, legs, and a coin slot, stroked in `.primary` (no SF Symbol exists for this).
-private struct PiggyBankIcon: View {
-    var body: some View {
-        Canvas { context, size in
-            // Designed on a 72x60 grid, scaled to whatever frame hosts it.
-            let sx = size.width / 72
-            let sy = size.height / 60
-            func pt(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: x * sx, y: y * sy) }
-            let stroke = StrokeStyle(lineWidth: 3.5 * min(sx, sy), lineCap: .round, lineJoin: .round)
-            let color = GraphicsContext.Shading.color(.primary)
-
-            // Body
-            var body = Path()
-            body.addEllipse(in: CGRect(x: 6 * sx, y: 14 * sy, width: 50 * sx, height: 36 * sy))
-            context.stroke(body, with: color, style: stroke)
-
-            // Snout poking out the right side
-            var snout = Path(roundedRect: CGRect(x: 54 * sx, y: 26 * sy, width: 12 * sx, height: 13 * sy),
-                             cornerRadius: 5 * min(sx, sy))
-            context.stroke(snout, with: color, style: stroke)
-
-            // Ear
-            var ear = Path()
-            ear.move(to: pt(40, 16))
-            ear.addQuadCurve(to: pt(48, 18), control: pt(45, 8))
-            context.stroke(ear, with: color, style: stroke)
-
-            // Eye
-            let eye = Path(ellipseIn: CGRect(x: 43 * sx, y: 24 * sy, width: 4 * sx, height: 4 * sy))
-            context.fill(eye, with: color)
-
-            // Coin slot on top
-            var slot = Path()
-            slot.move(to: pt(22, 12))
-            slot.addLine(to: pt(32, 12))
-            context.stroke(slot, with: color, style: stroke)
-
-            // Legs
-            for x in [18.0, 42.0] {
-                var leg = Path()
-                leg.move(to: pt(x, 49))
-                leg.addLine(to: pt(x, 57))
-                context.stroke(leg, with: color, style: stroke)
-            }
-        }
     }
 }
 

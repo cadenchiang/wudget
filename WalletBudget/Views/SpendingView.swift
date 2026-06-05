@@ -248,6 +248,8 @@ struct SpendingView: View {
 
                 recurringRow
 
+                budgetBlurbCard
+
                 VStack(alignment: .leading, spacing: 4) {
                     tabSelector
                     if tab == .recent {
@@ -285,6 +287,31 @@ struct SpendingView: View {
                 .padding(.vertical, 14)
             }
             .buttonStyle(.plain)
+        }
+    }
+
+    /// The per-day allowance as a quiet card under the Repeat row: the piggy glyph beside the
+    /// "you can spend X a day" sentence on subtle Apple gray. Hidden when no budget is set.
+    @ViewBuilder
+    private var budgetBlurbCard: some View {
+        if let sentence = projection?.perDaySentence {
+            HStack(spacing: 14) {
+                Image("welcomePiggy")
+                    .resizable()
+                    .renderingMode(.template)
+                    .scaledToFit()
+                    .frame(width: 30, height: 30)
+                    .foregroundStyle(.primary)
+                sentence
+                    .font(.subheadline)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+            }
+            .padding(18)
+            .background(
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(Color(.secondarySystemBackground))
+            )
         }
     }
 
