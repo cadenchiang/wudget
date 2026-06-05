@@ -33,11 +33,13 @@ struct SpendingProjection {
                 + Text(perDay.asCurrency()).fontWeight(.bold)
                 + Text(" a day for the next \(daysRemaining) \(dayWord) and stay under budget.")
         } else if remaining <= -0.005 {
-            return Text("You're ")
-                + Text(abs(remaining).asCurrency()).fontWeight(.bold)
-                + Text(" over budget this \(periodNoun).")
+            // Over budget: the delta line above already shows the number, so this card coaches
+            // instead of repeating it.
+            return Text("Take it easy").fontWeight(.bold)
+                + Text(" for the rest of the \(periodNoun), a few no-spend days will pull you back.")
         }
-        return Text("You've hit your budget for this \(periodNoun).")
+        return Text("Right at your budget").fontWeight(.bold)
+            + Text(" — a light day or two keeps you on track.")
     }
 }
 
