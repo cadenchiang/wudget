@@ -27,6 +27,8 @@ struct SpendingView: View {
     @State private var span: TimeSpan = .month
     @State private var tab: SpendingTab = .recent
     @State private var showingAdd = false
+    /// Anchors the sliding pill of the list selector.
+    @Namespace private var tabPillNamespace
     /// Expenses within the selected period (already date-descending from the query).
     private var currentExpenses: [Expense] {
         SpendingSummary.filter(expenses, in: span.interval())
@@ -241,7 +243,7 @@ struct SpendingView: View {
                 recurringRow
 
                 VStack(alignment: .leading, spacing: 4) {
-                    tabMenu
+                    tabSelector
                     if tab == .recent {
                         recentRows
                     } else {
@@ -280,26 +282,35 @@ struct SpendingView: View {
         }
     }
 
-    /// The list selector as a dropdown: Recent / By Merchant / By Category.
-    private var tabMenu: some View {
-        Menu {
-            Picker("List", selection: $tab) {
-                ForEach(SpendingTab.allCases) { option in
-                    Text(option.title).tag(option)
+    /// The list selector as chips: Recent / By Merchant / By Category with a filled pill that
+    /// slides to the active choice.
+    private var tabSelector: some View {
+        HStack(spacing: 4) {
+            ForEach(SpendingTab.allCases) { option in
+                Button {
+                    tab = option
+                } label: {
+                    Text(option.title)
+                        .font(.caption.weight(.bold))
+                        .foregroundStyle(tab == option ? Color(.systemBackground) : Color.secondary)
+                        .padding(.horizontal, 13)
+                        .padding(.vertical, 6)
+                        .background {
+                            if tab == option {
+                                Capsule()
+                                    .fill(Color.primary)
+                                    .matchedGeometryEffect(id: "tabPill", in: tabPillNamespace)
+                            }
+                        }
+                        .contentShape(Capsule())
                 }
+                .buttonStyle(.plain)
+                .accessibilityLabel("List: \(option.title)")
             }
-        } label: {
-            HStack(spacing: 4) {
-                Text(tab.title)
-                    .font(.title3.weight(.semibold))
-                Image(systemName: "chevron.down")
-                    .font(.subheadline.weight(.semibold))
-            }
-            .foregroundStyle(.primary)
+            Spacer(minLength: 0)
         }
-        .tint(.primary)
-        .padding(.vertical, 8)
-        .accessibilityLabel("List: \(tab.title)")
+        .padding(.vertical, 6)
+        .animation(.spring(response: 0.3, dampingFraction: 0.85), value: tab)
     }
 
     /// Flat, date-ordered list of the period's transactions (the Recent tab).
