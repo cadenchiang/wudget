@@ -80,6 +80,8 @@ struct TotalSpendingCard: View {
 
     /// The raw drag position from the chart (continuous).
     @State private var selectedDate: Date?
+    /// Set once on appear to fire the live dot's single welcome pulse.
+    @State private var introPulsed = false
     /// The drag position snapped to the nearest logged transaction.
     @State private var snappedDate: Date?
 
@@ -311,13 +313,14 @@ struct TotalSpendingCard: View {
             // The budget: one dotted horizontal line straight across, with the amount in small
             // letters above its trailing end.
             if let periodBudget {
+                let lit = snappedDate != nil
                 RuleMark(y: .value("Budget", periodBudget))
-                    .foregroundStyle(.secondary.opacity(0.6))
-                    .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [1, 4]))
+                    .foregroundStyle(lit ? Color.primary.opacity(0.85) : Color.secondary.opacity(0.6))
+                    .lineStyle(StrokeStyle(lineWidth: 0.5, dash: [1, 4]))
                     .annotation(position: .top, alignment: .trailing, spacing: 3) {
                         Text(periodBudget.asCurrency())
                             .font(.caption2.weight(.semibold))
-                            .foregroundStyle(.secondary.opacity(0.6)) // same color as the line
+                            .foregroundStyle(lit ? Color.primary.opacity(0.85) : Color.secondary.opacity(0.6))
                             .padding(.trailing, 2)
                     }
             }
@@ -337,6 +340,12 @@ struct TotalSpendingCard: View {
         .padding(.top, 8)
         // Bleed past the page gutter so the line runs edge to edge, Robinhood-style.
         .padding(.horizontal, -20)
+        .onAppear {
+            // One welcome pulse from the live dot (state starts false; the ring expands and
+            // fades as it flips true, then stays invisible).
+            introPulsed = false
+            withAnimation(.easeOut(duration: 1.0).delay(0.3)) { introPulsed = true }
+        }
         // Snap the scrub to the nearest logged transaction and tick once per point.
         .onChange(of: selectedDate) { _, newValue in
             guard let newValue else {
@@ -353,12 +362,17 @@ struct TotalSpendingCard: View {
             GeometryReader { geo in
                 if let plotAnchor = proxy.plotFrame {
                     let plot = geo[plotAnchor]
-                    // Live dot at the end of the line.
+                    // Live dot at the end of the line, with a single welcome pulse on appear.
                     if let endX = proxy.position(forX: lineEnd),
                        let endY = proxy.position(forY: linePoints.last?.total ?? 0) {
                         Circle()
+                            .stroke(lineColor.opacity(introPulsed ? 0 : 0.7), lineWidth: 1.5)
+                            .frame(width: 7, height: 7)
+                            .scaleEffect(introPulsed ? 3.4 : 1)
+                            .position(x: plot.minX + endX, y: plot.minY + endY)
+                        Circle()
                             .fill(lineColor)
-                            .frame(width: 9, height: 9)
+                            .frame(width: 7, height: 7)
                             .position(x: plot.minX + endX, y: plot.minY + endY)
                     }
                     // Pulsing dot + breakdown card at the snapped transaction.
