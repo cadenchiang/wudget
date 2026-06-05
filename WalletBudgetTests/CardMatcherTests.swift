@@ -15,10 +15,12 @@ final class CardMatcherTests: XCTestCase {
     }
 
     func testLongestContainedMatchWins() {
-        // "Chase Sapphire" must beat "Chase".
-        XCTAssertEqual(CardMatcher.match("CHASE SAPPHIRE RESERVE"), "Chase Sapphire")
-        // Plain Chase product still maps to "Chase".
-        XCTAssertEqual(CardMatcher.match("Chase Freedom Unlimited"), "Chase")
+        // The most specific library entry wins: Reserve beats Sapphire beats Chase.
+        XCTAssertEqual(CardMatcher.match("CHASE SAPPHIRE RESERVE"), "Chase Sapphire Reserve")
+        XCTAssertEqual(CardMatcher.match("Chase Sapphire Preferred"), "Chase Sapphire")
+        XCTAssertEqual(CardMatcher.match("Chase Freedom Unlimited"), "Chase Freedom")
+        // A bare bank product still maps to the bank.
+        XCTAssertEqual(CardMatcher.match("Chase Slate"), "Chase")
     }
 
     func testRawContainedInLibraryNameMatches() {

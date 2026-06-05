@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "logo_varo.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

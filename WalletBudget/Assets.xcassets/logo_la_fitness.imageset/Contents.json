@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "logo_la_fitness.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

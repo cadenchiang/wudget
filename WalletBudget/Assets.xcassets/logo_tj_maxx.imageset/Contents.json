@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "logo_tj_maxx.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

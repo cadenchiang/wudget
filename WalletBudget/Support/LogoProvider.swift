@@ -95,6 +95,39 @@ enum LogoProvider {
         "xfinity": "xfinity.com", "pg&e": "pge.com",
         // Money
         "paypal": "paypal.com", "venmo": "venmo.com", "cash app": "cash.app",
-        "robinhood": "robinhood.com", "coinbase": "coinbase.com"
+        "robinhood": "robinhood.com", "coinbase": "coinbase.com",
+        // Dining II
+        "panda express": "pandaexpress.com", "raising cane's": "raisingcanes.com", "wingstop": "wingstop.com",
+        "kfc": "kfc.com", "popeyes": "popeyes.com", "sonic": "sonicdrivein.com",
+        "dairy queen": "dairyqueen.com", "cava": "cava.com", "jersey mike's": "jerseymikes.com",
+        "jimmy john's": "jimmyjohns.com", "crumbl": "crumblcookies.com", "insomnia cookies": "insomniacookies.com",
+        "jamba": "jamba.com", "smoothie king": "smoothieking.com", "olive garden": "olivegarden.com",
+        "chili's": "chilis.com", "buffalo wild wings": "buffalowildwings.com",
+        // Convenience & gas II
+        "7-eleven": "7-eleven.com", "wawa": "wawa.com", "circle k": "circlek.com",
+        "speedway": "speedway.com", "quiktrip": "quiktrip.com", "valero": "valero.com",
+        // Groceries II
+        "h-e-b": "heb.com", "wegmans": "wegmans.com", "meijer": "meijer.com",
+        "albertsons": "albertsons.com", "sam's club": "samsclub.com", "bj's": "bjs.com",
+        // Retail II
+        "tj maxx": "tjmaxx.tjx.com", "marshalls": "marshalls.com", "ross": "rossstores.com",
+        "dollar tree": "dollartree.com", "dollar general": "dollargeneral.com", "five below": "fivebelow.com",
+        "gamestop": "gamestop.com", "dick's sporting goods": "dickssportinggoods.com", "rei": "rei.com",
+        "staples": "staples.com", "michaels": "michaels.com", "petsmart": "petsmart.com",
+        "petco": "petco.com", "autozone": "autozone.com",
+        // Tech & subscriptions II
+        "openai": "openai.com", "github": "github.com", "dropbox": "dropbox.com",
+        "discord": "discord.com", "twitch": "twitch.tv", "patreon": "patreon.com",
+        "canva": "canva.com", "figma": "figma.com", "duolingo": "duolingo.com",
+        "chegg": "chegg.com", "quizlet": "quizlet.com", "paramount+": "paramountplus.com",
+        "peacock": "peacocktv.com", "crunchyroll": "crunchyroll.com",
+        // Travel & transport II
+        "lime": "li.me", "amtrak": "amtrak.com", "jetblue": "jetblue.com",
+        "spirit": "spirit.com", "turo": "turo.com", "hertz": "hertz.com",
+        "enterprise": "enterprise.com", "fandango": "fandango.com", "regal": "regmovies.com",
+        "cinemark": "cinemark.com", "topgolf": "topgolf.com", "classpass": "classpass.com",
+        "orangetheory": "orangetheory.com", "la fitness": "lafitness.com", "ups": "ups.com",
+        "fedex": "fedex.com", "usps": "usps.com", "klarna": "klarna.com",
+        "afterpay": "afterpay.com", "affirm": "affirm.com", "zelle": "zellepay.com"
     ]
 }

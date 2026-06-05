@@ -176,13 +176,14 @@ private struct OnboardingStepView: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .topLeading)
-            .frame(minHeight: 72, alignment: .topLeading)
+            .frame(minHeight: 48, alignment: .topLeading)
 
             artwork
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .padding(.horizontal, 24)
-        .padding(.vertical, 12)
+        .padding(.top, 4)
+        .padding(.bottom, 12)
     }
 
     /// The step title. When `highlightPill` is set, the highlight renders as a blue button-style

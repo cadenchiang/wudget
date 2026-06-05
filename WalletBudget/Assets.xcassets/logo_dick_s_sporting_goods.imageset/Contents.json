@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "logo_dick_s_sporting_goods.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

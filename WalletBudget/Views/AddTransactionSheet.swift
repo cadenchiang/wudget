@@ -1,10 +1,11 @@
 import SwiftUI
 import SwiftData
+import UIKit
 
 /// Step-by-step sheet for manually logging a transaction (fallback when not using the Shortcut),
 /// presented on frosted glass so the screen behind ghosts through. Numbered steps walk through
-/// amount → merchant → optional details, with one big Add pill pinned at the bottom that stays
-/// dimmed until the required steps are filled.
+/// amount → merchant → card → optional details, with one big Add pill pinned at the bottom that
+/// stays dimmed until the three required steps are filled.
 struct AddTransactionSheet: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
@@ -35,10 +36,11 @@ struct AddTransactionSheet: View {
         _showDetails = State(initialValue: recurrenceDefault != .none || !categoryDefault.isEmpty)
     }
 
-    /// Whether the required steps (a parseable amount and a merchant) are complete.
+    /// Whether the required steps (a parseable amount, a merchant, and a card) are complete.
     private var canSave: Bool {
         CurrencyParser.parse(amountText).map { $0 != 0 } == true
             && !merchant.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            && !card.isEmpty
     }
 
     var body: some View {
@@ -48,6 +50,7 @@ struct AddTransactionSheet: View {
                 VStack(alignment: .leading, spacing: 28) {
                     amountStep
                     merchantStep
+                    cardStep
                     detailsStep
                     if let errorMessage {
                         Text(errorMessage)
@@ -149,14 +152,61 @@ struct AddTransactionSheet: View {
         }
     }
 
-    /// Step 3 (optional): card, category, date, repeat, and note as plain hairline rows.
+    /// Step 3: the card, as a chip that opens the picker.
+    private var cardStep: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            stepLabel(3, "Which card?")
+            Button {
+                showingCardPicker = true
+            } label: {
+                HStack(spacing: 10) {
+                    if card.isEmpty {
+                        Text("Choose a card")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        cardChipLogo
+                        Text(card)
+                            .fontWeight(.medium)
+                            .foregroundStyle(.primary)
+                    }
+                    Image(systemName: "chevron.down")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.tertiary)
+                }
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .overlay(Capsule().strokeBorder(Color.primary.opacity(0.2), lineWidth: 1))
+                .contentShape(Capsule())
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    /// The selected card's bundled logo (when known), else a small card glyph.
+    @ViewBuilder
+    private var cardChipLogo: some View {
+        if let item = CardLibrary.item(named: card),
+           let asset = item.assetName, UIImage(named: asset) != nil {
+            Image(asset)
+                .resizable()
+                .scaledToFill()
+                .frame(width: 26, height: 26)
+                .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
+        } else {
+            Image(systemName: "creditcard.fill")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    /// Step 4 (optional): category, date, repeat, and note as plain hairline rows.
     private var detailsStep: some View {
         VStack(alignment: .leading, spacing: 4) {
             Button {
                 withAnimation(.easeInOut(duration: 0.2)) { showDetails.toggle() }
             } label: {
                 HStack(spacing: 8) {
-                    stepLabel(3, "Details")
+                    stepLabel(4, "Details")
                     Text("optional")
                         .font(.subheadline)
                         .foregroundStyle(.tertiary)
@@ -172,8 +222,6 @@ struct AddTransactionSheet: View {
 
             if showDetails {
                 VStack(spacing: 0) {
-                    detailRow("Card", value: card.isEmpty ? "Choose" : card) { showingCardPicker = true }
-                    Divider()
                     HStack {
                         Text("Category")
                         Spacer()

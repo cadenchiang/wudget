@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "logo_citi_double_cash.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

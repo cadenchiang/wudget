@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "logo_m_t_bank.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

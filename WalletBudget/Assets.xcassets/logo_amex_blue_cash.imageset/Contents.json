@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "logo_amex_blue_cash.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

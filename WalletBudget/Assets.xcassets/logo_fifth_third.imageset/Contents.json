@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "logo_fifth_third.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

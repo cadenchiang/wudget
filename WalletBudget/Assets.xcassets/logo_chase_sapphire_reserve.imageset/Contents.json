@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "logo_chase_sapphire_reserve.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

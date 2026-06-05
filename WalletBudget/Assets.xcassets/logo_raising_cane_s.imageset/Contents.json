@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "logo_raising_cane_s.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
