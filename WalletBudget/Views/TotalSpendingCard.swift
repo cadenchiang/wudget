@@ -57,35 +57,73 @@ struct TotalSpendingCard: View {
     let total: Double
     /// Total spent in the previous period (for the comparison arrow).
     let previousTotal: Double
-    /// The period's transactions (any order; the card sorts by time).
-    let entries: [SpendingChartEntry]
-    /// The period's full date range — the x-axis domain, so unelapsed time stays blank.
-    let domain: ClosedRange<Date>
-    /// The period's sub-intervals (days/weeks/months) used for the volume-style breakdown bars.
-    let buckets: [PeriodBucket]
-    /// Optional forward-looking projection (used by the blurb card outside this view).
+    /// Optional forward-looking projection (used by the blurb copy outside this view).
     let projection: SpendingProjection?
     /// Optional total budget for the period; drawn as a dotted horizontal line.
     let periodBudget: Double?
+
+    // Everything the chart draws is computed once at init (not per render), so scrub frames
+    // and state changes never re-sort or re-bucket the data — this is what keeps dragging
+    // at full frame rate.
+    private let entries: [SpendingChartEntry]
+    private let domain: ClosedRange<Date>
+    private let lineEnd: Date
+    private let linePoints: [(date: Date, total: Double)]
+    private let snapDates: [Date]
+    private let volumeSegments: [VolumeSegment]
+    private let yMax: Double
+    private let lineColor: Color
 
     /// The raw drag position from the chart (continuous).
     @State private var selectedDate: Date?
     /// The drag position snapped to the nearest logged transaction.
     @State private var snappedDate: Date?
 
+    /// Builds the hero and precomputes all chart geometry.
+    /// - Parameters:
+    ///   - total: Total spent in the current period.
+    ///   - previousTotal: Previous period's total (for the delta line).
+    ///   - entries: The period's transactions (any order).
+    ///   - domain: The period's full date range (x-axis domain).
+    ///   - buckets: The period's sub-intervals for the volume bars.
+    ///   - projection: Optional pace projection.
+    ///   - periodBudget: Optional budget ceiling for the period.
+    init(total: Double, previousTotal: Double, entries: [SpendingChartEntry],
+         domain: ClosedRange<Date>, buckets: [PeriodBucket],
+         projection: SpendingProjection?, periodBudget: Double?) {
+        self.total = total
+        self.previousTotal = previousTotal
+        self.projection = projection
+        self.periodBudget = periodBudget
+        self.entries = entries
+        self.domain = domain
+
+        let end = min(Date(), domain.upperBound)
+        lineEnd = end
+        let points = Self.cumulativeLine(entries: entries, from: domain.lowerBound, to: end)
+        linePoints = points
+
+        let logged = entries.map(\.date).filter { $0 >= domain.lowerBound && $0 <= end }
+        snapDates = (logged + [end]).sorted()
+
+        let spentMax = points.last?.total ?? 0
+        let ceiling = max(spentMax, periodBudget ?? 0)
+        let top = ceiling > 0 ? ceiling * 1.15 : 100
+        yMax = top
+
+        if let periodBudget {
+            lineColor = spentMax <= periodBudget ? .green : .red
+        } else {
+            lineColor = .primary
+        }
+
+        volumeSegments = Self.makeVolumeSegments(entries: entries, buckets: buckets, yMax: top)
+    }
+
     private var delta: Double { total - previousTotal }
 
     /// Whether there's previous-period spending to compare against.
     private var hasComparison: Bool { previousTotal > 0 }
-
-    /// Where the line ends: now, clamped into the domain (a period fully in the past ends at its
-    /// own end).
-    private var lineEnd: Date { min(Date(), domain.upperBound) }
-
-    /// The cumulative line: starts at zero, steps up at each transaction, and runs flat to now.
-    private var linePoints: [(date: Date, total: Double)] {
-        Self.cumulativeLine(entries: entries, from: domain.lowerBound, to: lineEnd)
-    }
 
     /// Builds the cumulative line for `entries` between `start` and `end`: a zero anchor at
     /// `start`, a point at each transaction's exact timestamp (entries after `end` are ignored,
@@ -132,8 +170,8 @@ struct TotalSpendingCard: View {
 
     /// The volume bars: each bucket's categories stacked into the bottom ~25% of the plot,
     /// scaled relative to the busiest bucket, with a small horizontal inset between bars.
-    private var volumeSegments: [VolumeSegment] {
-        let perBucket = Self.bucketCategoryTotals(entries: entries, buckets: buckets)
+    private static func makeVolumeSegments(entries: [SpendingChartEntry], buckets: [PeriodBucket], yMax: Double) -> [VolumeSegment] {
+        let perBucket = bucketCategoryTotals(entries: entries, buckets: buckets)
         guard let maxBucket = perBucket.map({ $0.totals.reduce(0) { $0 + $1.amount } }).max(),
               maxBucket > 0 else { return [] }
         let band = yMax * 0.25
@@ -172,28 +210,9 @@ struct TotalSpendingCard: View {
         return totals.sorted { $0.value > $1.value }.prefix(3).map { ($0.key, $0.value) }
     }
 
-    /// The line/dot color: green while under budget, red when over; monochrome with no budget.
-    private var lineColor: Color {
-        guard let periodBudget else { return .primary }
-        return (linePoints.last?.total ?? 0) <= periodBudget ? .green : .red
-    }
-
-    /// Snap targets for scrubbing: every logged transaction plus the live end of the line, so a
-    /// drag can ride the flat tail to "now" even when nothing is logged there.
-    private var snapDates: [Date] {
-        let logged = entries.map(\.date).filter { $0 >= domain.lowerBound && $0 <= lineEnd }
-        return (logged + [lineEnd]).sorted()
-    }
-
     /// The logged moment nearest to a raw scrub position.
     private func snap(_ date: Date) -> Date? {
         snapDates.min(by: { abs($0.timeIntervalSince(date)) < abs($1.timeIntervalSince(date)) })
-    }
-
-    /// Upper y-bound: the spent total or the budget, whichever is larger, with headroom.
-    private var yMax: Double {
-        let ceiling = max(linePoints.last?.total ?? 0, periodBudget ?? 0)
-        return ceiling > 0 ? ceiling * 1.15 : 100
     }
 
     var body: some View {
