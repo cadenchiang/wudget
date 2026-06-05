@@ -71,12 +71,9 @@ enum SpendingMode: String, CaseIterable, Identifiable {
     }
 }
 
-/// The "Total Spending" card: the period total, a comparison line versus the previous
-/// period, and a stacked bar chart over the period's time buckets (e.g. 1-7, 8-14 for a
-/// month) where each bar is segmented by category color.
-///
-/// Tapping a bar dims the others and shows an info card with that bucket's total. Tapping
-/// empty space clears the selection.
+/// The spending hero: the period total and a Robinhood-style cumulative line graph over the
+/// period's time buckets. Dragging across the chart scrubs a hairline + dot along the line and
+/// raises a breakdown card for that bucket; tapping empty space clears the selection.
 struct TotalSpendingCard: View {
     /// Total spent in the current period.
     let total: Double
@@ -113,11 +110,12 @@ struct TotalSpendingCard: View {
     /// Whether there's previous-period spending to compare against.
     private var hasComparison: Bool { previousTotal > 0 }
 
-    /// Upper bound for the y-axis. Falls back to a fixed value when there's no spending so the
-    /// axis (and its baseline above the dates) still renders; otherwise adds a little headroom.
+    /// Upper bound for the y-axis: the cumulative total or the full budget pace, whichever is
+    /// larger, with headroom. Falls back to a fixed value when both are zero so the axis renders.
     private var yMax: Double {
-        let maxBucket = bucketLabels.map(bucketTotal).max() ?? 0
-        let ceiling = max(maxBucket, budgetPerBucket ?? 0)
+        let cumulativeMax = cumulativePoints.last?.total ?? 0
+        let budgetEnd = (budgetPerBucket ?? 0) * Double(bucketLabels.count)
+        let ceiling = max(cumulativeMax, budgetEnd)
         return ceiling > 0 ? ceiling * 1.1 : 100
     }
 
@@ -142,22 +140,50 @@ struct TotalSpendingCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    /// Stacked, category-colored bars over the time buckets, with a budget line + tap selection.
+    /// Cumulative points for the line: running total of spending at the end of each bucket.
+    private var cumulativePoints: [(label: String, total: Double)] {
+        var running = 0.0
+        return bucketLabels.map { label in
+            running += bucketTotal(label)
+            return (label, running)
+        }
+    }
+
+    /// Robinhood-style line graph: cumulative spending across the period, scrubbed by dragging
+    /// (a hairline + dot track the finger while the breakdown card describes that bucket), with
+    /// a dashed budget pace line when a budget is set.
     private var chart: some View {
         Chart {
-            ForEach(segments) { segment in
-                BarMark(
-                    x: .value("Period", segment.bucketLabel),
-                    y: .value("Spent", segment.total)
+            ForEach(cumulativePoints, id: \.label) { point in
+                LineMark(
+                    x: .value("Period", point.label),
+                    y: .value("Spent", point.total),
+                    series: .value("Series", "spent")
                 )
-                .foregroundStyle(CategoryStyle.color(for: segment.category))
-                .opacity(opacity(for: segment.bucketLabel))
-                .cornerRadius(3)
+                .foregroundStyle(.primary)
+                .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
             }
             if let budgetPerBucket {
-                RuleMark(y: .value("Budget", budgetPerBucket))
-                    .foregroundStyle(budgetColor)
+                ForEach(Array(bucketLabels.enumerated()), id: \.element) { index, label in
+                    LineMark(
+                        x: .value("Period", label),
+                        y: .value("Budget", budgetPerBucket * Double(index + 1)),
+                        series: .value("Series", "budget")
+                    )
+                    .foregroundStyle(budgetColor.opacity(0.6))
                     .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [2, 4]))
+                }
+            }
+            if let selected, let point = cumulativePoints.first(where: { $0.label == selected }) {
+                RuleMark(x: .value("Period", selected))
+                    .foregroundStyle(.secondary.opacity(0.5))
+                    .lineStyle(StrokeStyle(lineWidth: 1))
+                PointMark(
+                    x: .value("Period", point.label),
+                    y: .value("Spent", point.total)
+                )
+                .foregroundStyle(.primary)
+                .symbolSize(70)
             }
         }
         .chartXScale(domain: bucketLabels)
@@ -166,35 +192,21 @@ struct TotalSpendingCard: View {
         .chartLegend(.hidden)
         .chartXAxis {
             AxisMarks { _ in
-                AxisGridLine()
                 AxisValueLabel()
             }
         }
         .chartYAxis {
             AxisMarks(position: .trailing) { value in
                 AxisGridLine()
-                // Suppress a regular label when it sits near the budget label, so the budget
-                // value always wins and the two numbers don't overlap into a confusing blur.
-                if let amount = value.as(Double.self), !isNearBudget(amount) {
+                if let amount = value.as(Double.self) {
                     AxisValueLabel {
                         Text(abbreviatedAmount(amount))
                     }
                 }
             }
-            if let budgetPerBucket {
-                AxisMarks(position: .trailing, values: [budgetPerBucket]) { value in
-                    AxisValueLabel {
-                        if let amount = value.as(Double.self) {
-                            Text(abbreviatedAmount(amount))
-                                .foregroundStyle(budgetColor)
-                        }
-                    }
-                }
-            }
         }
-        .chartBackground { proxy in budgetGradients(proxy) }
-        .frame(height: 190)
-        .padding(.top, 4)
+        .frame(height: 260)
+        .padding(.top, 8)
         .onChange(of: selected) { _, newValue in
             if newValue != nil { Haptics.selection() }
         }
@@ -206,11 +218,11 @@ struct TotalSpendingCard: View {
                     let plot = geo[plotAnchor]
                     let cardWidth: CGFloat = 150
                     let gap: CGFloat = 18
-                    let barX = plot.minX + xPosition
-                    // Place the card beside the bar (right if the bar is on the left half, else left)
-                    // so it never covers the selected bar.
-                    let preferRight = barX < plot.midX
-                    let sideX = preferRight ? barX + gap + cardWidth / 2 : barX - gap - cardWidth / 2
+                    let scrubX = plot.minX + xPosition
+                    // Place the card beside the scrub line (right when on the left half, else
+                    // left) so it never covers the tracked point.
+                    let preferRight = scrubX < plot.midX
+                    let sideX = preferRight ? scrubX + gap + cardWidth / 2 : scrubX - gap - cardWidth / 2
                     let clampedX = min(max(sideX, plot.minX + cardWidth / 2), plot.maxX - cardWidth / 2)
                     infoCard(bucket: selected)
                         .frame(width: cardWidth)
@@ -218,38 +230,6 @@ struct TotalSpendingCard: View {
                 }
             }
         }
-    }
-
-    /// Slight gradients split at the budget line: green below (under budget), gray above (over).
-    @ViewBuilder
-    private func budgetGradients(_ proxy: ChartProxy) -> some View {
-        GeometryReader { geo in
-            if let budgetPerBucket,
-               let plotAnchor = proxy.plotFrame,
-               let yPosition = proxy.position(forY: budgetPerBucket) {
-                let plot = geo[plotAnchor]
-                let lineY = min(max(plot.minY + yPosition, plot.minY), plot.maxY)
-                let aboveHeight = lineY - plot.minY
-                let belowHeight = plot.maxY - lineY
-
-                LinearGradient(colors: [Color.gray.opacity(0.18), Color.gray.opacity(0.0)],
-                               startPoint: .top, endPoint: .bottom)
-                    .frame(width: plot.width, height: aboveHeight)
-                    .position(x: plot.midX, y: plot.minY + aboveHeight / 2)
-
-                LinearGradient(colors: [Color.green.opacity(0.0), Color.green.opacity(0.18)],
-                               startPoint: .top, endPoint: .bottom)
-                    .frame(width: plot.width, height: belowHeight)
-                    .position(x: plot.midX, y: lineY + belowHeight / 2)
-            }
-        }
-    }
-
-    /// Whether a y-axis value is close enough to the budget value that their labels would collide.
-    /// Used to hide the regular label there so the budget label takes priority.
-    private func isNearBudget(_ amount: Double) -> Bool {
-        guard let budgetPerBucket else { return false }
-        return abs(amount - budgetPerBucket) < yMax * 0.08
     }
 
     /// Compact currency label for the y-axis (e.g. "$4K", "$1.2M") so large values never render
@@ -264,12 +244,6 @@ struct TotalSpendingCard: View {
         default:
             return "$\(value.formatted(.number.precision(.fractionLength(0))))"
         }
-    }
-
-    /// Dims segments outside the selected bucket.
-    private func opacity(for bucketLabel: String) -> Double {
-        guard let selected else { return 1 }
-        return bucketLabel == selected ? 1 : 0.2
     }
 
     /// Total spent within a bucket (sum of its segments).
