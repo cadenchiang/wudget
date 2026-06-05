@@ -22,8 +22,8 @@ struct RecurringPaymentsView: View {
                         } label: {
                             RecurringRow(expense: expense)
                         }
-                        .listRowInsets(EdgeInsets(top: 6, leading: 20, bottom: 6, trailing: 20))
-                        .listRowSeparator(.hidden, edges: expense == expenses.last ? .bottom : [])
+                        .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                        .listRowBackground(Color(.secondarySystemBackground))
                         // Left swipe only: ignore or delete. No leading (right-swipe) actions.
                         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                             Button(role: .destructive) { delete(expense) } label: {
@@ -37,7 +37,9 @@ struct RecurringPaymentsView: View {
                         }
                     }
                 }
-                .listStyle(.plain)
+                .listStyle(.insetGrouped)
+                .scrollContentBackground(.hidden)
+                .background(Color(.systemBackground))
                 .safeAreaInset(edge: .bottom) {
                     Text("Swipe left on a payment to ignore or delete it. Ignored fixed costs raise your budget line instead of counting against it.")
                         .font(.caption)
