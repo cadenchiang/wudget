@@ -287,11 +287,18 @@ struct TotalSpendingCard: View {
                 .foregroundStyle(lineColor)
                 .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
             }
-            // The budget: one dotted horizontal line straight across.
+            // The budget: one dotted horizontal line straight across, with the amount in small
+            // letters above its trailing end.
             if let periodBudget {
                 RuleMark(y: .value("Budget", periodBudget))
                     .foregroundStyle(.secondary.opacity(0.6))
                     .lineStyle(StrokeStyle(lineWidth: 1.5, dash: [1, 4]))
+                    .annotation(position: .top, alignment: .trailing, spacing: 3) {
+                        Text(periodBudget.asCurrency())
+                            .font(.caption2.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                            .padding(.trailing, 24) // clear the edge-to-edge bleed
+                    }
             }
             if let snappedDate {
                 RuleMark(x: .value("Time", snappedDate))
