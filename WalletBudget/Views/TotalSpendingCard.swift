@@ -239,8 +239,8 @@ struct TotalSpendingCard: View {
             let diff = periodBudget - total
             let under = diff >= 0
             HStack(spacing: 5) {
-                Image(systemName: under ? "arrowtriangle.down.fill" : "arrowtriangle.up.fill")
-                    .font(.caption2)
+                Image(systemName: under ? "arrow.down.circle.fill" : "arrow.up.circle.fill")
+                    .font(.subheadline)
                     .foregroundStyle(under ? Color.green : Color.red)
                 Text(abs(diff).asCurrency())
                     .fontWeight(.semibold)
@@ -251,8 +251,8 @@ struct TotalSpendingCard: View {
             .font(.subheadline)
         } else if hasComparison {
             HStack(spacing: 5) {
-                Image(systemName: delta <= 0 ? "arrowtriangle.down.fill" : "arrowtriangle.up.fill")
-                    .font(.caption2)
+                Image(systemName: delta <= 0 ? "arrow.down.circle.fill" : "arrow.up.circle.fill")
+                    .font(.subheadline)
                     .foregroundStyle(delta <= 0 ? Color.green : Color.red)
                 Text(abs(delta).asCurrency())
                     .fontWeight(.semibold)
