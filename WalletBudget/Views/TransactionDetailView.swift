@@ -30,17 +30,14 @@ struct TransactionDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
+            VStack(spacing: 16) {
                 header
                 detailsCard
                 if expense.viaWalletImport {
                     TransactionMapCard(expense: expense)
                 }
-                Divider()
                 notesCard
-                Divider()
                 ignoreCard
-                Divider()
                 reportCard
                 deleteButton
             }
@@ -117,17 +114,21 @@ struct TransactionDetailView: View {
     private var detailsCard: some View {
         VStack(spacing: 0) {
             merchantRow
-            Divider()
+            Divider().padding(.leading, 16)
             amountRow
-            Divider()
+            Divider().padding(.leading, 16)
             dateRow
-            Divider()
+            Divider().padding(.leading, 16)
             cardRow
-            Divider()
+            Divider().padding(.leading, 16)
             categoryRow
-            Divider()
+            Divider().padding(.leading, 16)
             recurrenceRow
         }
+        .background(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(Color(.secondarySystemBackground))
+        )
     }
 
     /// "Merchant" label with a button that opens the merchant picker.
@@ -148,6 +149,7 @@ struct TransactionDetailView: View {
             }
         }
         .tint(.primary)
+        .padding(.horizontal, 16)
         .padding(.vertical, 14)
     }
 
@@ -167,6 +169,7 @@ struct TransactionDetailView: View {
             }
         }
         .tint(.primary)
+        .padding(.horizontal, 16)
         .padding(.vertical, 14)
     }
 
@@ -174,6 +177,7 @@ struct TransactionDetailView: View {
     private var dateRow: some View {
         DatePicker("Date", selection: $expense.date, displayedComponents: [.date, .hourAndMinute])
             .tint(.primary)
+            .padding(.horizontal, 16)
             .padding(.vertical, 14)
     }
 
@@ -195,6 +199,7 @@ struct TransactionDetailView: View {
             }
         }
         .tint(.primary)
+        .padding(.horizontal, 16)
         .padding(.vertical, 14)
     }
 
@@ -227,6 +232,7 @@ struct TransactionDetailView: View {
             }
             .tint(.primary)
         }
+        .padding(.horizontal, 16)
         .padding(.vertical, 14)
     }
 
@@ -254,6 +260,7 @@ struct TransactionDetailView: View {
             }
             .tint(.primary)
         }
+        .padding(.horizontal, 16)
         .padding(.vertical, 14)
     }
 
@@ -265,8 +272,12 @@ struct TransactionDetailView: View {
             Text("Report an Issue")
                 .foregroundStyle(.blue)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.vertical, 14)
+                .padding(16)
         }
+        .background(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(Color(.secondarySystemBackground))
+        )
     }
 
     /// Opens the Mail app with a support report pre-filled with this transaction's details.
@@ -291,8 +302,12 @@ struct TransactionDetailView: View {
             TextField("Add a note", text: $expense.notes, axis: .vertical)
                 .lineLimit(1...6)
         }
-        .padding(.vertical, 14)
+        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(Color(.secondarySystemBackground))
+        )
     }
 
     /// Toggle to exclude this transaction from Everyday Spending (fixed costs like rent/bills).
@@ -308,8 +323,12 @@ struct TransactionDetailView: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
-        .padding(.vertical, 14)
+        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(Color(.secondarySystemBackground))
+        )
     }
 
     /// Destructive "Delete Transaction" button (confirmed via dialog).
@@ -318,8 +337,12 @@ struct TransactionDetailView: View {
             Text("Delete Transaction")
                 .foregroundStyle(.red)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.vertical, 14)
+                .padding(16)
         }
+        .background(
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .fill(Color(.secondarySystemBackground))
+        )
     }
 
     /// Deletes the expense, saves, and pops back.
