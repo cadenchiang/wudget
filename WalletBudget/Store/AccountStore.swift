@@ -158,9 +158,11 @@ final class AccountStore {
         email = nil
         provider = nil
         displayName = nil
-        // The widget and scheduled notifications surface financial data on the
-        // home/lock screen while nobody is signed in; clear them. The database
-        // stays (the same owner usually returns; a different sign-in wipes it).
+        // Stop any in-flight sync (its session is ending) and clear the surfaces
+        // that show financial data on the home/lock screen while nobody is signed
+        // in. The database stays (the same owner usually returns; a different
+        // sign-in wipes it).
+        SyncEngine.shared.cancelAll()
         AccountDataReset.clearSignedOutSurfaces()
         Task {
             do {

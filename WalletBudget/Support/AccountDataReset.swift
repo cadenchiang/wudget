@@ -36,7 +36,14 @@ enum AccountDataReset {
     }
 
     /// Full wipe: database, preferences, widget, avatar, notifications, owner stamp.
+    ///
+    /// Cancels sync first so no in-flight cycle can apply the previous account's
+    /// rows into the freshly wiped store. Known accepted limitation: tombstones
+    /// queued offline by the previous user are discarded here (they cannot be
+    /// flushed without that user's session), so a deletion made offline right
+    /// before an account switch may reappear on the original user's other devices.
     static func wipeAllLocalData() {
+        SyncEngine.shared.cancelAll()
         wipeDatabase()
         wipeDefaults()
         clearSignedOutSurfaces()

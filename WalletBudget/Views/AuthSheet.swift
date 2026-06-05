@@ -65,6 +65,11 @@ struct AuthSheet: View {
         } message: {
             Text(errorMessage ?? "Something went wrong. Please try again.")
         }
+        // Safety net for every sign-in path (including email completing inside the
+        // nested sheet): the moment a session exists this sheet has no purpose.
+        .onChange(of: account.isSignedIn) { _, signedIn in
+            if signedIn { dismiss() }
+        }
         .sheet(isPresented: $showingEmail) {
             EmailAuthView(initialMode: intent == .signUp ? .signUp : .logIn)
         }

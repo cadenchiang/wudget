@@ -266,7 +266,9 @@ private struct CardEditorSheet: View {
             Log.ui.error("Rejected card limit input: \(limitText, privacy: .public)")
             return
         }
+        card.updatedAt = Date()
         save(context: context, action: "save card limit")
+        SyncEngine.shared.requestSync()
         Haptics.success()
         dismiss()
     }

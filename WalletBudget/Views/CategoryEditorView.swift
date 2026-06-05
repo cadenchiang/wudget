@@ -128,11 +128,16 @@ struct CategoryEditorView: View {
         }
     }
 
-    /// Moves all expenses from `old` category name to `new`.
+    /// Moves all expenses from `old` category name to `new`, stamping each so the
+    /// reassignment wins last-write-wins sync merges.
     private func reassignExpenses(from old: String, to new: String) {
         let descriptor = FetchDescriptor<Expense>(predicate: #Predicate { $0.category == old })
         if let affected = try? context.fetch(descriptor) {
-            for expense in affected { expense.category = new }
+            for expense in affected {
+                expense.category = new
+                expense.updatedAt = Date()
+            }
+            SyncEngine.shared.requestSync()
         }
     }
 }

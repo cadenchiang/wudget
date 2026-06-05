@@ -25,6 +25,11 @@ final class SyncEngine {
     private let client: SupabaseClient
     private var syncTask: Task<Void, Never>?
 
+    /// Bumped whenever local data is wiped or the session ends. In-flight cycles
+    /// re-check it after every network await and abort instead of applying rows
+    /// fetched under the previous account into a freshly wiped store.
+    private var generation = 0
+
     /// - Parameter client: injectable for tests; defaults to the shared client.
     init(client: SupabaseClient = SupabaseService.client) {
         self.client = client
@@ -40,6 +45,16 @@ final class SyncEngine {
             guard !Task.isCancelled else { return }
             await self?.performSync()
         }
+    }
+
+    /// Cancels pending and in-flight sync work. Called before local data is wiped
+    /// (account switch/deletion) and on sign-out, so no stale cycle can write
+    /// another account's rows into the store.
+    func cancelAll() {
+        syncTask?.cancel()
+        syncTask = nil
+        generation += 1
+        Log.sync.notice("Sync cancelled; generation bumped")
     }
 
     /// Deletes an expense locally and queues the tombstone for the cloud.
@@ -67,24 +82,36 @@ final class SyncEngine {
     // MARK: - Sync cycle
 
     /// One full reconcile pass. Silently no-ops when signed out; all failures are
-    /// logged and left for the next cycle (local data is never at risk).
+    /// logged and left for the next cycle (local data is never at risk). The
+    /// generation captured at the start guards every phase: if a wipe/sign-out
+    /// happens mid-cycle, the remainder aborts cleanly.
     func performSync() async {
         guard let userId = client.auth.currentSession?.user.id else {
             Log.sync.debug("Sync skipped: no session")
             return
         }
+        let gen = generation
         let context = SharedModelContainer.container.mainContext
         do {
             try await flushTombstones()
-            try await pullExpenses(userId: userId, context: context)
-            try await pullCards(userId: userId, context: context)
-            try await syncPrefs(userId: userId)
+            try checkCurrent(gen)
+            try await pullExpenses(userId: userId, context: context, gen: gen)
+            try await pullCards(userId: userId, context: context, gen: gen)
+            try await syncPrefs(userId: userId, gen: gen)
+            try checkCurrent(gen)
             try await pushAll(userId: userId, context: context)
             WidgetUpdater.refresh(context: context)
             Log.sync.info("Sync cycle completed")
+        } catch is CancellationError {
+            Log.sync.notice("Sync cycle aborted: account state changed mid-cycle")
         } catch {
             Log.sync.error("Sync cycle failed (will retry next trigger): \(error.localizedDescription, privacy: .public)")
         }
+    }
+
+    /// Throws when the cycle's generation is stale (data wiped / session ended).
+    private func checkCurrent(_ gen: Int) throws {
+        guard gen == generation else { throw CancellationError() }
     }
 
     // MARK: - Tombstones
@@ -117,9 +144,10 @@ final class SyncEngine {
 
     // MARK: - Pull + merge
 
-    private func pullExpenses(userId: UUID, context: ModelContext) async throws {
+    private func pullExpenses(userId: UUID, context: ModelContext, gen: Int) async throws {
         let remote: [ExpenseDTO] = try await client.from("expenses")
             .select().eq("user_id", value: userId).execute().value
+        try checkCurrent(gen)
         let local = try context.fetch(FetchDescriptor<Expense>())
         let localByID = Dictionary(local.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
         let pending = pendingTombstones(key: TombstoneKey.expenses)
@@ -141,9 +169,10 @@ final class SyncEngine {
         saveQuietly(context, what: "expense merge")
     }
 
-    private func pullCards(userId: UUID, context: ModelContext) async throws {
+    private func pullCards(userId: UUID, context: ModelContext, gen: Int) async throws {
         let remote: [UserCardDTO] = try await client.from("user_cards")
             .select().eq("user_id", value: userId).execute().value
+        try checkCurrent(gen)
         let local = try context.fetch(FetchDescriptor<UserCard>())
         let localByID = Dictionary(local.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
         let pending = pendingTombstones(key: TombstoneKey.cards)
@@ -168,11 +197,12 @@ final class SyncEngine {
     // MARK: - Prefs
 
     /// Two-way LWW for the single prefs row (budget, variable default, currency).
-    private func syncPrefs(userId: UUID) async throws {
+    private func syncPrefs(userId: UUID, gen: Int) async throws {
         let defaults = UserDefaults.standard
         let localStamp = defaults.double(forKey: Self.prefsStampKey)
         let remote: [UserPrefsDTO] = try await client.from("user_prefs")
             .select().eq("user_id", value: userId).execute().value
+        try checkCurrent(gen)
 
         if let row = remote.first, row.updatedAt.timeIntervalSince1970 > localStamp {
             defaults.set(row.monthlyBudget, forKey: ProfileKeys.monthlyBudget)
