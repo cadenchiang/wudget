@@ -155,6 +155,9 @@ struct TotalSpendingCard: View {
         let yStart: Double
         let yEnd: Double
         let category: String
+        /// The owning bucket's uninset range, for matching the scrubbed moment.
+        let bucketStart: Date
+        let bucketEnd: Date
     }
 
     /// Per-bucket category totals (largest category at the bottom of each stack), used by the
@@ -191,7 +194,9 @@ struct TotalSpendingCard: View {
                     xEnd: bucket.interval.end.addingTimeInterval(-inset),
                     yStart: yStart,
                     yEnd: yEnd,
-                    category: category
+                    category: category,
+                    bucketStart: bucket.interval.start,
+                    bucketEnd: bucket.interval.end
                 ))
             }
         }
@@ -215,6 +220,20 @@ struct TotalSpendingCard: View {
     /// The logged moment nearest to a raw scrub position.
     private func snap(_ date: Date) -> Date? {
         snapDates.min(by: { abs($0.timeIntervalSince(date)) < abs($1.timeIntervalSince(date)) })
+    }
+
+    /// Categories of the transaction(s) logged exactly at the snapped moment (what just got
+    /// added to the line there).
+    private func categoriesAdded(at date: Date) -> Set<String> {
+        Set(entries.filter { abs($0.date.timeIntervalSince(date)) < 1 }.map(\.category))
+    }
+
+    /// Volume-bar emphasis while scrubbing: the snapped moment's bucket stays lit (its just-added
+    /// category brightest); everything else recedes. No scrub = the usual translucency.
+    private func opacity(for segment: VolumeSegment, snapped: Date?) -> Double {
+        guard let snapped else { return 0.45 }
+        guard segment.bucketStart <= snapped, snapped < segment.bucketEnd else { return 0.15 }
+        return categoriesAdded(at: snapped).contains(segment.category) ? 1.0 : 0.6
     }
 
     var body: some View {
@@ -276,7 +295,7 @@ struct TotalSpendingCard: View {
                     yStart: .value("From", segment.yStart),
                     yEnd: .value("To", segment.yEnd)
                 )
-                .foregroundStyle(CategoryStyle.color(for: segment.category).opacity(0.45))
+                .foregroundStyle(CategoryStyle.color(for: segment.category).opacity(opacity(for: segment, snapped: snappedDate)))
                 .cornerRadius(1.5)
             }
             ForEach(Array(linePoints.enumerated()), id: \.offset) { _, point in
@@ -395,15 +414,21 @@ struct TotalSpendingCard: View {
                     .foregroundStyle(.secondary)
             } else {
                 VStack(alignment: .leading, spacing: 3) {
+                    let added = categoriesAdded(at: date)
                     ForEach(rows, id: \.category) { row in
                         HStack(spacing: 5) {
                             Circle()
                                 .fill(CategoryStyle.color(for: row.category))
                                 .frame(width: 7, height: 7)
                             Text(row.category)
-                                .font(.caption2)
-                                .foregroundStyle(.secondary)
+                                .font(.caption2.weight(added.contains(row.category) ? .semibold : .regular))
+                                .foregroundStyle(added.contains(row.category) ? .primary : .secondary)
                                 .lineLimit(1)
+                            if added.contains(row.category) {
+                                Image(systemName: "arrow.up")
+                                    .font(.system(size: 8, weight: .bold))
+                                    .foregroundStyle(.green)
+                            }
                             Spacer(minLength: 4)
                             Text(row.total.asCurrency())
                                 .font(.caption2.weight(.medium))
