@@ -90,6 +90,24 @@ final class TimeSpanTests: XCTestCase {
         XCTAssertEqual(line.last?.date, end)
     }
 
+    /// Volume-bar totals group entries into their buckets by exact timestamp, largest category
+    /// first, skipping empty buckets.
+    func testBucketCategoryTotals() {
+        let buckets = [
+            PeriodBucket(label: "d1", interval: DateInterval(start: date(2026, 5, 1), end: date(2026, 5, 2))),
+            PeriodBucket(label: "d2", interval: DateInterval(start: date(2026, 5, 2), end: date(2026, 5, 3))),
+        ]
+        let entries = [
+            SpendingChartEntry(date: date(2026, 5, 1), amount: 5, category: "Coffee"),
+            SpendingChartEntry(date: date(2026, 5, 1), amount: 30, category: "Dining"),
+        ]
+        let totals = TotalSpendingCard.bucketCategoryTotals(entries: entries, buckets: buckets)
+        XCTAssertEqual(totals.count, 1) // empty second bucket skipped
+        XCTAssertEqual(totals.first?.bucket.label, "d1")
+        XCTAssertEqual(totals.first?.totals.first?.category, "Dining") // largest first
+        XCTAssertEqual(totals.first?.totals.last?.amount, 5)
+    }
+
     func testMonthBoundsToCalendarMonth() {
         let interval = TimeSpan.month.interval(now: date(2026, 5, 15), calendar: utcCalendar)
         XCTAssertNotNil(interval)

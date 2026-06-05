@@ -88,6 +88,8 @@ struct TotalSpendingCard: View {
     let entries: [SpendingChartEntry]
     /// The period's full date range — the x-axis domain, so unelapsed time stays blank.
     let domain: ClosedRange<Date>
+    /// The period's sub-intervals (days/weeks/months) used for the volume-style breakdown bars.
+    let buckets: [PeriodBucket]
     /// Optional forward-looking projection (used by the blurb card outside this view).
     let projection: SpendingProjection?
     /// Optional total budget for the period; drawn as a dotted horizontal line.
@@ -129,6 +131,58 @@ struct TotalSpendingCard: View {
             points.append((end, running))
         }
         return points
+    }
+
+    /// One translucent breakdown bar segment: a category's share of a bucket, scaled into the
+    /// bottom band of the plot like volume bars under a price chart.
+    struct VolumeSegment: Identifiable {
+        let id: String
+        let xStart: Date
+        let xEnd: Date
+        let yStart: Double
+        let yEnd: Double
+        let category: String
+    }
+
+    /// Per-bucket category totals (largest category at the bottom of each stack), used by the
+    /// volume bars. Empty buckets are skipped.
+    static func bucketCategoryTotals(entries: [SpendingChartEntry], buckets: [PeriodBucket]) -> [(bucket: PeriodBucket, totals: [(category: String, amount: Double)])] {
+        buckets.compactMap { bucket in
+            var totals: [String: Double] = [:]
+            for entry in entries where bucket.interval.contains(entry.date) {
+                totals[entry.category, default: 0] += entry.amount
+            }
+            guard !totals.isEmpty else { return nil }
+            return (bucket, totals.sorted { $0.value > $1.value }.map { ($0.key, $0.value) })
+        }
+    }
+
+    /// The volume bars: each bucket's categories stacked into the bottom ~25% of the plot,
+    /// scaled relative to the busiest bucket, with a small horizontal inset between bars.
+    private var volumeSegments: [VolumeSegment] {
+        let perBucket = Self.bucketCategoryTotals(entries: entries, buckets: buckets)
+        guard let maxBucket = perBucket.map({ $0.totals.reduce(0) { $0 + $1.amount } }).max(),
+              maxBucket > 0 else { return [] }
+        let band = yMax * 0.25
+        var segments: [VolumeSegment] = []
+        for (bucket, totals) in perBucket {
+            let inset = bucket.interval.duration * 0.12
+            var running = 0.0
+            for (category, amount) in totals {
+                let yStart = running / maxBucket * band
+                running += amount
+                let yEnd = running / maxBucket * band
+                segments.append(VolumeSegment(
+                    id: "\(bucket.label)-\(category)",
+                    xStart: bucket.interval.start.addingTimeInterval(inset),
+                    xEnd: bucket.interval.end.addingTimeInterval(-inset),
+                    yStart: yStart,
+                    yEnd: yEnd,
+                    category: category
+                ))
+            }
+        }
+        return segments
     }
 
     /// Cumulative total at the scrubbed moment (the last line point at or before it).
@@ -221,6 +275,16 @@ struct TotalSpendingCard: View {
     /// The bare, edge-to-edge market-style chart.
     private var chart: some View {
         Chart {
+            ForEach(volumeSegments) { segment in
+                RectangleMark(
+                    xStart: .value("Start", segment.xStart),
+                    xEnd: .value("End", segment.xEnd),
+                    yStart: .value("From", segment.yStart),
+                    yEnd: .value("To", segment.yEnd)
+                )
+                .foregroundStyle(CategoryStyle.color(for: segment.category).opacity(0.45))
+                .cornerRadius(1.5)
+            }
             ForEach(Array(linePoints.enumerated()), id: \.offset) { _, point in
                 LineMark(
                     x: .value("Time", point.date),
@@ -370,6 +434,10 @@ struct TotalSpendingCard: View {
             SpendingChartEntry(date: now.addingTimeInterval(-86400 * 2), amount: 300, category: "Shopping"),
         ],
         domain: now.addingTimeInterval(-86400 * 25)...now.addingTimeInterval(86400 * 5),
+        buckets: (0..<30).map { day in
+            let start = now.addingTimeInterval(Double(-86400 * (25 - day)))
+            return PeriodBucket(label: "d\(day)", interval: DateInterval(start: start, duration: 86400))
+        },
         projection: nil,
         periodBudget: 1600
     )

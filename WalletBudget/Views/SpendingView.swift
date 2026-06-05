@@ -306,6 +306,7 @@ struct SpendingView: View {
                         previousTotal: SpendingSummary.total(comparablePrevious),
                         entries: chartEntries,
                         domain: chartDomain,
+                        buckets: PeriodBucketizer.buckets(for: span),
                         projection: projection,
                         periodBudget: periodBudget
                     )
