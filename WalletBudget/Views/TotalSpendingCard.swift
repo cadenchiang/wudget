@@ -39,7 +39,7 @@ struct SpendingProjection {
                 + Text(" for the rest of the \(periodNoun), a few no-spend days will pull you back.")
         }
         return Text("Right at your budget").fontWeight(.bold)
-            + Text(" — a light day or two keeps you on track.")
+            + Text(", a light day or two keeps you on track.")
     }
 }
 

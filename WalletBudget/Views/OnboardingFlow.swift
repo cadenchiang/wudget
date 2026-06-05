@@ -176,7 +176,7 @@ private struct OnboardingStepView: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .topLeading)
-            .frame(minHeight: 100, alignment: .topLeading)
+            .frame(minHeight: 72, alignment: .topLeading)
 
             artwork
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
