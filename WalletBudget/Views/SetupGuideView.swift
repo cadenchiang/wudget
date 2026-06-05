@@ -1,41 +1,51 @@
 import SwiftUI
 
-/// The Settings tab, styled like Robinhood's Menu: airy typography-led rows (title + one-line
-/// summary + chevron) separated by hairlines on the plain background. No icons, no boxes.
-/// Detailed controls (budget, appearance, privacy, notifications, etc.) live on their own screens.
+/// The Settings tab: a compact, iOS-Settings-style list whose rows each open a focused sub-page.
+/// Detailed controls (budget, appearance, privacy, notifications, etc.) live on their own screens
+/// so the front page stays short and easy to scan.
 struct SetupGuideView: View {
     @Environment(AccountStore.self) private var account
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 0) {
-                    menuLink(title: account.email ?? "Account", subtitle: "Manage profile") {
+            List {
+                Section {
+                    NavigationLink {
                         AccountView()
+                    } label: {
+                        accountRow
                     }
-                    menuLink(title: "Tracking", subtitle: "Apple Wallet automation, spending mode") {
-                        TrackingSettingsView()
+                } header: {
+                    Text("Account").textCase(nil)
+                }
+
+                Section {
+                    NavigationLink { TrackingSettingsView() } label: {
+                        SettingsRow(icon: "creditcard.fill", tint: .blue, title: "Tracking")
                     }
-                    menuLink(title: "Budget", subtitle: "Monthly limit and progress") {
-                        BudgetSettingsView()
+                    NavigationLink { BudgetSettingsView() } label: {
+                        SettingsRow(icon: "chart.bar.fill", tint: .green, title: "Budget")
                     }
-                    menuLink(title: "Notifications", subtitle: "Alerts and summaries") {
-                        NotificationSettingsView()
-                    }
-                    menuLink(title: "Appearance", subtitle: "Theme and haptics") {
-                        AppearanceSettingsView()
-                    }
-                    menuLink(title: "Privacy & Security", subtitle: "Face ID lock, location") {
-                        PrivacySecuritySettingsView()
-                    }
-                    menuLink(title: "About", subtitle: "Version, support, legal", showsDivider: false) {
-                        AboutView()
+                    NavigationLink { NotificationSettingsView() } label: {
+                        SettingsRow(icon: "bell.badge.fill", tint: .red, title: "Notifications")
                     }
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 4)
+
+                Section {
+                    NavigationLink { AppearanceSettingsView() } label: {
+                        SettingsRow(icon: "paintbrush.fill", tint: .indigo, title: "Appearance")
+                    }
+                    NavigationLink { PrivacySecuritySettingsView() } label: {
+                        SettingsRow(icon: "lock.fill", tint: .gray, title: "Privacy & Security")
+                    }
+                }
+
+                Section {
+                    NavigationLink { AboutView() } label: {
+                        SettingsRow(icon: "info.circle.fill", tint: .orange, title: "About")
+                    }
+                }
             }
-            .background(Color(.systemBackground))
             .topChromeBar {
                 Text("Settings")
                     .font(.title3.weight(.semibold))
@@ -48,54 +58,33 @@ struct SetupGuideView: View {
         }
     }
 
-    /// One menu row: bold title over a one-line gray summary, a trailing chevron, and a hairline
-    /// underneath (except the last row).
-    private func menuLink<Destination: View>(
-        title: String,
-        subtitle: String,
-        showsDivider: Bool = true,
-        @ViewBuilder destination: () -> Destination
-    ) -> some View {
-        VStack(spacing: 0) {
-            NavigationLink {
-                destination()
-            } label: {
-                HStack(alignment: .center, spacing: 12) {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(title)
-                            .font(.title3.weight(.semibold))
-                            .foregroundStyle(.primary)
-                            .lineLimit(1)
-                        Text(subtitle)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                            .lineLimit(1)
-                    }
-                    Spacer(minLength: 0)
-                    Image(systemName: "chevron.right")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.tertiary)
-                }
-                .padding(.vertical, 18)
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            if showsDivider {
-                Divider()
+    /// The account header row: profile glyph, signed-in email, and a "Manage profile" subtitle.
+    private var accountRow: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "person.crop.circle.fill")
+                .font(.system(size: 36))
+                .foregroundStyle(.gray)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(account.email ?? "Account")
+                    .font(.body.weight(.semibold))
+                    .lineLimit(1)
+                Text("Manage profile")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
         }
     }
 }
 
-/// A Settings-style row: a leading icon (asset image or SF Symbol tile), a title, and a chevron.
-/// Shared by `SetupGuideView` and its sub-pages.
+/// A Settings-style row: a leading icon (asset image, or a plain monochrome SF Symbol — no
+/// colored squircle tile), a title, and a chevron. Shared by `SetupGuideView` and its sub-pages.
 struct SettingsRow: View {
-    /// Asset-catalog image used as the icon (takes precedence over `icon`/`tint`).
+    /// Asset-catalog image used as the icon (takes precedence over `icon`).
     var assetImage: String? = nil
     /// SF Symbol used when `assetImage` is nil.
     var icon: String = ""
-    /// Tile color when using an SF Symbol.
-    var tint: Color = .blue
+    /// Kept for call-site compatibility; the symbol now always renders monochrome.
+    var tint: Color = .primary
     let title: String
 
     var body: some View {
@@ -117,10 +106,9 @@ struct SettingsRow: View {
                 .clipShape(RoundedRectangle(cornerRadius: 7, style: .continuous))
         } else {
             Image(systemName: icon)
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(.white)
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(.primary)
                 .frame(width: 29, height: 29)
-                .background(RoundedRectangle(cornerRadius: 7, style: .continuous).fill(tint))
         }
     }
 }

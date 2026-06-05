@@ -62,6 +62,9 @@ struct AddTransactionSheet: View {
             .scrollDismissesKeyboard(.interactively)
             addButton
         }
+        // Rises as a partial-height glass sheet (the screen behind stays visible and ghosts
+        // through the material), expandable to full height by dragging.
+        .presentationDetents([.fraction(0.82), .large])
         .presentationBackground(.ultraThinMaterial)
         .presentationCornerRadius(36)
         .presentationDragIndicator(.visible)
