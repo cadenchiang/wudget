@@ -161,7 +161,7 @@ struct TotalSpendingCard: View {
                     series: .value("Series", "spent")
                 )
                 .foregroundStyle(.primary)
-                .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
+                .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
             }
             if let budgetPerBucket {
                 ForEach(Array(bucketLabels.enumerated()), id: \.element) { index, label in
@@ -190,23 +190,12 @@ struct TotalSpendingCard: View {
         .chartYScale(domain: 0...yMax)
         .chartXSelection(value: $selected)
         .chartLegend(.hidden)
-        .chartXAxis {
-            AxisMarks { _ in
-                AxisValueLabel()
-            }
-        }
-        .chartYAxis {
-            AxisMarks(position: .trailing) { value in
-                AxisGridLine()
-                if let amount = value.as(Double.self) {
-                    AxisValueLabel {
-                        Text(abbreviatedAmount(amount))
-                    }
-                }
-            }
-        }
+        .chartXAxis(.hidden)
+        .chartYAxis(.hidden)
         .frame(height: 260)
         .padding(.top, 8)
+        // Bleed past the page gutter so the line runs edge to edge, Robinhood-style.
+        .padding(.horizontal, -20)
         .onChange(of: selected) { _, newValue in
             if newValue != nil { Haptics.selection() }
         }
@@ -229,20 +218,6 @@ struct TotalSpendingCard: View {
                         .position(x: clampedX, y: plot.minY + 30)
                 }
             }
-        }
-    }
-
-    /// Compact currency label for the y-axis (e.g. "$4K", "$1.2M") so large values never render
-    /// in scientific notation ("4.0E6").
-    private func abbreviatedAmount(_ value: Double) -> String {
-        let absValue = abs(value)
-        switch absValue {
-        case 1_000_000...:
-            return "$\((value / 1_000_000).formatted(.number.precision(.fractionLength(0...1))))M"
-        case 1_000...:
-            return "$\((value / 1_000).formatted(.number.precision(.fractionLength(0...1))))K"
-        default:
-            return "$\(value.formatted(.number.precision(.fractionLength(0))))"
         }
     }
 
