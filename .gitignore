@@ -12,3 +12,13 @@ xcuserdata/
 # Swift Package Manager
 .swiftpm/
 .build/
+
+# Secrets — real keys live in .env (local only) and ~/.orbit-supabase.env (canonical).
+# Only the publishable anon key may appear in source (SupabaseService.swift).
+# .env.example is the committed template with placeholders, never real values.
+.env
+.env.*
+*.env
+*.pem
+*secret*
+!.env.example

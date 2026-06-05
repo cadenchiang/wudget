@@ -1,12 +1,12 @@
 import SwiftUI
 
-/// In-app terms of service for Budget.
+/// In-app terms of service for Orbit.
 struct TermsOfServiceView: View {
     var body: some View {
         LegalDocumentView(
             title: "Terms of Service",
-            updated: "May 29, 2026",
-            intro: "By using Budget, you agree to these terms. Please read them.",
+            updated: "June 5, 2026",
+            intro: "By using Orbit, you agree to these terms. Please read them.",
             sections: sections
         )
     }
@@ -15,7 +15,7 @@ struct TermsOfServiceView: View {
         [
             LegalSection(
                 heading: "The service",
-                body: "Budget helps you track and budget your spending on your device. It is a personal-finance tool, not a bank or financial institution, and it does not move, hold, or transfer money."
+                body: "Orbit helps you track and budget your spending on your device. It is a personal-finance tool, not a bank or financial institution, and it does not move, hold, or transfer money."
             ),
             LegalSection(
                 heading: "Not financial advice",
@@ -47,7 +47,7 @@ struct TermsOfServiceView: View {
             ),
             LegalSection(
                 heading: "Contact",
-                body: "Questions about these terms? Email support@walletbudget.app."
+                body: "Questions about these terms? Email support@orbitspending.com."
             )
         ]
     }

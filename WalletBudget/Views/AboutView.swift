@@ -6,11 +6,11 @@ struct AboutView: View {
     @Environment(\.openURL) private var openURL
     @State private var copied = false
 
-    /// Display name from the bundle (falls back to "WalletBudget").
+    /// Display name from the bundle (falls back to "Orbit").
     private var appName: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
             ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
-            ?? "Budget"
+            ?? "Orbit"
     }
 
     /// "Version 1.0 (1)"-style string from the bundle.
@@ -84,9 +84,9 @@ struct AboutView: View {
     private func emailSupport() {
         var components = URLComponents()
         components.scheme = "mailto"
-        components.path = "cadenchiang@gmail.com"
+        components.path = "support@orbitspending.com"
         components.queryItems = [
-            URLQueryItem(name: "subject", value: "Budget Support"),
+            URLQueryItem(name: "subject", value: "Orbit Support"),
             URLQueryItem(name: "body", value: "\n\n\n\(appName) \(versionString)")
         ]
         if let url = components.url {
