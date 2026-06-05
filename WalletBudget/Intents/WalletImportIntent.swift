@@ -102,6 +102,9 @@ struct WalletImportIntent: AppIntent {
         // Keep the home-screen widget in sync with the new transaction.
         WidgetUpdater.refresh(context: context)
 
+        // Mirror the imported expense to the cloud (no-op when signed out).
+        await SyncEngine.shared.requestSync()
+
         Log.intent.info("Imported \(expense.amount) at \(cleanMerchant, privacy: .public) [\(expense.category, privacy: .public)] currency=\(currency, privacy: .public)")
         return .result(value: "Imported \(cleanMerchant) in \(expense.category)")
     }

@@ -1,13 +1,25 @@
 import AuthenticationServices
 import SwiftUI
 
-/// The sign-in options presented as a bottom sheet from the welcome landing's "Get Started" CTA.
+/// Which welcome-screen pill raised the auth sheet. Tailors the sheet copy, the
+/// Apple button label, and the email form's starting mode; all providers behave
+/// identically underneath (Supabase links by account, not by entry point).
+enum AuthIntent {
+    case signUp
+    case logIn
+}
+
+/// The sign-in options presented as a bottom sheet from the welcome landing's pills.
 ///
 /// All three providers create real Supabase sessions: Apple exchanges the native
 /// identity token, Google runs the OAuth flow in a system web session, and Email
 /// opens `EmailAuthView` with separate Log in / Sign up modes.
 struct AuthSheet: View {
+    /// Entry point that raised the sheet; defaults to sign-up for new users.
+    var intent: AuthIntent = .signUp
+
     @Environment(AccountStore.self) private var account
+    @Environment(\.dismiss) private var dismiss
     @State private var showingEmail = false
     @State private var currentNonce: String?
     @State private var isWorking = false
@@ -16,8 +28,11 @@ struct AuthSheet: View {
     var body: some View {
         VStack(spacing: 16) {
             VStack(spacing: 6) {
-                Text("Get started").font(.title2.bold())
-                Text("Track your spending automatically.")
+                Text(intent == .signUp ? "Get started" : "Welcome back")
+                    .font(.title2.bold())
+                Text(intent == .signUp
+                     ? "Track your spending automatically."
+                     : "Log in to pick up where you left off.")
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
             }
@@ -50,7 +65,9 @@ struct AuthSheet: View {
         } message: {
             Text(errorMessage ?? "Something went wrong. Please try again.")
         }
-        .sheet(isPresented: $showingEmail) { EmailAuthView() }
+        .sheet(isPresented: $showingEmail) {
+            EmailAuthView(initialMode: intent == .signUp ? .signUp : .logIn)
+        }
     }
 
     /// Binding that shows the alert whenever an error message is set.
@@ -61,7 +78,7 @@ struct AuthSheet: View {
     // MARK: - Apple
 
     private var appleButton: some View {
-        SignInWithAppleButton(.continue) { request in
+        SignInWithAppleButton(intent == .signUp ? .signUp : .signIn) { request in
             do {
                 let nonce = try AuthNonce.random()
                 currentNonce = nonce
@@ -110,6 +127,10 @@ struct AuthSheet: View {
                         }
                     }
                     Haptics.success()
+                    // RootGate swaps the view tree on isSignedIn, but this sheet was
+                    // presented by the welcome screen; dismiss explicitly so it never
+                    // lingers over the app.
+                    dismiss()
                 } catch {
                     errorMessage = "Apple sign-in failed. Please try again."
                 }
@@ -132,6 +153,7 @@ struct AuthSheet: View {
         do {
             try await account.signInWithGoogle()
             Haptics.success()
+            dismiss()
         } catch {
             if (error as? ASWebAuthenticationSessionError)?.code != .canceledLogin {
                 errorMessage = "Google sign-in failed. Please try again."

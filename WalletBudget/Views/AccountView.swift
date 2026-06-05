@@ -67,7 +67,7 @@ struct AccountView: View {
                 }
                 .disabled(isDeleting)
             } footer: {
-                Text("Permanently deletes your Orbit account. Spending data stored on this device is removed when you delete the app.")
+                Text("Permanently deletes your Orbit account and removes all spending data stored on this device.")
             }
         }
         .navigationTitle("Account")

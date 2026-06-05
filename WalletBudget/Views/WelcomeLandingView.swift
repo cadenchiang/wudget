@@ -3,14 +3,16 @@ import SwiftUI
 
 /// Welcome / landing screen: black and white, with a looping Lottie animation (Al Boardman's
 /// minimal geometric "9 squares" loop, recolored monochrome and bundled as welcomeHero.json)
-/// in the middle of the screen and simple Sign up / Log in pills at the bottom. Both buttons
-/// raise the same auth sheet (Apple / Google / Email).
+/// in the middle of the screen and simple Sign up / Log in pills at the bottom. Each pill
+/// raises the auth sheet with matching intent (copy, Apple button label, email form mode).
 struct WelcomeLandingView: View {
     @Environment(AccountStore.self) private var account
     @Environment(\.colorScheme) private var colorScheme
 
     /// Whether the sign-in bottom sheet is showing.
     @State private var showingAuth = false
+    /// Which pill raised the sheet; tailors the sheet's copy and defaults.
+    @State private var authIntent: AuthIntent = .signUp
 
     var body: some View {
         ZStack {
@@ -28,7 +30,7 @@ struct WelcomeLandingView: View {
             }
         }
         .sheet(isPresented: $showingAuth) {
-            AuthSheet()
+            AuthSheet(intent: authIntent)
                 .environment(account)
                 .presentationDetents([.height(430)])
                 .presentationDragIndicator(.visible)
@@ -56,6 +58,7 @@ struct WelcomeLandingView: View {
         VStack(spacing: 12) {
             Button {
                 Haptics.tap()
+                authIntent = .signUp
                 showingAuth = true
             } label: {
                 Text("Sign up")
@@ -67,6 +70,7 @@ struct WelcomeLandingView: View {
             }
             Button {
                 Haptics.tap()
+                authIntent = .logIn
                 showingAuth = true
             } label: {
                 Text("Log in")

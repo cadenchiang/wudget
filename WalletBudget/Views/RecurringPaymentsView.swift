@@ -85,22 +85,19 @@ struct RecurringPaymentsView: View {
     private func toggleExcluded(_ expense: Expense) {
         Haptics.tap()
         expense.excludedFromBudget.toggle()
+        expense.updatedAt = Date()
         do {
             try context.save()
+            SyncEngine.shared.requestSync()
         } catch {
             Log.ui.error("Failed to toggle exclusion: \(error.localizedDescription, privacy: .public)")
         }
     }
 
-    /// Deletes one recurring expense and saves.
+    /// Deletes one recurring expense (locally + queued cloud tombstone).
     private func delete(_ expense: Expense) {
         Log.ui.info("Deleting recurring payment at \(expense.merchant, privacy: .public)")
-        context.delete(expense)
-        do {
-            try context.save()
-        } catch {
-            Log.ui.error("Failed to delete recurring payment: \(error.localizedDescription, privacy: .public)")
-        }
+        SyncEngine.shared.delete(expense, context: context)
     }
 }
 

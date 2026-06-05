@@ -52,6 +52,17 @@ final class AccountStore {
     /// which ends the restore phase.
     private func observeAuthChanges() async {
         for await (event, session) in auth.authStateChanges {
+            if let user = session?.user {
+                // A different account signing in on this device must never see the
+                // previous owner's expenses, budget, photo, or preferences.
+                if AccountDataReset.isDifferentOwner(than: user.id.uuidString) {
+                    AccountDataReset.wipeAllLocalData()
+                }
+                AccountDataReset.recordOwner(userID: user.id.uuidString)
+                // Pull this account's cloud data (and push anything local) so any
+                // device shows the same expenses after sign-in.
+                SyncEngine.shared.requestSync()
+            }
             let identity = Self.identity(email: session?.user.email,
                                          appMetadata: session?.user.appMetadata)
             email = identity.email
@@ -147,6 +158,10 @@ final class AccountStore {
         email = nil
         provider = nil
         displayName = nil
+        // The widget and scheduled notifications surface financial data on the
+        // home/lock screen while nobody is signed in; clear them. The database
+        // stays (the same owner usually returns; a different sign-in wipes it).
+        AccountDataReset.clearSignedOutSurfaces()
         Task {
             do {
                 try await auth.signOut()
@@ -189,11 +204,10 @@ final class AccountStore {
     /// Permanently deletes the account (App Store guideline 5.1.1(v)).
     ///
     /// Calls the `delete_user` Postgres RPC, which is SECURITY DEFINER and scoped
-    /// to `auth.uid()`, so a user can only ever delete themselves. On success the
-    /// local session is cleared. On-device expense data is untouched: it never
-    /// left the device, and the privacy policy directs users to delete the app
-    /// to remove it.
-    /// - Throws: the RPC error; the session is kept so the user can retry.
+    /// to `auth.uid()`, so a user can only ever delete themselves. On success all
+    /// on-device data (expenses, preferences, photo) is wiped and the local
+    /// session cleared, so deletion is total: server account and device data.
+    /// - Throws: the RPC error; session and local data are kept so the user can retry.
     func deleteAccount() async throws {
         do {
             try await SupabaseService.client.rpc("delete_user").execute()
@@ -202,6 +216,7 @@ final class AccountStore {
             Log.auth.error("Account deletion failed: \(error.localizedDescription, privacy: .public)")
             throw error
         }
+        AccountDataReset.wipeAllLocalData()
         signOut()
     }
 

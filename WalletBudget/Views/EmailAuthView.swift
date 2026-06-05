@@ -43,12 +43,18 @@ struct EmailAuthView: View {
 
     @Environment(AccountStore.self) private var account
     @Environment(\.dismiss) private var dismiss
-    @State private var mode: Mode = .logIn
+    @State private var mode: Mode
     @State private var email = ""
     @State private var password = ""
     @State private var isWorking = false
     @State private var statusMessage: String?
     @State private var awaitingVerification = false
+
+    /// - Parameter initialMode: which mode the form opens in (matches the welcome
+    ///   pill the user tapped); the segmented control still allows switching.
+    init(initialMode: Mode = .logIn) {
+        _mode = State(initialValue: initialMode)
+    }
 
     var body: some View {
         NavigationStack {

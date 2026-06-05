@@ -7,7 +7,7 @@ struct PrivacyPolicyView: View {
         LegalDocumentView(
             title: "Privacy Policy",
             updated: "June 5, 2026",
-            intro: "Orbit is built to keep your financial data private. Everything you track stays on your device. Your account is limited to the basics needed to sign you in, and we never sell or share your data.",
+            intro: "Orbit is built to keep your financial data private. Your spending data lives on your device and syncs privately to your own account so every device you sign into stays in step. We never sell or share your data.",
             sections: sections
         )
     }
@@ -15,12 +15,16 @@ struct PrivacyPolicyView: View {
     private var sections: [LegalSection] {
         [
             LegalSection(
-                heading: "Data stored on your device",
-                body: "Your transactions (amount, merchant, card name, date, category, and notes), your budget, your preferences, and your profile photo are stored locally on your device using Apple's on-device database. This information is not transmitted to us or to any server."
+                heading: "Your spending data and sync",
+                body: "Your transactions (amount, merchant, card name, date, category, and notes), your cards, and your budget are stored on your device and synced to your private account space in our database (hosted by Supabase) so signing in on another device shows the same data. Each account can only ever read its own rows, enforced at the database level. We never sell your data, share it with third parties, or use it for advertising."
             ),
             LegalSection(
                 heading: "Your account",
-                body: "When you sign up with Apple, Google, or email, we store your email address, your sign-in method, and the display name you choose with our authentication provider (Supabase) so you can sign in. Your spending data is not uploaded and is not connected to this account today. If we add optional sync in the future, this policy will be updated first."
+                body: "When you sign up with Apple, Google, or email, we store your email address, your sign-in method, and the display name you choose with our authentication provider (Supabase) so you can sign in."
+            ),
+            LegalSection(
+                heading: "Stays on this device only",
+                body: "Your profile photo and the location tags on purchases are stored only on your device and are never uploaded."
             ),
             LegalSection(
                 heading: "Location",
@@ -40,7 +44,7 @@ struct PrivacyPolicyView: View {
             ),
             LegalSection(
                 heading: "Deleting your data",
-                body: "You can delete individual transactions in the app at any time, and permanently delete your account from the Account screen, which removes your email and profile from our authentication provider. Deleting the app removes all data stored on your device."
+                body: "You can delete individual transactions in the app at any time (deletions propagate to your synced account data). Permanently deleting your account from the Account screen removes your email, your profile, and every synced transaction from our database, and erases all spending data stored on this device."
             ),
             LegalSection(
                 heading: "Children",

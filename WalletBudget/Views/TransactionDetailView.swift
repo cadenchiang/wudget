@@ -346,17 +346,12 @@ struct TransactionDetailView: View {
         )
     }
 
-    /// Deletes the expense, saves, and pops back.
+    /// Deletes the expense (locally + queued cloud tombstone) and pops back.
     private func deleteExpense() {
         Haptics.tap(.rigid)
-        context.delete(expense)
-        do {
-            try context.save()
-            Log.ui.info("Deleted transaction at \(expense.merchant, privacy: .public)")
-            dismiss()
-        } catch {
-            Log.ui.error("Failed to delete transaction: \(error.localizedDescription, privacy: .public)")
-        }
+        Log.ui.info("Deleted transaction at \(expense.merchant, privacy: .public)")
+        SyncEngine.shared.delete(expense, context: context)
+        dismiss()
     }
 
     /// Parses the amount-editor draft and stores it as the expense amount (logs and ignores
@@ -370,12 +365,15 @@ struct TransactionDetailView: View {
         save(describing: "amount")
     }
 
-    /// Persists an edit to the expense and logs the outcome.
+    /// Persists an edit to the expense and logs the outcome. Bumps `updatedAt`
+    /// (so the edit wins last-write-wins sync merges) and schedules a sync.
     /// - Parameter field: The field that changed (for the log message).
     private func save(describing field: String) {
+        expense.updatedAt = Date()
         do {
             try context.save()
             Log.ui.info("Updated \(field, privacy: .public) for \(expense.merchant, privacy: .public)")
+            SyncEngine.shared.requestSync()
         } catch {
             Log.ui.error("Failed to save \(field, privacy: .public) change: \(error.localizedDescription, privacy: .public)")
         }

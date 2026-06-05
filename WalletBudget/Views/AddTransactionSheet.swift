@@ -344,6 +344,7 @@ struct AddTransactionSheet: View {
             try context.save()
             Haptics.success()
             Log.ui.info("Manually added \(expense.amount) at \(cleanMerchant, privacy: .public)")
+            SyncEngine.shared.requestSync()
             dismiss()
         } catch {
             errorMessage = "Could not save. Please try again."
@@ -465,6 +466,7 @@ private struct MyCardPickerSheet: View {
     private func addIfNeeded(_ name: String) {
         guard !cards.contains(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) else { return }
         context.insert(UserCard(name: name))
+        defer { SyncEngine.shared.requestSync() }
         do {
             try context.save()
         } catch {

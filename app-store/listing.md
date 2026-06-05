@@ -27,9 +27,10 @@ Everything to paste into App Store Connect. Drafted 2026-06-05.
 > where it happened. No bank logins. No screen-scraping. No selling your data.
 >
 > YOUR DATA STAYS YOURS
-> Transactions live in Apple's on-device database, on your iPhone. Orbit has no
-> analytics SDKs and no trackers. Your account is just an email so you can sign
-> in. We can't see what you spend, and neither can anyone else.
+> Transactions live on your iPhone and sync privately to your own account, so a
+> new phone shows your full history the moment you sign in. Orbit has no
+> analytics SDKs, no trackers, and no ads. We never sell or share your data.
+> Purchase locations never leave your device.
 >
 > EFFORTLESS TRACKING
 > • Apple Pay purchases import automatically via Shortcuts
@@ -86,7 +87,7 @@ Everything to paste into App Store Connect. Drafted 2026-06-05.
 
 ## Privacy nutrition labels (App Privacy section)
 
-Data types to declare:
+Data types to declare (updated for cloud sync, 2026-06-05):
 
 1. **Contact Info → Email Address**
    - Collected: YES. Linked to user: YES. Used for tracking: NO.
@@ -94,11 +95,16 @@ Data types to declare:
 2. **Identifiers → User ID**
    - Collected: YES (Supabase user id). Linked to user: YES. Tracking: NO.
    - Purpose: App Functionality.
-3. **Everything else: NOT COLLECTED.**
-   - Purchase history, location, financial info: stored on-device only and
-     never transmitted off the device, so they are NOT "collected" under
-     Apple's definition (data must be transmitted off-device to count).
-   - No analytics, no ads, no tracking → "Data Not Used to Track You".
+3. **Purchases → Purchase History**
+   - Collected: YES (transactions sync to the user's private account space:
+     amount, merchant, card name, date, category, notes). Linked to user: YES.
+     Tracking: NO. Purpose: App Functionality (cross-device sync).
+4. **Other Financial Info**
+   - Collected: YES (monthly budget amount syncs). Linked: YES. Tracking: NO.
+   - Purpose: App Functionality.
+5. **Location: NOT collected.** Purchase location tags are stored on-device
+   only and are never transmitted (the sync layer strips them by design).
+6. No analytics, no ads, no tracking → "Data Not Used to Track You".
 
 ## Screenshots needed (you provide; 6.9" iPhone required, 6.5" optional)
 

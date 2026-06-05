@@ -6,21 +6,28 @@ import SwiftUI
 /// and tracked for credit utilization against its limit.
 @Model
 final class UserCard {
+    /// Stable identifier used for cloud sync (not unique-constrained so legacy rows
+    /// migrate safely; the sync layer treats it as the primary key).
+    var id: UUID = UUID()
     /// Canonical display name (matches `CardLibrary` naming when the card is a known brand).
     var name: String = ""
     /// Optional credit limit; utilization is month spend / limit. `nil` hides the utilization bar.
     var creditLimit: Double?
     /// Creation time, used as a stable tiebreaker for cards with no spending yet.
     var createdAt: Date = Date()
+    /// Last local modification time; drives last-write-wins cloud sync merges.
+    var updatedAt: Date = Date()
 
     /// Creates a card.
     /// - Parameters:
     ///   - name: Canonical card name.
     ///   - creditLimit: Optional limit for utilization tracking.
     init(name: String, creditLimit: Double? = nil) {
+        self.id = UUID()
         self.name = name
         self.creditLimit = creditLimit
         self.createdAt = Date()
+        self.updatedAt = Date()
     }
 }
 

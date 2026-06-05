@@ -72,10 +72,14 @@ struct BudgetEditorView: View {
         .onDisappear { commit() }
     }
 
-    /// Writes the draft's parsed value to storage (idempotent; safe to call repeatedly).
+    /// Writes the draft's parsed value to storage (idempotent; safe to call repeatedly)
+    /// and marks the prefs row dirty for cloud sync.
     private func commit() {
         let value = draftValue
-        if monthlyBudget != value { monthlyBudget = value }
+        if monthlyBudget != value {
+            monthlyBudget = value
+            SyncEngine.shared.prefsChanged()
+        }
     }
 
     /// Sets the budget from a preset/clear action, syncs the field text, and dismisses the keyboard.
@@ -83,6 +87,7 @@ struct BudgetEditorView: View {
     private func setBudget(_ amount: Double) {
         draft = displayString(for: amount)
         monthlyBudget = amount
+        SyncEngine.shared.prefsChanged()
         amountFocused = false
     }
 

@@ -26,4 +26,7 @@ enum Log {
 
     /// Logs related to authentication (sign-in, sign-up, session restore, sign-out).
     static let auth = Logger(subsystem: subsystem, category: "auth")
+
+    /// Logs related to cloud sync (pull/merge/push cycles, tombstones).
+    static let sync = Logger(subsystem: subsystem, category: "sync")
 }

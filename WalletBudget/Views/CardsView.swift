@@ -156,11 +156,10 @@ struct CardsView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
-    /// Deletes a card (its transactions stay) and saves.
+    /// Deletes a card (its transactions stay), locally + queued cloud tombstone.
     private func delete(_ card: UserCard) {
         Log.ui.info("Deleting card \(card.name, privacy: .public)")
-        context.delete(card)
-        save(context: context, action: "delete card")
+        SyncEngine.shared.delete(card, context: context)
     }
 
     /// Returns the existing card with this name, or inserts (and returns) a new one.
@@ -172,6 +171,7 @@ struct CardsView: View {
         let card = UserCard(name: name)
         context.insert(card)
         save(context: context, action: "add card")
+        SyncEngine.shared.requestSync()
         return card
     }
 
@@ -191,6 +191,7 @@ struct CardsView: View {
         if !seen.isEmpty {
             save(context: context, action: "seed cards")
             Log.ui.info("Seeded \(seen.count) cards from transactions")
+            SyncEngine.shared.requestSync()
         }
     }
 }
@@ -222,8 +223,7 @@ private struct CardEditorSheet: View {
                 }
                 Section {
                     Button(role: .destructive) {
-                        context.delete(card)
-                        save(context: context, action: "delete card")
+                        SyncEngine.shared.delete(card, context: context)
                         dismiss()
                     } label: {
                         Text("Remove Card")

@@ -49,6 +49,10 @@ final class Expense {
     /// Stored (not the enum) so it can be used in SwiftData `#Predicate` queries.
     var recurrenceRaw: String = RecurrenceFrequency.none.rawValue
 
+    /// Last local modification time; drives last-write-wins cloud sync merges.
+    /// Bumped by mutation sites (and at creation).
+    var updatedAt: Date = Date()
+
     /// Typed accessor for `recurrenceRaw`.
     var recurrence: RecurrenceFrequency {
         get { RecurrenceFrequency(rawValue: recurrenceRaw) ?? .none }

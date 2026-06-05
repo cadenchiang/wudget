@@ -12,9 +12,13 @@ struct RootView: View {
                 CategorySeeder.seedAndRefresh(context: context)
                 NotificationManager.shared.refreshAuthorization()
                 refreshNotifications()
+                SyncEngine.shared.requestSync()
             }
             .onChange(of: scenePhase) { _, phase in
-                if phase == .active { refreshNotifications() }
+                if phase == .active {
+                    refreshNotifications()
+                    SyncEngine.shared.requestSync()
+                }
             }
     }
 
