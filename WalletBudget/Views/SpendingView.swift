@@ -347,20 +347,22 @@ struct SpendingView: View {
         }
     }
 
-    /// Robinhood-style text tabs: the active one is bold primary, the rest stay secondary.
+    /// Robinhood-style text tabs, sized like the screen title: the active one is bold primary,
+    /// the rest stay secondary. Scrolls horizontally when the titles outgrow the screen.
     private var tabRow: some View {
-        HStack(spacing: 18) {
-            ForEach(SpendingTab.allCases) { option in
-                Button {
-                    tab = option
-                } label: {
-                    Text(option.title)
-                        .font(.subheadline.weight(tab == option ? .semibold : .regular))
-                        .foregroundStyle(tab == option ? Color.primary : Color.secondary)
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 20) {
+                ForEach(SpendingTab.allCases) { option in
+                    Button {
+                        tab = option
+                    } label: {
+                        Text(option.title)
+                            .font(.title3.weight(tab == option ? .semibold : .regular))
+                            .foregroundStyle(tab == option ? Color.primary : Color.secondary)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
             }
-            Spacer(minLength: 0)
         }
         .padding(.vertical, 8)
         .animation(.easeInOut(duration: 0.15), value: tab)
