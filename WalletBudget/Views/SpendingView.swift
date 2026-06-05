@@ -18,6 +18,14 @@ private enum SpendingTab: String, CaseIterable, Identifiable {
     }
 }
 
+/// Carries each list chip's bounds so the selector can slide one persistent pill between them.
+private struct TabChipBoundsKey: PreferenceKey {
+    static var defaultValue: [SpendingTab: Anchor<CGRect>] = [:]
+    static func reduce(value: inout [SpendingTab: Anchor<CGRect>], nextValue: () -> [SpendingTab: Anchor<CGRect>]) {
+        value.merge(nextValue()) { $1 }
+    }
+}
+
 /// Main screen: a Week/Month/Year selector, a total-spending card with a bar chart, a
 /// Recent / By Merchant / By Category selector, and the matching rows below.
 struct SpendingView: View {
@@ -27,8 +35,6 @@ struct SpendingView: View {
     @State private var span: TimeSpan = .month
     @State private var tab: SpendingTab = .recent
     @State private var showingAdd = false
-    /// Anchors the sliding pill of the list selector.
-    @Namespace private var tabPillNamespace
     /// Expenses within the selected period (already date-descending from the query).
     private var currentExpenses: [Expense] {
         SpendingSummary.filter(expenses, in: span.interval())
@@ -282,8 +288,9 @@ struct SpendingView: View {
         }
     }
 
-    /// The list selector as chips: Recent / By Merchant / By Category with a filled pill that
-    /// slides to the active choice.
+    /// The list selector as chips: Recent / By Merchant / By Category. One persistent pill
+    /// slides between chips (positioned via anchor preferences rather than
+    /// matchedGeometryEffect, which stutters when the heavy row list swaps in the same frame).
     private var tabSelector: some View {
         HStack(spacing: 4) {
             ForEach(SpendingTab.allCases) { option in
@@ -293,24 +300,30 @@ struct SpendingView: View {
                     Text(option.title)
                         .font(.caption.weight(.bold))
                         .foregroundStyle(tab == option ? Color(.systemBackground) : Color.secondary)
+                        .animation(.easeInOut(duration: 0.15), value: tab)
                         .padding(.horizontal, 13)
                         .padding(.vertical, 6)
-                        .background {
-                            if tab == option {
-                                Capsule()
-                                    .fill(Color.primary)
-                                    .matchedGeometryEffect(id: "tabPill", in: tabPillNamespace)
-                            }
-                        }
                         .contentShape(Capsule())
+                        .anchorPreference(key: TabChipBoundsKey.self, value: .bounds) { [option: $0] }
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("List: \(option.title)")
             }
             Spacer(minLength: 0)
         }
+        .backgroundPreferenceValue(TabChipBoundsKey.self) { anchors in
+            GeometryReader { geo in
+                if let anchor = anchors[tab] {
+                    let frame = geo[anchor]
+                    Capsule()
+                        .fill(Color.primary)
+                        .frame(width: frame.width, height: frame.height)
+                        .position(x: frame.midX, y: frame.midY)
+                        .animation(.spring(response: 0.28, dampingFraction: 0.9), value: frame)
+                }
+            }
+        }
         .padding(.vertical, 6)
-        .animation(.spring(response: 0.3, dampingFraction: 0.85), value: tab)
     }
 
     /// Flat, date-ordered list of the period's transactions (the Recent tab).
