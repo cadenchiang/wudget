@@ -11,11 +11,37 @@ struct WelcomeLandingView: View {
 
     /// Whether the sign-in bottom sheet is showing.
     @State private var showingAuth = false
+    /// Drives the gentle breathing of the centered dollar sign.
+    @State private var dollarPulsing = false
 
     var body: some View {
         ZStack {
             Color(.systemBackground).ignoresSafeArea()
 
+            VStack(spacing: 0) {
+                // Centered in the space above the buttons (not the full screen), so the
+                // animation sits at the optical center rather than reading low.
+                Spacer()
+                hero
+                Spacer()
+                authButtons
+                    .padding(.horizontal, 24)
+                    .padding(.bottom, 8)
+            }
+        }
+        .sheet(isPresented: $showingAuth) {
+            AuthSheet()
+                .environment(account)
+                .presentationDetents([.height(430)])
+                .presentationDragIndicator(.visible)
+                .presentationCornerRadius(28)
+        }
+    }
+
+    /// The hero: the morphing monochrome ring loop orbiting a softly breathing dollar sign,
+    /// so the geometry reads as money in motion.
+    private var hero: some View {
+        ZStack {
             LottieView(animation: .named("welcomeHero"))
                 .playing(loopMode: .loop)
                 // The artwork is authored black; flip every stroke/fill white in dark mode so
@@ -28,17 +54,13 @@ struct WelcomeLandingView: View {
                 )
                 .frame(width: 300, height: 300)
 
-            authButtons
-                .padding(.horizontal, 24)
-                .padding(.bottom, 8)
-                .frame(maxHeight: .infinity, alignment: .bottom)
-        }
-        .sheet(isPresented: $showingAuth) {
-            AuthSheet()
-                .environment(account)
-                .presentationDetents([.height(430)])
-                .presentationDragIndicator(.visible)
-                .presentationCornerRadius(28)
+            Text("$")
+                .font(.system(size: 54, weight: .semibold, design: .rounded))
+                .foregroundStyle(.primary)
+                .scaleEffect(dollarPulsing ? 1.07 : 0.93)
+                .animation(.easeInOut(duration: 1.6).repeatForever(autoreverses: true), value: dollarPulsing)
+                .onAppear { dollarPulsing = true }
+                .accessibilityHidden(true)
         }
     }
 
