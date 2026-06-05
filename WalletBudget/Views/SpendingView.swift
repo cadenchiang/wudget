@@ -18,14 +18,6 @@ private enum SpendingTab: String, CaseIterable, Identifiable {
     }
 }
 
-/// Carries each list chip's bounds so the selector can slide one persistent pill between them.
-private struct TabChipBoundsKey: PreferenceKey {
-    static var defaultValue: [SpendingTab: Anchor<CGRect>] = [:]
-    static func reduce(value: inout [SpendingTab: Anchor<CGRect>], nextValue: () -> [SpendingTab: Anchor<CGRect>]) {
-        value.merge(nextValue()) { $1 }
-    }
-}
-
 /// Main screen: a Week/Month/Year selector, a total-spending card with a bar chart, a
 /// Recent / By Merchant / By Category selector, and the matching rows below.
 struct SpendingView: View {
@@ -338,42 +330,42 @@ struct SpendingView: View {
         }
     }
 
-    /// The list selector as chips: Recent / By Merchant / By Category. One persistent pill
-    /// slides between chips (positioned via anchor preferences rather than
-    /// matchedGeometryEffect, which stutters when the heavy row list swaps in the same frame).
+    /// The list selector: a full-width three-way slider. Hairline primary outline, transparent
+    /// middle, and a primary-filled pill that slides to the active segment.
     private var tabSelector: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 6) {
-                ForEach(SpendingTab.allCases) { option in
+        let tabs = SpendingTab.allCases
+        let selectedIndex = tabs.firstIndex(of: tab) ?? 0
+        return ZStack(alignment: .leading) {
+            GeometryReader { geo in
+                let segment = geo.size.width / CGFloat(tabs.count)
+                Capsule()
+                    .fill(Color.primary)
+                    .frame(width: segment - 6, height: geo.size.height - 6)
+                    .offset(x: 3 + segment * CGFloat(selectedIndex), y: 3)
+                    .animation(.spring(response: 0.28, dampingFraction: 0.9), value: tab)
+            }
+            HStack(spacing: 0) {
+                ForEach(tabs) { option in
                     Button {
                         tab = option
                     } label: {
                         Text(option.title)
-                            .font(.title3.weight(.semibold))
+                            .font(.footnote.weight(.semibold))
                             .foregroundStyle(tab == option ? Color(.systemBackground) : Color.secondary)
                             .animation(.easeInOut(duration: 0.15), value: tab)
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 7)
-                            .contentShape(Capsule())
-                            .anchorPreference(key: TabChipBoundsKey.self, value: .bounds) { [option: $0] }
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 36)
+                            .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("List: \(option.title)")
                 }
             }
         }
-        .backgroundPreferenceValue(TabChipBoundsKey.self) { anchors in
-            GeometryReader { geo in
-                if let anchor = anchors[tab] {
-                    let frame = geo[anchor]
-                    Capsule()
-                        .fill(Color.primary)
-                        .frame(width: frame.width, height: frame.height)
-                        .position(x: frame.midX, y: frame.midY)
-                        .animation(.spring(response: 0.28, dampingFraction: 0.9), value: frame)
-                }
-            }
-        }
+        .frame(height: 36)
+        .overlay(Capsule().strokeBorder(Color.primary, lineWidth: 1))
         .padding(.vertical, 6)
     }
 
