@@ -14,6 +14,14 @@ final class TimeSpanTests: XCTestCase {
         utcCalendar.date(from: DateComponents(year: year, month: month, day: day, hour: 12))!
     }
 
+    /// Every span has a compact chip label, in the Robinhood "1D 1W 1M 1Y" convention.
+    func testShortLabels() {
+        XCTAssertEqual(TimeSpan.today.shortLabel, "1D")
+        XCTAssertEqual(TimeSpan.week.shortLabel, "1W")
+        XCTAssertEqual(TimeSpan.month.shortLabel, "1M")
+        XCTAssertEqual(TimeSpan.year.shortLabel, "1Y")
+    }
+
     func testMonthBoundsToCalendarMonth() {
         let interval = TimeSpan.month.interval(now: date(2026, 5, 15), calendar: utcCalendar)
         XCTAssertNotNil(interval)

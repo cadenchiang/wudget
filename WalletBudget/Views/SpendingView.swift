@@ -30,6 +30,8 @@ struct SpendingView: View {
     @AppStorage("spending.mode") private var spendingMode: SpendingMode = .total
     @AppStorage("spending.modeSeeded") private var modeSeeded = false
     @State private var showingAdd = false
+    /// Anchors the sliding pill of the period selector.
+    @Namespace private var spanPillNamespace
 
     /// Expenses within the selected period (already date-descending from the query).
     private var currentExpenses: [Expense] {
@@ -157,14 +159,18 @@ struct SpendingView: View {
         }
     }
 
-    /// Transparent top bar: period dropdown with date-range subtitle, add button trailing.
+    /// Transparent top bar: title with the selected period's date range, add button trailing.
+    /// (Period selection lives in the chip slider under the chart.)
     private var topBar: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 1) {
-                spanMenu
+                Text("Spending")
+                    .font(.title3.weight(.semibold))
                 Text(span.dateRange())
                     .font(.subheadline)
                     .foregroundStyle(.secondary)
+                    .contentTransition(.numericText())
+                    .animation(.easeInOut(duration: 0.2), value: span)
             }
             Spacer()
             addButton
@@ -192,25 +198,33 @@ struct SpendingView: View {
         }
     }
 
-    /// The period dropdown (transparent, no background).
-    private var spanMenu: some View {
-        Menu {
-            Picker("Time span", selection: $span) {
-                ForEach(TimeSpan.allCases) { option in
-                    Text(option.title).tag(option)
+    /// Robinhood-style period chips under the chart: 1D 1W 1M 1Y, with a filled pill that
+    /// slides to the active span.
+    private var spanSelector: some View {
+        HStack(spacing: 0) {
+            ForEach(TimeSpan.allCases) { option in
+                Button {
+                    span = option
+                } label: {
+                    Text(option.shortLabel)
+                        .font(.footnote.weight(.bold))
+                        .foregroundStyle(span == option ? Color(.systemBackground) : Color.secondary)
+                        .padding(.vertical, 7)
+                        .frame(maxWidth: .infinity)
+                        .background {
+                            if span == option {
+                                Capsule()
+                                    .fill(Color.primary)
+                                    .matchedGeometryEffect(id: "spanPill", in: spanPillNamespace)
+                            }
+                        }
+                        .contentShape(Capsule())
                 }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Time span: \(option.title)")
             }
-        } label: {
-            HStack(spacing: 4) {
-                Text(span.title)
-                    .font(.title3.weight(.semibold))
-                Image(systemName: "chevron.down")
-                    .font(.subheadline.weight(.semibold))
-            }
-            .foregroundStyle(.primary)
         }
-        .tint(.primary)
-        .accessibilityLabel("Time span: \(span.title)")
+        .animation(.spring(response: 0.3, dampingFraction: 0.85), value: span)
     }
 
     /// The spending content, airy and card-free: full-bleed hero + chart, a hairline Repeat row,
@@ -227,6 +241,8 @@ struct SpendingView: View {
                     budgetPerBucket: budgetPerBucket,
                     mode: $spendingMode
                 )
+
+                spanSelector
 
                 recurringRow
 

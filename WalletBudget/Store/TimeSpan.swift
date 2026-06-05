@@ -22,6 +22,16 @@ enum TimeSpan: String, CaseIterable, Identifiable {
         }
     }
 
+    /// Compact label for the chart's period chips (Robinhood-style "1D 1W 1M 1Y").
+    var shortLabel: String {
+        switch self {
+        case .today: return "1D"
+        case .week: return "1W"
+        case .month: return "1M"
+        case .year: return "1Y"
+        }
+    }
+
     /// The calendar component this span spans.
     private var component: Calendar.Component {
         switch self {
