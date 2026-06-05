@@ -307,7 +307,7 @@ struct TotalSpendingCard: View {
                 let lit = snappedDate != nil
                 RuleMark(y: .value("Budget", periodBudget))
                     .foregroundStyle(lit ? Color.primary.opacity(0.85) : Color.secondary.opacity(0.6))
-                    .lineStyle(StrokeStyle(lineWidth: 0.5, dash: [1, 4]))
+                    .lineStyle(StrokeStyle(lineWidth: 1.5, lineCap: .round, dash: [0.1, 5]))
                     .annotation(position: .top, alignment: .trailing, spacing: 3) {
                         Text(periodBudget.asCurrency())
                             .font(.caption2.weight(.semibold))
