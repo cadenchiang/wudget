@@ -212,15 +212,6 @@ struct TotalSpendingCard: View {
         linePoints.last(where: { $0.date <= date })?.total ?? 0
     }
 
-    /// Per-category totals up to the scrubbed moment, largest first (top three).
-    private func breakdown(at date: Date) -> [(category: String, total: Double)] {
-        var totals: [String: Double] = [:]
-        for entry in entries where entry.date <= date {
-            totals[entry.category, default: 0] += entry.amount
-        }
-        return totals.sorted { $0.value > $1.value }.prefix(3).map { ($0.key, $0.value) }
-    }
-
     /// The logged moment nearest to a raw scrub position.
     private func snap(_ date: Date) -> Date? {
         snapDates.min(by: { abs($0.timeIntervalSince(date)) < abs($1.timeIntervalSince(date)) })
@@ -381,7 +372,7 @@ struct TotalSpendingCard: View {
                        let scrubY = proxy.position(forY: cumulativeTotal(at: snappedDate)) {
                         pulsingDot
                             .position(x: plot.minX + scrubX, y: plot.minY + scrubY)
-                        let cardWidth: CGFloat = 176
+                        let cardWidth: CGFloat = 180
                         let gap: CGFloat = 18
                         let x = plot.minX + scrubX
                         let preferRight = x < plot.midX
@@ -412,65 +403,36 @@ struct TotalSpendingCard: View {
         }
     }
 
-    /// Floating card describing the scrubbed moment: timestamp, spent-so-far with budget
-    /// progress, the purchase that just landed, and the top categories.
+    /// Floating card for the scrubbed moment, three tidy lines: when, the running total, and
+    /// the purchase that landed there (category-colored dot, merchant, amount). Nothing wraps.
     private func infoCard(at date: Date) -> some View {
-        let cumulative = cumulativeTotal(at: date)
-        let justAdded = entries.filter { abs($0.date.timeIntervalSince(date)) < 1 }
-        return VStack(alignment: .leading, spacing: 9) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(date.formatted(.dateTime.month(.abbreviated).day().hour().minute()))
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text(cumulative.asCurrency())
-                        .font(.headline)
-                    if let periodBudget, periodBudget > 0 {
-                        Text("\(Int((cumulative / periodBudget * 100).rounded()))% of budget")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-            }
+        let purchase = entries.first { abs($0.date.timeIntervalSince(date)) < 1 }
+        return VStack(alignment: .leading, spacing: 7) {
+            Text(date.formatted(.dateTime.month(.abbreviated).day().hour().minute()))
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
 
-            if let purchase = justAdded.first {
-                HStack(spacing: 4) {
-                    Image(systemName: "plus")
-                        .font(.system(size: 8, weight: .bold))
-                    Text("\(purchase.amount.asCurrency())\(purchase.merchant.isEmpty ? "" : "  ·  \(purchase.merchant)")")
+            Text(cumulativeTotal(at: date).asCurrency())
+                .font(.headline)
+                .lineLimit(1)
+
+            if let purchase {
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(CategoryStyle.color(for: purchase.category))
+                        .frame(width: 7, height: 7)
+                    Text(purchase.merchant.isEmpty ? purchase.category : purchase.merchant)
+                        .font(.footnote)
+                        .foregroundStyle(.primary)
                         .lineLimit(1)
-                }
-                .font(.caption.weight(.medium))
-                .foregroundStyle(.green)
-            }
-
-            let rows = breakdown(at: date)
-            if rows.isEmpty {
-                Text("No spending yet")
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            } else {
-                VStack(alignment: .leading, spacing: 3) {
-                    let added = categoriesAdded(at: date)
-                    ForEach(rows, id: \.category) { row in
-                        HStack(spacing: 5) {
-                            Circle()
-                                .fill(CategoryStyle.color(for: row.category))
-                                .frame(width: 7, height: 7)
-                            Text(row.category)
-                                .font(.caption2.weight(added.contains(row.category) ? .semibold : .regular))
-                                .foregroundStyle(added.contains(row.category) ? .primary : .secondary)
-                                .lineLimit(1)
-                            if added.contains(row.category) {
-                                Image(systemName: "arrow.up")
-                                    .font(.system(size: 8, weight: .bold))
-                                    .foregroundStyle(.green)
-                            }
-                            Spacer(minLength: 4)
-                            Text(row.total.asCurrency())
-                                .font(.caption2.weight(.medium))
-                        }
-                    }
+                        .truncationMode(.tail)
+                    Spacer(minLength: 8)
+                    Text("+\(purchase.amount.asCurrency())")
+                        .font(.footnote.weight(.medium))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .layoutPriority(1)
                 }
             }
         }
