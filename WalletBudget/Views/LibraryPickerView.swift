@@ -99,7 +99,7 @@ struct LibraryPickerView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Cancel") { dismiss() }
+                    CloseToolbarButton { dismiss() }
                 }
             }
             .searchable(
