@@ -20,13 +20,12 @@ struct CardsView: View {
                 emptyState
             } else {
                 List {
-                    ForEach(Array(sortedCards.enumerated()), id: \.element.persistentModelID) { index, card in
-                        Button { editing = card } label: { row(card) }
+                    ForEach(sortedCards, id: \.persistentModelID) { card in
+                        Button { editing = card } label: { glassCard(row(card)) }
                             .buttonStyle(.plain)
-                            .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
-                            // Full-width hairline (under the logo too); none above the first row.
-                            .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
-                            .listRowSeparator(index == 0 ? .hidden : .visible, edges: .top)
+                            .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear)
                             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                                 Button(role: .destructive) { delete(card) } label: {
                                     Label("Delete", systemImage: "trash")
@@ -131,8 +130,19 @@ struct CardsView: View {
                 }
             }
         }
-        .padding(.vertical, 12)
+        .padding(16)
         .contentShape(Rectangle())
+    }
+
+    /// Wraps a row in a Liquid Glass card (material fallback pre-iOS 26) so each
+    /// card floats with spacing instead of sharing hairline separators.
+    @ViewBuilder
+    private func glassCard<Content: View>(_ content: Content) -> some View {
+        if #available(iOS 26.0, *) {
+            content.glassEffect(.regular, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        } else {
+            content.background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(.thinMaterial))
+        }
     }
 
     /// The card's bundled logo (when known), else a card glyph on a gray tile.
