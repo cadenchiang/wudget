@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 /// Pins top chrome above a scroll view.
 ///
@@ -157,5 +158,22 @@ struct CloseToolbarButton: View {
                 .foregroundStyle(.primary)
         }
         .accessibilityLabel("Close")
+    }
+}
+
+/// Restores the system interactive pop — the edge swipe-back that LIVE-tracks
+/// the finger — on navigation stacks whose bar is hidden for custom chrome
+/// (My Cards, Repeat, the spending root). Hiding the navigation bar normally
+/// disables this gesture; handing its delegate to the controller re-arms it.
+/// The anywhere-on-screen `swipeToGoBack` remains as a complement.
+extension UINavigationController: UIGestureRecognizerDelegate {
+    override open func viewDidLoad() {
+        super.viewDidLoad()
+        interactivePopGestureRecognizer?.delegate = self
+    }
+
+    /// Only begin when there is something to pop (never fights the root).
+    public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        viewControllers.count > 1
     }
 }
