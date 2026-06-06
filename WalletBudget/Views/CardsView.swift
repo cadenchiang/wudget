@@ -333,13 +333,13 @@ private struct UtilizationGauge: View {
                     .frame(height: 6)
                     .frame(maxHeight: .infinity)
 
-                // The "you are here" dot.
+                // The "you are here" dot: pure white in both themes, defined
+                // against the gradient by its shadow alone.
                 Circle()
-                    .fill(Color(.systemBackground))
-                    .overlay(Circle().strokeBorder(Color.primary, lineWidth: 2))
+                    .fill(.white)
                     .frame(width: 13, height: 13)
                     .position(x: x, y: geo.size.height / 2)
-                    .shadow(color: .black.opacity(0.25), radius: 2, y: 1)
+                    .shadow(color: .black.opacity(0.35), radius: 2, y: 1)
             }
         }
         .frame(height: 14)
