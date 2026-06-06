@@ -16,41 +16,49 @@ Everything to paste into App Store Connect. Drafted 2026-06-05.
 
 ## Promotional text (170 chars, editable without review)
 
-> Your purchases, tracked the moment you tap to pay. Orbit keeps every
-> transaction on your device. No bank logins required.
+Angle (Caden, 2026-06-06): AUTOMATIC tracking is the hook; privacy is a
+footer, not the headline.
+
+> Orbit gives you spending tracking that does itself. Every Apple Pay
+> purchase logs the moment you tap to pay. No bank links, no typing.
 
 ## Description
 
-> Orbit is a spending tracker that respects your privacy.
+> Orbit tracks your spending automatically.
 >
-> Set up a one-time Shortcuts automation and every Apple Pay purchase imports
-> itself the moment you tap to pay: amount, merchant, card, and (optionally)
-> where it happened. No bank logins. No screen-scraping. No selling your data.
+> Set up a one-time Shortcut and every Apple Pay purchase logs itself the
+> moment you tap to pay: amount, merchant, and card, without ever opening the
+> app. No bank logins. No spreadsheets. No typing in receipts.
 >
-> YOUR DATA STAYS YOURS
-> Transactions live on your iPhone and sync privately to your own account, so a
-> new phone shows your full history the moment you sign in. Orbit has no
-> analytics SDKs, no trackers, and no ads. We never sell or share your data.
-> Purchase locations never leave your device.
+> TRACKING THAT DOES ITSELF
+> • Apple Pay purchases import automatically, in the background
+> • Merchant logos and smart categorization keep your list tidy
+> • Cash or card purchases add manually in seconds
+> • See where a purchase happened on a map
 >
-> EFFORTLESS TRACKING
-> • Apple Pay purchases import automatically via Shortcuts
-> • Add cash or card purchases in seconds
-> • Merchant logos and smart categorization keep things tidy
-> • See purchases on a map (optional, on-device)
->
-> BUDGETS THAT FIT REAL LIFE
-> • Monthly budget with an everyday-spending mode that ignores fixed costs
+> KNOW WHAT YOU CAN SPEND
+> • Monthly budget with a daily allowance that updates as you spend
+> • Everyday-spending mode that ignores fixed costs like rent
 > • Recurring payment tracking so subscriptions never surprise you
-> • Budget alerts and weekly summaries, scheduled entirely on your phone
+> • Alerts for budget limits, large purchases, upcoming charges, plus a
+>   weekly summary
 > • Home Screen widget with your month at a glance
 >
-> PRIVATE BY DESIGN
-> • Face ID app lock
-> • No third-party tracking, no ads
-> • Delete your account any time, right in the app
+> SET UP IN A MINUTE
+> Sign in with Apple, Google, or email, follow the guided setup, and your
+> next tap-to-pay purchase tracks itself. Your history syncs to your account,
+> so a new phone picks up right where you left off.
 >
-> Sign in with Apple, Google, or email and start tracking in under a minute.
+> PRIVATE BY DESIGN
+> No analytics, no ads, no selling your data. Purchase locations never leave
+> your device. Face ID lock and in-app account deletion included.
+>
+> Orbit is free.
+
+Every claim verified against the code 2026-06-06 (NotificationManager has
+weekly summary / upcoming charges / large purchase / budget alerts; sync,
+deletion, widget, Face ID all shipped). Known nuance for the privacy policy:
+merchant names are sent to Logo.dev when fetching logos (not user-linked).
 
 ## Keywords (100 chars max)
 
