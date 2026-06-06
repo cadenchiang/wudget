@@ -95,6 +95,14 @@ struct TransactionMapCard: View {
             .buttonStyle(.borderedProminent)
             .tint(.white)
             .foregroundStyle(.black)
+        case .authorizedWhenInUse:
+            // Staged escalation: offer the Always upgrade needed for background tagging.
+            Button { locationProvider.requestAuthorization() } label: {
+                Label("Enable Background Tagging", systemImage: "location.fill")
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(.white)
+            .foregroundStyle(.black)
         default:
             Text("No location recorded")
                 .font(.subheadline)

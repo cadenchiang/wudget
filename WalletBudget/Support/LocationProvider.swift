@@ -44,9 +44,21 @@ final class LocationProvider: NSObject, CLLocationManagerDelegate {
         }
     }
 
-    /// Requests "Always" access so the automation can tag transactions in the background.
+    /// Requests location access using Apple's staged pattern (App Review guideline
+    /// 5.1.5 expects this): first ask for When-In-Use, and only once that is
+    /// granted escalate to "Always" so background Wallet imports can tag where a
+    /// purchase happened. Each UI tap advances one stage; foreground tagging
+    /// already works at When-In-Use, so nothing breaks between stages.
     func requestAuthorization() {
-        manager.requestAlwaysAuthorization()
+        switch manager.authorizationStatus {
+        case .notDetermined:
+            manager.requestWhenInUseAuthorization()
+        case .authorizedWhenInUse:
+            manager.requestAlwaysAuthorization()
+        default:
+            // Denied/restricted can only be changed in Settings; already-Always needs nothing.
+            Log.location.info("Authorization request skipped (status raw \(self.manager.authorizationStatus.rawValue))")
+        }
     }
 
     /// One-shot current location, or `nil` if unavailable/unauthorized (4s timeout so it never hangs).

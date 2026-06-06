@@ -46,6 +46,10 @@ struct PrivacySecuritySettingsView: View {
         switch locationProvider.authorization {
         case .notDetermined:
             Button("Allow Location Access") { locationProvider.requestAuthorization() }
+        case .authorizedWhenInUse:
+            // Staged escalation: When-In-Use is granted; offer the Always upgrade
+            // that background Wallet imports need to tag purchase locations.
+            Button("Enable Background Tagging") { locationProvider.requestAuthorization() }
         case .denied, .restricted:
             Button("Open Settings to Enable") { openSystemSettings() }
         default:
