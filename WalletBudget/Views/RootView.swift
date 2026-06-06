@@ -31,6 +31,12 @@ struct RootView: View {
 
     /// Selected root tab; mutated by the tab bar and by `tabSwipe()` swipes.
     @State private var selection = 0
+    /// Namespace for the tab bar's sliding selection highlight.
+    @Namespace private var tabNamespace
+
+    /// One shared curve for every way the tabs can move (tap, swipe), so the
+    /// pager slide and the highlight slide always travel together.
+    private static let tabAnimation: Animation = .snappy(duration: 0.32, extraBounce: 0)
 
     /// Both roots side by side in a pager, so switching tabs slides smoothly
     /// (a system TabView snaps with no animation). The floating glass pill
@@ -48,7 +54,7 @@ struct RootView: View {
         .overlay(alignment: .bottom) { tabBar }
         .onReceive(NotificationCenter.default.publisher(for: .orbitSwitchTab)) { note in
             guard let delta = note.object as? Int else { return }
-            withAnimation(.spring(duration: 0.38, bounce: 0.12)) {
+            withAnimation(Self.tabAnimation) {
                 selection = min(1, max(0, selection + delta))
             }
         }
@@ -74,24 +80,29 @@ struct RootView: View {
         .padding(.bottom, 4)
     }
 
-    /// One tab pill: icon + title, emphasized when selected.
+    /// One tab pill: icon + title. Every pill is the exact same size; the
+    /// selected highlight is a single capsule that SLIDES between pills
+    /// (matched geometry) on the same curve as the page transition.
     private func tabButton(_ index: Int, icon: String, title: String) -> some View {
         Button {
             Haptics.tap()
-            withAnimation(.spring(duration: 0.38, bounce: 0.12)) { selection = index }
+            withAnimation(Self.tabAnimation) { selection = index }
         } label: {
             VStack(spacing: 3) {
                 Image(systemName: icon)
                     .font(.system(size: 17, weight: .medium))
+                    .frame(height: 20)
                 Text(title)
                     .font(.caption2.weight(.medium))
+                    .lineLimit(1)
             }
             .foregroundStyle(selection == index ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
-            .frame(width: 86)
-            .padding(.vertical, 8)
+            .frame(width: 92, height: 48)
             .background {
                 if selection == index {
-                    Capsule().fill(Color.primary.opacity(0.08))
+                    Capsule()
+                        .fill(Color.primary.opacity(0.1))
+                        .matchedGeometryEffect(id: "selectedTab", in: tabNamespace)
                 }
             }
             .contentShape(Capsule())

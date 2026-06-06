@@ -43,10 +43,12 @@ extension View {
     /// requires a decisively horizontal drag before it fires.
     func tabSwipe() -> some View {
         simultaneousGesture(
-            DragGesture(minimumDistance: 25)
+            DragGesture(minimumDistance: 20)
                 .onEnded { value in
-                    let w = value.translation.width, h = value.translation.height
-                    guard abs(w) > 60, abs(w) > abs(h) * 2 else { return }
+                    // Use predicted end so a quick flick counts even if short.
+                    let w = value.predictedEndTranslation.width
+                    let h = value.translation.height
+                    guard abs(w) > 50, abs(w) > abs(h) * 1.5 else { return }
                     NotificationCenter.default.post(name: .orbitSwitchTab, object: w < 0 ? 1 : -1)
                 }
         )
