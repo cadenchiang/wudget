@@ -8,6 +8,7 @@ import UIKit
 /// seen on imported transactions are seeded in automatically.
 struct CardsView: View {
     @Environment(\.modelContext) private var context
+    @Environment(\.dismiss) private var dismiss
     @Query(sort: \UserCard.createdAt) private var cards: [UserCard]
     @Query(sort: \Expense.date, order: .reverse) private var expenses: [Expense]
     @State private var editing: UserCard?
@@ -46,14 +47,23 @@ struct CardsView: View {
             }
         }
         .background(Color(.systemBackground))
-        .navigationTitle("My Cards")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button { addingNew = true } label: { Image(systemName: "plus") }
-                    .tint(.primary)
-                    .accessibilityLabel("Add card")
+        .swipeToGoBack { dismiss() }
+        // Custom chrome so the back and + buttons are the same 40pt glass
+        // circles as the spending screen's, not the larger system toolbar ones.
+        .toolbar(.hidden, for: .navigationBar)
+        .topChromeBar {
+            ZStack {
+                Text("My Cards")
+                    .font(.headline)
+                HStack {
+                    GlassCircleButton(systemImage: "chevron.left", label: "Back") { dismiss() }
+                    Spacer()
+                    GlassCircleButton(systemImage: "plus", label: "Add card",
+                                      font: .headline.weight(.semibold)) { addingNew = true }
+                }
             }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 8)
         }
         .sheet(item: $editing) { card in
             CardEditorSheet(card: card)
@@ -83,33 +93,39 @@ struct CardsView: View {
             .reduce(0) { $0 + $1.amount }
     }
 
-    /// One card row: logo, name, spend / limit, and the utilization bar.
+    /// One card row: logo and name on the left, this month's spend big and
+    /// unmistakable on the right, with the utilization bar underneath.
     private func row(_ card: UserCard) -> some View {
         let spent = monthSpent(on: card.name)
         let fraction = CardUtilization.fraction(spent: spent, limit: card.creditLimit)
         return HStack(spacing: 12) {
             cardLogo(card.name)
             VStack(alignment: .leading, spacing: 5) {
-                HStack {
+                HStack(alignment: .firstTextBaseline) {
                     Text(card.name)
                         .font(.body.weight(.semibold))
+                        .lineLimit(1)
                     Spacer()
-                    if let fraction {
-                        Text("\(Int((fraction * 100).rounded()))%")
-                            .font(.subheadline.weight(.semibold))
-                            .foregroundStyle(CardUtilization.tier(for: fraction).color)
-                    }
+                    // The headline number: what's been spent on this card.
+                    Text(spent.asCurrency())
+                        .font(.body.weight(.bold))
+                        .monospacedDigit()
                 }
                 if let fraction, let limit = card.creditLimit {
-                    ProgressView(value: min(fraction, 1))
-                        .tint(CardUtilization.tier(for: fraction).color)
-                    Text("\(spent.asCurrency()) of \(limit.asCurrency()) this month")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    UtilizationGauge(fraction: fraction)
+                        .padding(.top, 2)
+                    HStack {
+                        Text("of \(limit.asCurrency()) limit")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Text("\(Int((fraction * 100).rounded()))% used")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(CardUtilization.tier(for: fraction).color)
+                    }
                 } else {
-                    Text(spent > 0
-                         ? "\(spent.asCurrency()) this month · tap to set a limit"
-                         : "Tap to set a credit limit")
+                    // The spend amount is already on the right; no need to repeat it here.
+                    Text("Tap to set a credit limit")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -236,7 +252,7 @@ private struct CardEditorSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    CloseToolbarButton { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") { commit() }
@@ -279,4 +295,43 @@ private struct CardEditorSheet: View {
         CardsView()
     }
     .modelContainer(for: [Expense.self, UserCard.self], inMemory: true)
+}
+
+/// Credit-utilization gauge: a fixed gradient of the whole health curve — a
+/// LITTLE monthly usage is good for your score (card stays active), the
+/// 1–30% band is the sweet spot, and it degrades through orange to red as
+/// utilization climbs — with a dot marking where this card sits right now.
+private struct UtilizationGauge: View {
+    /// Current utilization (spent / limit); values above 1 pin to the end.
+    let fraction: Double
+
+    var body: some View {
+        GeometryReader { geo in
+            let x = min(max(fraction, 0), 1) * geo.size.width
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(LinearGradient(
+                        stops: [
+                            .init(color: .orange, location: 0.00), // unused: card looks inactive
+                            .init(color: .green, location: 0.10),  // a little spend = healthy
+                            .init(color: .green, location: 0.30),  // sweet spot through 30%
+                            .init(color: .orange, location: 0.50),
+                            .init(color: .red, location: 0.80),
+                        ],
+                        startPoint: .leading, endPoint: .trailing
+                    ))
+                    .frame(height: 6)
+                    .frame(maxHeight: .infinity)
+
+                // The "you are here" dot.
+                Circle()
+                    .fill(Color(.systemBackground))
+                    .overlay(Circle().strokeBorder(Color.primary, lineWidth: 2))
+                    .frame(width: 13, height: 13)
+                    .position(x: x, y: geo.size.height / 2)
+                    .shadow(color: .black.opacity(0.25), radius: 2, y: 1)
+            }
+        }
+        .frame(height: 14)
+    }
 }

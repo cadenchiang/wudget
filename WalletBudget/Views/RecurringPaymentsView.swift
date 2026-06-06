@@ -4,11 +4,21 @@ import SwiftData
 /// Lists transactions marked as recurring, with swipe-to-delete. Tapping one opens its detail.
 struct RecurringPaymentsView: View {
     @Environment(\.modelContext) private var context
+    @Environment(\.dismiss) private var dismiss
     @Query(
         filter: #Predicate<Expense> { $0.recurrenceRaw != "none" },
         sort: [SortDescriptor(\Expense.date, order: .reverse)]
     ) private var expenses: [Expense]
     @State private var showingAdd = false
+
+    /// Active payments first, ignored ones at the very bottom (each group keeps
+    /// the query's newest-first date order — `sorted` is stable).
+    private var sortedExpenses: [Expense] {
+        expenses.sorted { a, b in
+            if a.excludedFromBudget != b.excludedFromBudget { return !a.excludedFromBudget }
+            return a.date > b.date
+        }
+    }
 
     var body: some View {
         Group {
@@ -16,7 +26,7 @@ struct RecurringPaymentsView: View {
                 emptyState
             } else {
                 List {
-                    ForEach(Array(expenses.enumerated()), id: \.element.id) { index, expense in
+                    ForEach(Array(sortedExpenses.enumerated()), id: \.element.id) { index, expense in
                         // Hidden NavigationLink so the row keeps its badge instead of the
                         // system chevron.
                         ZStack {
@@ -53,16 +63,23 @@ struct RecurringPaymentsView: View {
                 .listStyle(.plain)
             }
         }
-        .navigationTitle("Repeat")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button { showingAdd = true } label: {
-                    Image(systemName: "plus")
+        .swipeToGoBack { dismiss() }
+        // Custom chrome: back and + as the same 40pt glass circles used on the
+        // spending screen, instead of the larger system toolbar buttons.
+        .toolbar(.hidden, for: .navigationBar)
+        .topChromeBar {
+            ZStack {
+                Text("Repeat")
+                    .font(.headline)
+                HStack {
+                    GlassCircleButton(systemImage: "chevron.left", label: "Back") { dismiss() }
+                    Spacer()
+                    GlassCircleButton(systemImage: "plus", label: "Add repeating payment",
+                                      font: .headline.weight(.semibold)) { showingAdd = true }
                 }
-                .tint(.primary)
-                .accessibilityLabel("Add repeating payment")
             }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 8)
         }
         .sheet(isPresented: $showingAdd) {
             AddTransactionSheet(recurrenceDefault: .monthly, categoryDefault: "Subscription")
