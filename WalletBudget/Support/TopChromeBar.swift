@@ -32,26 +32,67 @@ extension View {
     }
 }
 
-extension Notification.Name {
-    /// Posted by `tabSwipe()` with +1/-1 to move the root tab selection.
-    static let orbitSwitchTab = Notification.Name("orbit.switchTab")
+/// Shared state for the root tab pager: the selection plus the LIVE drag
+/// translation, so swipes on the root screens move the pager with the finger
+/// instead of animating only after release.
+@Observable @MainActor
+final class TabPager {
+    /// Selected tab index.
+    var selection = 0
+    /// Live horizontal translation of an in-flight tab swipe (0 when idle).
+    var dragOffset: CGFloat = 0
+    /// Number of root tabs.
+    let count = 2
+    /// Page width, kept current by the pager view; used to settle relative to
+    /// how far the swipe actually travelled.
+    var width: CGFloat = 390
+
+    /// Commits an ended drag RELATIVE to its travel: the page snaps to whichever
+    /// tab is nearest at the gesture's predicted resting point, so a half-screen
+    /// swipe switches and a small nudge springs back — momentum included.
+    /// - Parameter predicted: the gesture's predicted end translation width.
+    func settle(predicted: CGFloat) {
+        let projected = CGFloat(selection) - predicted / max(width, 1)
+        let target = Int(projected.rounded())
+        withAnimation(.snappy(duration: 0.32, extraBounce: 0)) {
+            selection = min(count - 1, max(0, target))
+            dragOffset = 0
+        }
+    }
+}
+
+/// Finger-tracking tab swipe for root screens: locks to horizontal drags and
+/// streams the translation into the shared `TabPager`.
+private struct TabSwipeModifier: ViewModifier {
+    @Environment(TabPager.self) private var pager: TabPager?
+    /// nil until the drag's direction is decided; true = horizontal (ours).
+    @State private var isHorizontal: Bool?
+
+    func body(content: Content) -> some View {
+        content.simultaneousGesture(
+            DragGesture(minimumDistance: 15)
+                .onChanged { value in
+                    guard let pager else { return }
+                    if isHorizontal == nil {
+                        isHorizontal = abs(value.translation.width) > abs(value.translation.height) * 1.2
+                    }
+                    guard isHorizontal == true else { return }
+                    pager.dragOffset = value.translation.width
+                }
+                .onEnded { value in
+                    defer { isHorizontal = nil }
+                    guard let pager, isHorizontal == true else { return }
+                    pager.settle(predicted: value.predictedEndTranslation.width)
+                }
+        )
+    }
 }
 
 extension View {
-    /// Horizontal swipe anywhere on a tab's ROOT screen to switch root tabs
-    /// (Spending ↔ Settings). Simultaneous, so vertical scrolling still works;
-    /// requires a decisively horizontal drag before it fires.
+    /// Horizontal swipe anywhere on a tab's ROOT screen to switch root tabs,
+    /// tracking the finger live (no-op when no `TabPager` is in the environment).
     func tabSwipe() -> some View {
-        simultaneousGesture(
-            DragGesture(minimumDistance: 20)
-                .onEnded { value in
-                    // Use predicted end so a quick flick counts even if short.
-                    let w = value.predictedEndTranslation.width
-                    let h = value.translation.height
-                    guard abs(w) > 50, abs(w) > abs(h) * 1.5 else { return }
-                    NotificationCenter.default.post(name: .orbitSwitchTab, object: w < 0 ? 1 : -1)
-                }
-        )
+        modifier(TabSwipeModifier())
     }
 
     /// Right-swipe to go back on pushed screens whose system nav bar (and with

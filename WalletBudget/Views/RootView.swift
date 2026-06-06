@@ -29,8 +29,9 @@ struct RootView: View {
         WidgetUpdater.refresh(context: context)
     }
 
-    /// Selected root tab; mutated by the tab bar and by `tabSwipe()` swipes.
-    @State private var selection = 0
+    /// Pager state (selection + live drag offset) shared with the root screens'
+    /// swipe gestures via the environment.
+    @State private var pager = TabPager()
     /// Namespace for the tab bar's sliding selection highlight.
     @Namespace private var tabNamespace
 
@@ -49,15 +50,22 @@ struct RootView: View {
                 SetupGuideView()
                     .frame(width: geo.size.width)
             }
-            .offset(x: -CGFloat(selection) * geo.size.width)
+            .offset(x: pagerOffset(width: geo.size.width))
+            .onAppear { pager.width = geo.size.width }
+            .onChange(of: geo.size.width) { _, width in pager.width = width }
         }
+        .environment(pager)
         .overlay(alignment: .bottom) { tabBar }
-        .onReceive(NotificationCenter.default.publisher(for: .orbitSwitchTab)) { note in
-            guard let delta = note.object as? Int else { return }
-            withAnimation(Self.tabAnimation) {
-                selection = min(1, max(0, selection + delta))
-            }
+    }
+
+    /// Pager x-offset: the selected page plus any in-flight drag, with rubber-
+    /// band resistance when dragging past the first/last tab.
+    private func pagerOffset(width: CGFloat) -> CGFloat {
+        var drag = pager.dragOffset
+        if (pager.selection == 0 && drag > 0) || (pager.selection == pager.count - 1 && drag < 0) {
+            drag /= 3
         }
+        return -CGFloat(pager.selection) * width + drag
     }
 
     /// Floating glass tab bar (two pills) hovering at the bottom of the pager.
@@ -86,7 +94,7 @@ struct RootView: View {
     private func tabButton(_ index: Int, icon: String, title: String) -> some View {
         Button {
             Haptics.tap()
-            withAnimation(Self.tabAnimation) { selection = index }
+            withAnimation(Self.tabAnimation) { pager.dragOffset = 0; pager.selection = index }
         } label: {
             VStack(spacing: 3) {
                 Image(systemName: icon)
@@ -96,10 +104,10 @@ struct RootView: View {
                     .font(.caption2.weight(.medium))
                     .lineLimit(1)
             }
-            .foregroundStyle(selection == index ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+            .foregroundStyle(pager.selection == index ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
             .frame(width: 92, height: 48)
             .background {
-                if selection == index {
+                if pager.selection == index {
                     Capsule()
                         .fill(Color.primary.opacity(0.1))
                         .matchedGeometryEffect(id: "selectedTab", in: tabNamespace)
@@ -109,7 +117,7 @@ struct RootView: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(title)
-        .accessibilityAddTraits(selection == index ? .isSelected : [])
+        .accessibilityAddTraits(pager.selection == index ? .isSelected : [])
     }
 }
 

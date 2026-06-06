@@ -97,9 +97,11 @@ struct CardsView: View {
     private func row(_ card: UserCard) -> some View {
         let spent = monthSpent(on: card.name)
         let fraction = CardUtilization.fraction(spent: spent, limit: card.creditLimit)
-        return HStack(spacing: 12) {
+        // Logo pinned to the top-left; every card is the SAME height whether or
+        // not it has a gauge, with the bottom line anchored to the bottom edge.
+        return HStack(alignment: .top, spacing: 12) {
             cardLogo(card.name)
-            VStack(alignment: .leading, spacing: 5) {
+            VStack(alignment: .leading, spacing: 0) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(card.name)
                         .font(.body.weight(.semibold))
@@ -110,9 +112,9 @@ struct CardsView: View {
                         .font(.body.weight(.bold))
                         .monospacedDigit()
                 }
+                Spacer(minLength: 8)
                 if let fraction, let limit = card.creditLimit {
                     UtilizationGauge(fraction: fraction)
-                        .padding(.top, 2)
                     HStack {
                         Text("of \(limit.asCurrency()) limit")
                             .font(.caption)
@@ -122,6 +124,7 @@ struct CardsView: View {
                             .font(.caption.weight(.semibold))
                             .foregroundStyle(CardUtilization.tier(for: fraction).color)
                     }
+                    .padding(.top, 5)
                 } else {
                     // The spend amount is already on the right; no need to repeat it here.
                     Text("Tap to set a credit limit")
@@ -129,6 +132,7 @@ struct CardsView: View {
                         .foregroundStyle(.secondary)
                 }
             }
+            .frame(height: 64)
         }
         .padding(16)
         .contentShape(Rectangle())
