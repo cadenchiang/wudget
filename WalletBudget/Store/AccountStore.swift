@@ -38,9 +38,10 @@ final class AccountStore {
 
     var isSignedIn: Bool { email != nil }
 
-    /// Redirect URL for OAuth flows (registered as a custom URL scheme and in the
-    /// Supabase dashboard's Redirect URLs allowlist).
-    static let oauthRedirectURL = URL(string: "orbit://auth-callback")!
+    // Note: the orbit:// URL scheme stays registered in Info.plist and handled in
+    // WalletBudgetApp.onOpenURL — Supabase email links (verification, password
+    // reset) can deep-link back through it. Only the old web-OAuth constant that
+    // referenced it was removed when Google moved to the native SDK.
 
     private let auth: AuthClient
     /// Set once in init, cancelled in deinit; `nonisolated(unsafe)` because deinit

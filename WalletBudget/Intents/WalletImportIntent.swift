@@ -103,7 +103,8 @@ struct WalletImportIntent: AppIntent {
         WidgetUpdater.refresh(context: context)
 
         // Mirror the imported expense to the cloud (no-op when signed out).
-        await SyncEngine.shared.requestSync()
+        // Fire-and-forget: schedules a debounced background cycle, never blocks the import.
+        SyncEngine.shared.requestSync()
 
         Log.intent.info("Imported \(expense.amount) at \(cleanMerchant, privacy: .public) [\(expense.category, privacy: .public)] currency=\(currency, privacy: .public)")
         return .result(value: "Imported \(cleanMerchant) in \(expense.category)")
