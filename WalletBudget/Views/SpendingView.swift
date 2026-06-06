@@ -28,6 +28,11 @@ struct SpendingView: View {
     @State private var tab: SpendingTab = .recent
     @State private var showingAdd = false
     @State private var showingCards = false
+    /// A just-celebrated expense held out of the Recent rows until the
+    /// confirmation screen dismisses, so its pop-in plays where it's visible.
+    @State private var pendingPopInID: PersistentIdentifier?
+    /// Pushes the just-saved transaction's detail when View Transaction is tapped.
+    @State private var viewingExpense: Expense?
     /// Expenses within the selected period (already date-descending from the query).
     private var currentExpenses: [Expense] {
         SpendingSummary.filter(expenses, in: span.interval())
@@ -157,10 +162,35 @@ struct SpendingView: View {
         NavigationStack {
             spendingScroll
                 .background(Color(.systemBackground))
+                .tabSwipe()
                 .topChromeBar { topBar }
                 .toolbar(.hidden, for: .navigationBar)
-                .sheet(isPresented: $showingAdd) { AddTransactionSheet() }
+                .sheet(isPresented: $showingAdd) {
+                    AddTransactionSheet(
+                        // Hold the new row out of Recent so its pop-in plays
+                        // after the confirmation dismisses, not behind it.
+                        onLogged: { pendingPopInID = $0.id },
+                        // View Transaction pushes the same detail screen a row
+                        // tap opens, once the add flow has slid away.
+                        onViewSaved: { expense in
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.55) {
+                                pendingPopInID = nil
+                                viewingExpense = expense
+                            }
+                        }
+                    )
+                }
+                .onChange(of: showingAdd) { _, showing in
+                    guard !showing, pendingPopInID != nil else { return }
+                    // Reveal the held row once the sheet has animated out.
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+                        withAnimation(.spring(duration: 0.5, bounce: 0.25)) {
+                            pendingPopInID = nil
+                        }
+                    }
+                }
                 .navigationDestination(isPresented: $showingCards) { CardsView() }
+                .navigationDestination(item: $viewingExpense) { TransactionDetailView(expense: $0) }
                 .onChange(of: span) { _, _ in Haptics.selection() }
                 .onChange(of: tab) { _, _ in Haptics.selection() }
         }
@@ -369,23 +399,35 @@ struct SpendingView: View {
         .padding(.vertical, 6)
     }
 
+    /// Recent rows minus any expense whose pop-in is being deferred until the
+    /// post-save confirmation screen has dismissed.
+    private var visibleRecent: [Expense] {
+        displayedCurrent.filter { $0.id != pendingPopInID }
+    }
+
     /// Flat, date-ordered list of the period's transactions (the Recent tab).
     /// Honors the spending mode so ignored items don't appear in Variable mode.
+    /// A freshly added transaction pops in with a subtle scale/fade while the
+    /// rows beneath it spring down to make room.
     private var recentRows: some View {
-        rowsList(displayedCurrent.isEmpty) {
-            ForEach(Array(displayedCurrent.enumerated()), id: \.element.id) { index, expense in
-                NavigationLink {
-                    TransactionDetailView(expense: expense)
-                } label: {
-                    TransactionRow(expense: expense)
-                }
-                .buttonStyle(.plain)
+        rowsList(visibleRecent.isEmpty) {
+            ForEach(Array(visibleRecent.enumerated()), id: \.element.id) { index, expense in
+                Group {
+                    NavigationLink {
+                        TransactionDetailView(expense: expense)
+                    } label: {
+                        TransactionRow(expense: expense)
+                    }
+                    .buttonStyle(.plain)
 
-                if index < displayedCurrent.count - 1 {
-                    Divider()
+                    if index < visibleRecent.count - 1 {
+                        Divider()
+                    }
                 }
+                .transition(.scale(scale: 0.96, anchor: .top).combined(with: .opacity))
             }
         }
+        .animation(.spring(duration: 0.5, bounce: 0.25), value: visibleRecent.map(\.id))
     }
 
     /// Grouped rows (By Merchant / By Category), each opening the group's transaction list.

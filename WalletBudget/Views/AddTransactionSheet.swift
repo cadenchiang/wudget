@@ -20,6 +20,8 @@ struct AddTransactionSheet: View {
     @State private var errorMessage: String?
     @State private var showingMerchantPicker = false
     @State private var showingCardPicker = false
+    /// The just-saved expense; non-nil presents the full-screen confirmation.
+    @State private var savedExpense: Expense?
     /// Whether the optional details step is expanded. Collapsed by default so the sheet opens
     /// clean; auto-expanded when a default is pre-filled so the caller's preset is visible.
     @State private var showDetails: Bool
@@ -30,11 +32,22 @@ struct AddTransactionSheet: View {
     ///   - recurrenceDefault: Initial recurrence (e.g. `.monthly` when adding from the Repeat screen).
     ///   - categoryDefault: Initial category (e.g. "Subscription" when adding from the Repeat
     ///     screen). Empty means "Automatic" (derived from the merchant).
-    init(recurrenceDefault: RecurrenceFrequency = .none, categoryDefault: String = "") {
+    ///   - onLogged: called the moment an expense is saved (before the
+    ///     confirmation screen), so the presenter can hold its row's pop-in.
+    ///   - onViewSaved: called when the confirmation's View Transaction is
+    ///     tapped, after this sheet starts dismissing.
+    init(recurrenceDefault: RecurrenceFrequency = .none, categoryDefault: String = "",
+         onLogged: ((Expense) -> Void)? = nil, onViewSaved: ((Expense) -> Void)? = nil) {
         _recurrence = State(initialValue: recurrenceDefault)
         _category = State(initialValue: categoryDefault)
         _showDetails = State(initialValue: recurrenceDefault != .none || !categoryDefault.isEmpty)
+        self.onLogged = onLogged
+        self.onViewSaved = onViewSaved
     }
+
+    /// See `init(recurrenceDefault:categoryDefault:onLogged:onViewSaved:)`.
+    private let onLogged: ((Expense) -> Void)?
+    private let onViewSaved: ((Expense) -> Void)?
 
     /// Step gates: each later step stays blurred until the one before it is complete.
     private var amountDone: Bool {
@@ -73,8 +86,13 @@ struct AddTransactionSheet: View {
                 .padding(.bottom, 24)
             }
             .scrollDismissesKeyboard(.interactively)
-            addButton
+            // Hidden until all three required steps are filled, then springs in.
+            if canSave {
+                addButton
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         }
+        .animation(.spring(duration: 0.35, bounce: 0.2), value: canSave)
         // Rises as a partial-height glass sheet (the screen behind stays visible and ghosts
         // through), expandable to full height by dragging. On iOS 26 this is real Liquid Glass
         // (refraction, not just blur); earlier systems fall back to the thin material.
@@ -88,6 +106,16 @@ struct AddTransactionSheet: View {
         }
         .sheet(isPresented: $showingCardPicker) {
             MyCardPickerSheet { card = $0 }
+        }
+        // Saving doesn't dismiss; it celebrates. Done tears down the whole
+        // stack (this cover and the sheet) in one dismissal.
+        .fullScreenCover(item: $savedExpense) { expense in
+            TransactionLoggedView(expense: expense,
+                                  onDone: { dismiss() },
+                                  onView: {
+                                      onViewSaved?(expense)
+                                      dismiss()
+                                  })
         }
     }
 
@@ -293,13 +321,10 @@ struct AddTransactionSheet: View {
                 .frame(maxWidth: .infinity)
                 .frame(height: 54)
                 .background(Capsule().fill(Color.primary))
-                .opacity(canSave ? 1 : 0.35)
         }
         .buttonStyle(.plain)
-        .disabled(!canSave)
         .padding(.horizontal, 24)
         .padding(.bottom, 12)
-        .animation(.easeInOut(duration: 0.15), value: canSave)
     }
 
     /// A details row that opens a picker, showing the current selection or a placeholder.
@@ -345,7 +370,8 @@ struct AddTransactionSheet: View {
             Haptics.success()
             Log.ui.info("Manually added \(expense.amount) at \(cleanMerchant, privacy: .public)")
             SyncEngine.shared.requestSync()
-            dismiss()
+            onLogged?(expense)
+            savedExpense = expense
         } catch {
             errorMessage = "Could not save. Please try again."
             Log.ui.error("Manual save failed: \(error.localizedDescription, privacy: .public)")
@@ -417,7 +443,7 @@ private struct MyCardPickerSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button("Cancel") { dismiss() }
+                    CloseToolbarButton { dismiss() }
                 }
             }
         }
