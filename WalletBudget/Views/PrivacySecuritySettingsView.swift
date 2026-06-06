@@ -25,7 +25,7 @@ struct PrivacySecuritySettingsView: View {
         } header: {
             Text("Security").textCase(nil)
         } footer: {
-            Text("Lock Budget so it can only be opened with Face ID.")
+            Text("Lock Orbit so it can only be opened with Face ID.")
         }
     }
 
@@ -64,7 +64,7 @@ struct PrivacySecuritySettingsView: View {
         }
         switch locationProvider.authorization {
         case .denied, .restricted:
-            return "Location is turned off for Budget in iOS Settings. Locations stay on your device."
+            return "Location is turned off for Orbit in iOS Settings. Locations stay on your device."
         case .authorizedWhenInUse:
             return "Set location access to “Always” in iOS Settings so purchases can be tagged when the import runs in the background. Locations stay on your device."
         default:

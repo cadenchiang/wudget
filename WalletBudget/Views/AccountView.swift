@@ -4,7 +4,8 @@ import SwiftUI
 /// and permanent account deletion (App Store guideline 5.1.1(v)).
 struct AccountView: View {
     @Environment(AccountStore.self) private var account
-    @State private var avatarStore = ProfileAvatarStore()
+    /// Injected by the settings page so its row shows the identical avatar.
+    let avatarStore: ProfileAvatarStore
     @State private var editingName = false
     @State private var nameInput = ""
     @State private var nameSaveFailed = false
@@ -24,9 +25,9 @@ struct AccountView: View {
                             editingName = true
                         } label: {
                             HStack(spacing: 6) {
-                                Text(account.displayName ?? account.email ?? "Account")
+                                Text(account.displayName ?? "Add Your Name")
                                     .font(.headline)
-                                    .foregroundStyle(.primary)
+                                    .foregroundStyle(account.displayName == nil ? .secondary : .primary)
                                     .lineLimit(1)
                                 Image(systemName: "pencil")
                                     .font(.caption2.weight(.semibold))
@@ -35,7 +36,9 @@ struct AccountView: View {
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("Edit name")
-                        if account.displayName != nil, let email = account.email {
+                        // Apple's private-relay addresses are machine-generated
+                        // noise; show only addresses a person would recognize.
+                        if let email = account.email, !Self.isPrivateRelay(email) {
                             Text(email)
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
@@ -52,22 +55,18 @@ struct AccountView: View {
             }
 
             Section {
-                Button(role: .destructive) { confirmLogout = true } label: {
-                    Text("Log Out").frame(maxWidth: .infinity)
-                }
-            }
-
-            Section {
+                Button("Log Out") { confirmLogout = true }
+                    .foregroundStyle(.primary)
                 Button(role: .destructive) { confirmDelete = true } label: {
                     if isDeleting {
-                        ProgressView().frame(maxWidth: .infinity)
+                        ProgressView()
                     } else {
-                        Text("Delete Account").frame(maxWidth: .infinity)
+                        Text("Delete Account")
                     }
                 }
                 .disabled(isDeleting)
             } footer: {
-                Text("Permanently deletes your Orbit account and removes all spending data stored on this device.")
+                Text("Deleting your account permanently removes your data from Orbit.")
             }
         }
         .navigationTitle("Account")
@@ -105,6 +104,14 @@ struct AccountView: View {
         } message: {
             Text("Please check your connection and try again.")
         }
+    }
+
+    /// Whether an email is an Apple Sign-in private-relay address (random
+    /// machine-generated localpart, e.g. "x9f3kq2@privaterelay.appleid.com").
+    /// - Parameter email: the address to test.
+    /// - Returns: true when the address is relay-generated and shouldn't be shown.
+    nonisolated static func isPrivateRelay(_ email: String) -> Bool {
+        email.lowercased().hasSuffix("@privaterelay.appleid.com")
     }
 
     /// Persists the edited display name; failure keeps the previous name and alerts.

@@ -21,7 +21,7 @@ struct BudgetSettingsView: View {
                 }
                 Toggle("Use a Budget", isOn: $budgetEnabled)
             } footer: {
-                Text("Set a monthly spending limit and Budget will track your progress against it.")
+                Text("Set a monthly spending limit and Orbit will track your progress against it.")
             }
         }
         .navigationTitle("Budget")

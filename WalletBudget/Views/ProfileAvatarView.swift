@@ -39,27 +39,7 @@ struct ProfileAvatarView: View {
     /// small edit badge so the affordance is discoverable.
     private var avatar: some View {
         ZStack(alignment: .bottomTrailing) {
-            Group {
-                if let image = store.image {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFill()
-                } else if let initials = Self.initials(from: name) {
-                    Circle()
-                        .fill(Self.fallbackColor(for: name ?? "").gradient)
-                        .overlay {
-                            Text(initials)
-                                .font(.system(size: 24, weight: .semibold, design: .rounded))
-                                .foregroundStyle(.white)
-                        }
-                } else {
-                    Image(systemName: "person.crop.circle.fill")
-                        .resizable()
-                        .foregroundStyle(.gray)
-                }
-            }
-            .frame(width: 64, height: 64)
-            .clipShape(Circle())
+            ProfileAvatarCircle(image: store.image, name: name)
 
             Image(systemName: "pencil")
                 .font(.system(size: 10, weight: .bold))
@@ -115,5 +95,41 @@ struct ProfileAvatarView: View {
             Log.ui.error("Avatar load failed: \(error.localizedDescription, privacy: .public)")
             loadFailed = true
         }
+    }
+}
+
+/// The avatar circle itself — photo, initials, or generic placeholder — at any
+/// size. Shared by the editable profile picker above and the read-only settings
+/// row, so the avatar always looks identical everywhere it appears.
+struct ProfileAvatarCircle: View {
+    /// The stored profile photo; nil falls back to initials, then the glyph.
+    let image: UIImage?
+    /// Display name used for the initials fallback.
+    let name: String?
+    /// Circle size in points.
+    var diameter: CGFloat = 64
+
+    var body: some View {
+        Group {
+            if let image {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+            } else if let initials = ProfileAvatarView.initials(from: name) {
+                Circle()
+                    .fill(ProfileAvatarView.fallbackColor(for: name ?? "").gradient)
+                    .overlay {
+                        Text(initials)
+                            .font(.system(size: diameter * 0.375, weight: .semibold, design: .rounded))
+                            .foregroundStyle(.white)
+                    }
+            } else {
+                Image(systemName: "person.crop.circle.fill")
+                    .resizable()
+                    .foregroundStyle(.gray)
+            }
+        }
+        .frame(width: diameter, height: diameter)
+        .clipShape(Circle())
     }
 }

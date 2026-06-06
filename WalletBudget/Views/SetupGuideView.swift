@@ -5,13 +5,16 @@ import SwiftUI
 /// so the front page stays short and easy to scan.
 struct SetupGuideView: View {
     @Environment(AccountStore.self) private var account
+    /// Owned here and shared with `AccountView`, so the avatar on this row and
+    /// the one on the profile page are always the same image.
+    @State private var avatarStore = ProfileAvatarStore()
 
     var body: some View {
         NavigationStack {
             List {
                 Section {
                     NavigationLink {
-                        AccountView()
+                        AccountView(avatarStore: avatarStore)
                     } label: {
                         accountRow
                     }
@@ -29,6 +32,8 @@ struct SetupGuideView: View {
                     NavigationLink { NotificationSettingsView() } label: {
                         SettingsRow(icon: "bell.badge.fill", tint: .red, title: "Notifications")
                     }
+                } header: {
+                    Text("Spending").textCase(nil)
                 }
 
                 Section {
@@ -38,6 +43,8 @@ struct SetupGuideView: View {
                     NavigationLink { PrivacySecuritySettingsView() } label: {
                         SettingsRow(icon: "lock.fill", tint: .gray, title: "Privacy & Security")
                     }
+                } header: {
+                    Text("App").textCase(nil)
                 }
 
                 Section {
@@ -46,6 +53,7 @@ struct SetupGuideView: View {
                     }
                 }
             }
+            .tabSwipe()
             .topChromeBar {
                 Text("Settings")
                     .font(.title3.weight(.semibold))
@@ -58,21 +66,22 @@ struct SetupGuideView: View {
         }
     }
 
-    /// The account header row: profile glyph, signed-in email, and a "Manage profile" subtitle.
+    /// The account header row: the real profile avatar and the user's name
+    /// (never the email — Apple's private-relay addresses are unreadable noise).
+    /// Deliberately larger than every other settings row, iOS-Settings style.
     private var accountRow: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "person.crop.circle.fill")
-                .font(.system(size: 36))
-                .foregroundStyle(.gray)
+        HStack(spacing: 13) {
+            ProfileAvatarCircle(image: avatarStore.image, name: account.displayName, diameter: 46)
             VStack(alignment: .leading, spacing: 2) {
-                Text(account.email ?? "Account")
-                    .font(.body.weight(.semibold))
+                Text(account.displayName ?? "Your Account")
+                    .font(.headline)
                     .lineLimit(1)
                 Text("Manage profile")
-                    .font(.caption)
+                    .font(.footnote)
                     .foregroundStyle(.secondary)
             }
         }
+        .padding(.vertical, 6)
     }
 }
 

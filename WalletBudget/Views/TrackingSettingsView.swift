@@ -15,7 +15,7 @@ struct TrackingSettingsView: View {
                 }
                 .buttonStyle(.plain)
             } footer: {
-                Text("Connect the Apple Wallet automation so purchases import into Budget automatically.")
+                Text("Connect the Apple Wallet automation so purchases import into Orbit automatically.")
             }
 
             Section {
