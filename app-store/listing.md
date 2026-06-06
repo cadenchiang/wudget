@@ -11,7 +11,8 @@ Everything to paste into App Store Connect. Drafted 2026-06-05.
 | Category | Finance |
 | Secondary category | Productivity (optional) |
 | Price | Free |
-| Age rating | 4+ (no objectionable content; finance questionnaire all "No") |
+| Age rating | Answer the NEW (2025) expanded questionnaire honestly — no UGC, no gambling, no unrestricted web, no ads; expect the lowest tier (4+). The old "pick 4+" shortcut no longer exists. |
+| EU availability | Requires a DSA trader/non-trader declaration in App Store Connect. Trader status publishes your address + contact on the EU store. Free app, no IAP → declare non-trader, or launch US-only first and expand later. |
 
 ## Promotional text (170 chars, editable without review)
 
@@ -71,11 +72,13 @@ Everything to paste into App Store Connect. Drafted 2026-06-05.
 > Demo account: demo@orbitspending.com / OrbitReview2026!
 >
 > APPLE PAY IMPORT: Orbit's automatic import works through an Apple Shortcuts
-> personal "Transaction" automation that the user creates (Setup Guide in-app,
-> Settings → Setup Guide). The automation passes the transaction's amount,
-> merchant, and card name to Orbit's App Intent. Orbit has NO access to Apple
-> Wallet, the user's cards, or bank accounts; it only receives what the
-> Shortcut passes. Manual entry (+ button) works without any setup.
+> personal "Transaction" automation that the user creates (in-app walkthrough:
+> Settings → Tracking → "Set up Apple Wallet tracking"). The automation passes
+> the transaction's amount, merchant, and card name to Orbit's App Intent.
+> Orbit has NO access to Apple Wallet, the user's cards, or bank accounts; it
+> only receives what the Shortcut passes. Manual entry (+ button on the
+> Spending tab) works without any setup — the app is fully testable without
+> creating the automation.
 >
 > BACKGROUND LOCATION ("Always"): used solely to tag where an Apple Pay
 > purchase happened at the moment the background import runs. Location is
@@ -115,6 +118,19 @@ Suggested five, in order:
 4. Widget on a Home Screen
 5. The onboarding/setup guide (the Apple Pay automation pitch)
 
+## Accessibility Nutrition Label (new ASC section, 2025)
+
+Declare only what's actually been tested. As of 2026-06-06 nothing has been
+audited, so the safe initial answers:
+
+- Dynamic Type / Larger Text: untested — do not claim until verified
+- VoiceOver: untested — custom tab bar and chrome have accessibility labels,
+  but no full pass has been run; do not claim until verified
+- Dark Mode is NOT part of this label (it covers assistive features)
+
+Either run a quick VoiceOver + text-size pass before submitting and claim what
+holds up, or leave the label minimal at 1.0 and improve it in 1.1.
+
 ## Build settings checklist (already done in repo)
 
 - [x] Display name "Orbit", version 1.0 (1)
@@ -123,3 +139,6 @@ Suggested five, in order:
 - [x] Account deletion implemented + verified
 - [x] Privacy policy/ToS accurate in-app
 - [ ] Archive with Distribution profile and upload via Xcode Organizer
+
+See `launch-checklist.md` for the full ordered runbook (pre-archive checks,
+TestFlight, secrets rotation, submission).
