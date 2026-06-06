@@ -28,12 +28,15 @@ enum EmailAuthRules {
     }
 }
 
-/// Email authentication form with distinct Log in and Sign up modes.
+/// Full-screen email authentication page with distinct Log in and Sign up modes.
 ///
-/// Sign up sends a verification email (Supabase default) and shows a check-your-inbox
-/// state; log in surfaces wrong-credential errors inline and offers a password reset.
+/// The mode is fixed by the entry point (which welcome pill was tapped) — there is
+/// no in-form mode slider; a footer link flips to the other page for people who
+/// picked the wrong one. Sign up sends a verification email (Supabase default) and
+/// shows a check-your-inbox state; log in surfaces wrong-credential errors inline
+/// and offers a password reset.
 struct EmailAuthView: View {
-    /// Which flow the form is in. Distinct modes so new users aren't silently
+    /// Which flow the page shows. Distinct modes so new users aren't silently
     /// signed up by a typo'd login (and vice versa).
     enum Mode: String, CaseIterable, Identifiable {
         case logIn = "Log in"
@@ -48,6 +51,9 @@ struct EmailAuthView: View {
     @State private var password = ""
     @State private var isWorking = false
     @State private var statusMessage: String?
+    /// Whether `statusMessage` is an error (red) or neutral info (gray), e.g.
+    /// the password-reset confirmation.
+    @State private var statusIsError = true
     @State private var awaitingVerification = false
 
     /// - Parameter initialMode: which mode the form opens in (matches the welcome
@@ -69,62 +75,129 @@ struct EmailAuthView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button {
+                        Haptics.tap()
+                        dismiss()
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundStyle(.primary)
+                    }
+                    .accessibilityLabel("Back")
                 }
             }
         }
-        .presentationDetents([.medium])
         .interactiveDismissDisabled(isWorking)
     }
 
     // MARK: - Form
 
+    /// The email/password page, in the app's monochrome minimal style: plain
+    /// fields over hairline underlines (no bubbles, no backgrounds) and a
+    /// full-width primary submit button identical to the auth sheet's buttons.
     private var form: some View {
-        Form {
-            Picker("Mode", selection: $mode) {
-                ForEach(Mode.allCases) { Text($0.rawValue).tag($0) }
-            }
-            .pickerStyle(.segmented)
-            .listRowBackground(Color.clear)
-            .onChange(of: mode) { _, _ in statusMessage = nil }
+        ScrollView {
+            VStack(spacing: 0) {
+                VStack(spacing: 24) {
+                    TextField("Email", text: $email)
+                        .keyboardType(.emailAddress)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .textContentType(.emailAddress)
+                        .underlinedField()
+                    SecureField("Password", text: $password)
+                        .textContentType(mode == .signUp ? .newPassword : .password)
+                        .underlinedField()
+                }
+                .padding(.top, 24)
 
-            Section {
-                TextField("Email", text: $email)
-                    .keyboardType(.emailAddress)
-                    .textInputAutocapitalization(.never)
-                    .autocorrectionDisabled()
-                    .textContentType(.emailAddress)
-                SecureField("Password", text: $password)
-                    .textContentType(mode == .signUp ? .newPassword : .password)
-            } footer: {
                 if mode == .signUp {
                     Text("At least \(EmailAuthRules.minimumPasswordLength) characters. We'll send a verification email.")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.top, 12)
                 }
-            }
-
-            Section {
-                Button(action: { Task { await submit() } }) {
-                    if isWorking {
-                        ProgressView().frame(maxWidth: .infinity)
-                    } else {
-                        Text(mode.rawValue).fontWeight(.semibold).frame(maxWidth: .infinity)
-                    }
-                }
-                .disabled(isWorking || !inputsLookValid)
 
                 if mode == .logIn {
                     Button("Forgot password?") { Task { await sendReset() } }
                         .font(.footnote)
-                        .disabled(isWorking || !EmailAuthRules.isValidEmail(email))
+                        .foregroundStyle(.secondary)
+                        .disabled(isWorking)
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .padding(.top, 12)
                 }
-            }
 
-            if let statusMessage {
-                Section {
-                    Text(statusMessage).font(.footnote).foregroundStyle(.red)
+                if let statusMessage {
+                    Text(statusMessage)
+                        .font(.footnote)
+                        .foregroundStyle(statusIsError ? AnyShapeStyle(.red) : AnyShapeStyle(.secondary))
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .padding(.top, 16)
                 }
             }
+            .padding(.horizontal, 24)
         }
+        .scrollDismissesKeyboard(.interactively)
+        // Pinned to the bottom like the welcome page's pills: the switch-mode
+        // line directly above the primary action, evenly spaced. The submit pill
+        // stays hidden until both fields have content, then springs in.
+        .safeAreaInset(edge: .bottom) {
+            VStack(spacing: 16) {
+                switchModeLink
+                if bothFieldsFilled {
+                    submitButton
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
+            .padding(.horizontal, 24)
+            .padding(.bottom, 8)
+            .animation(.spring(duration: 0.35, bounce: 0.2), value: bothFieldsFilled)
+        }
+    }
+
+    /// Whether both fields have any content — gates the submit pill's appearance
+    /// (full validation still happens in `submit()` with inline messages).
+    private var bothFieldsFilled: Bool {
+        !email.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !password.isEmpty
+    }
+
+    /// One quiet line that flips between the Log in and Sign up pages.
+    private var switchModeLink: some View {
+        Button {
+            mode = mode == .logIn ? .signUp : .logIn
+            statusMessage = nil
+        } label: {
+            (Text(mode == .logIn ? "New to Orbit? " : "Already have an account? ")
+                .foregroundStyle(.secondary)
+             + Text(mode == .logIn ? "Sign up" : "Log in")
+                .foregroundStyle(.primary)
+                .fontWeight(.semibold))
+        }
+        .font(.footnote)
+        .buttonStyle(.plain)
+    }
+
+    /// The primary submit pill, identical to the welcome page's "Sign up" button:
+    /// capsule shape, 56pt tall, headline title, solid primary fill.
+    private var submitButton: some View {
+        Button(action: { Haptics.tap(); Task { await submit() } }) {
+            Group {
+                if isWorking {
+                    ProgressView().tint(Color(.systemBackground))
+                } else {
+                    Text(mode.rawValue)
+                }
+            }
+            .font(.headline)
+            .foregroundStyle(Color(.systemBackground))
+            .frame(maxWidth: .infinity)
+            .frame(height: 56)
+            .background(Capsule().fill(Color.primary))
+        }
+        .buttonStyle(.plain)
+        .disabled(isWorking)
     }
 
     /// The check-your-inbox state shown after a sign-up that requires verification.
@@ -147,17 +220,18 @@ struct EmailAuthView: View {
         .padding(24)
     }
 
-    /// Client-side sanity check used to enable the submit button.
-    private var inputsLookValid: Bool {
-        EmailAuthRules.isValidEmail(email) && EmailAuthRules.passwordIssue(password) == nil
-    }
-
     // MARK: - Actions
 
     /// Runs the selected flow; on log-in success the root gate swaps to the app,
-    /// so this sheet only needs to dismiss itself.
+    /// so this sheet only needs to dismiss itself. Validates inline first (the
+    /// submit pill appears as soon as both fields have content).
     private func submit() async {
         let address = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        statusIsError = true
+        guard EmailAuthRules.isValidEmail(address) else {
+            statusMessage = "Please enter a valid email address."
+            return
+        }
         if let issue = EmailAuthRules.passwordIssue(password) {
             statusMessage = issue
             return
@@ -185,14 +259,23 @@ struct EmailAuthView: View {
         }
     }
 
-    /// Sends the password-reset email and confirms inline.
+    /// Sends the password-reset email and confirms inline. Always tappable: an
+    /// empty/invalid email gets a helpful prompt instead of a dead button.
     private func sendReset() async {
+        let address = email.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard EmailAuthRules.isValidEmail(address) else {
+            statusIsError = true
+            statusMessage = "Enter your email above first, then tap Forgot password."
+            return
+        }
         isWorking = true
         defer { isWorking = false }
         do {
-            try await account.resetPassword(email: email.trimmingCharacters(in: .whitespacesAndNewlines))
+            try await account.resetPassword(email: address)
+            statusIsError = false
             statusMessage = "Password reset email sent. Check your inbox."
         } catch {
+            statusIsError = true
             statusMessage = "Couldn't send the reset email. Please try again."
         }
     }
@@ -219,5 +302,21 @@ struct EmailAuthView: View {
         return mode == .logIn
             ? "Couldn't log in. Please try again."
             : "Couldn't create the account. Please try again."
+    }
+}
+
+private extension View {
+    /// Minimal field chrome: no background, just a hairline underline in the
+    /// primary tone (white in dark mode, black in light), matching the app's
+    /// thin-line monochrome aesthetic. Placeholders stay system-gray.
+    func underlinedField() -> some View {
+        self
+            .font(.system(size: 17))
+            .padding(.vertical, 12)
+            .overlay(alignment: .bottom) {
+                Rectangle()
+                    .fill(Color.primary)
+                    .frame(height: 1)
+            }
     }
 }

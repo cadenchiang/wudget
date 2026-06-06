@@ -50,8 +50,19 @@ struct AppLockGate<Content: View>: View {
     /// Prompts for biometrics once. Re-entrant calls (a second scene-phase change, or tapping
     /// Unlock while a prompt is already up) are ignored so only one evaluation ever runs.
     private func authenticateIfNeeded() {
+        // Always consume the grace (even when the lock is off) so a sign-in can
+        // never leave a stale grace that skips some future lock prompt.
+        let freshSignIn = account.consumeInteractiveSignInGrace()
         guard lockEnabled else { unlocked = true; return }
         guard !unlocked, !authenticating else { return }
+        if freshSignIn {
+            // The user authenticated with a provider seconds ago; stacking a
+            // Face ID prompt on top of the sign-in transition is jarring. The
+            // normal lock resumes from the next background/foreground cycle.
+            Log.auth.info("App lock skipped once: fresh interactive sign-in")
+            unlocked = true
+            return
+        }
         authenticating = true
         AppLock.authenticate { success in
             authenticating = false
@@ -90,7 +101,7 @@ struct AppLockGate<Content: View>: View {
             }
         }
         .animation(.easeInOut(duration: 0.25), value: authFailed)
-        .alert("Log out of Budget?", isPresented: $confirmLogout) {
+        .alert("Log out of Orbit?", isPresented: $confirmLogout) {
             Button("Log Out", role: .destructive) { account.signOut() }
             Button("Cancel", role: .cancel) {}
         }

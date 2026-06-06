@@ -9,10 +9,11 @@ struct WelcomeLandingView: View {
     @Environment(AccountStore.self) private var account
     @Environment(\.colorScheme) private var colorScheme
 
-    /// Whether the sign-in bottom sheet is showing.
-    @State private var showingAuth = false
-    /// Which pill raised the sheet; tailors the sheet's copy and defaults.
-    @State private var authIntent: AuthIntent = .signUp
+    /// Which pill raised the sheet (nil = no sheet). Driving the sheet off the
+    /// intent itself (`.sheet(item:)`) guarantees the sheet content is built with
+    /// the tapped pill's intent; a separate Bool + `.sheet(isPresented:)` can
+    /// evaluate the content closure with a stale intent on first presentation.
+    @State private var authIntent: AuthIntent?
 
     var body: some View {
         ZStack {
@@ -29,8 +30,8 @@ struct WelcomeLandingView: View {
                     .padding(.bottom, 8)
             }
         }
-        .sheet(isPresented: $showingAuth) {
-            AuthSheet(intent: authIntent)
+        .sheet(item: $authIntent) { intent in
+            AuthSheet(intent: intent)
                 .environment(account)
                 .presentationDetents([.height(430)])
                 .presentationDragIndicator(.visible)
@@ -59,7 +60,6 @@ struct WelcomeLandingView: View {
             Button {
                 Haptics.tap()
                 authIntent = .signUp
-                showingAuth = true
             } label: {
                 Text("Sign up")
                     .font(.headline)
@@ -71,7 +71,6 @@ struct WelcomeLandingView: View {
             Button {
                 Haptics.tap()
                 authIntent = .logIn
-                showingAuth = true
             } label: {
                 Text("Log in")
                     .font(.headline)

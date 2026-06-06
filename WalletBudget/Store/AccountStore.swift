@@ -1,6 +1,8 @@
 import Foundation
+import GoogleSignIn
 import Observation
 import Supabase
+import UIKit
 
 /// The signed-in account, backed by Supabase Auth.
 ///
@@ -24,6 +26,15 @@ final class AccountStore {
     /// True until the initial session restore completes, so the root view can hold
     /// a splash instead of flashing the welcome screen at every cold launch.
     private(set) var isRestoringSession = true
+
+    /// True from the start of an interactive (user-tapped) sign-in until consumed.
+    ///
+    /// Set BEFORE the network call so it is already visible when `authStateChanges`
+    /// emits the new session mid-await. RootGate reads it to hold the welcome→app
+    /// swap until the auth sheet finishes dismissing; AppLockGate consumes it to
+    /// skip the biometric prompt that would otherwise stack on the sign-in
+    /// transition (the user authenticated with a provider seconds ago).
+    private(set) var lastSignInWasInteractive = false
 
     var isSignedIn: Bool { email != nil }
 
@@ -85,36 +96,87 @@ final class AccountStore {
     /// - Throws: `AuthError` when the token is rejected (e.g. bundle id not in the
     ///   provider's Authorized Client IDs).
     func signInWithApple(idToken: String, nonce: String) async throws {
+        markInteractiveSignIn()
         do {
             try await auth.signInWithIdToken(
                 credentials: .init(provider: .apple, idToken: idToken, nonce: nonce)
             )
             Log.auth.info("Apple sign-in succeeded")
         } catch {
+            lastSignInWasInteractive = false
             Log.auth.error("Apple sign-in failed: \(error.localizedDescription, privacy: .public)")
             throw error
         }
     }
 
-    /// Runs the Google OAuth flow in an `ASWebAuthenticationSession` and signs in.
-    /// - Throws: `AuthError` on cancellation or provider misconfiguration.
+    /// Runs the native Google Sign-In flow (GoogleSignIn SDK, configured by the
+    /// `GIDClientID` Info.plist key) and exchanges the resulting identity token
+    /// for a Supabase session — same shape as the Apple flow, so the system
+    /// consent alert for Supabase's domain never appears.
+    /// - Throws: `CancellationError` when the user closes Google's sheet;
+    ///   `AuthError` when Supabase rejects the token (e.g. the iOS client ID is
+    ///   missing from the provider's additional client IDs).
     func signInWithGoogle() async throws {
+        markInteractiveSignIn()
         do {
-            try await auth.signInWithOAuth(provider: .google, redirectTo: Self.oauthRedirectURL)
+            guard let presenter = Self.presentingViewController() else {
+                Log.auth.error("Google sign-in failed: no view controller to present from")
+                throw AuthUIError.noPresenter
+            }
+            let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: presenter)
+            guard let idToken = result.user.idToken?.tokenString else {
+                Log.auth.error("Google sign-in returned no identity token")
+                throw AuthUIError.missingIDToken
+            }
+            try await auth.signInWithIdToken(credentials: .init(
+                provider: .google,
+                idToken: idToken,
+                accessToken: result.user.accessToken.tokenString
+            ))
             Log.auth.info("Google sign-in succeeded")
+        } catch let error as GIDSignInError where error.code == .canceled {
+            lastSignInWasInteractive = false
+            Log.auth.info("Google sign-in cancelled by user")
+            throw CancellationError()
         } catch {
+            lastSignInWasInteractive = false
             Log.auth.error("Google sign-in failed: \(error.localizedDescription, privacy: .public)")
             throw error
         }
     }
 
+    /// Errors from the native sign-in UI layer (not the auth backend).
+    enum AuthUIError: Error {
+        /// No foreground window/view controller was available to present from.
+        case noPresenter
+        /// The provider returned a credential without an identity token.
+        case missingIDToken
+    }
+
+    /// The frontmost view controller of the active scene, used to present the
+    /// Google sign-in sheet (it walks up `presentedViewController` so the sheet
+    /// presents over the auth sheet, not under it).
+    /// - Returns: the top presented controller, or nil when no window is active.
+    private static func presentingViewController() -> UIViewController? {
+        let scene = UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first { $0.activationState == .foregroundActive }
+        let root = scene?.windows.first(where: \.isKeyWindow)?.rootViewController
+            ?? scene?.windows.first?.rootViewController
+        var top = root
+        while let presented = top?.presentedViewController { top = presented }
+        return top
+    }
+
     /// Signs in an existing email+password account.
     /// - Throws: `AuthError` for wrong password, unknown account, or unverified email.
     func signIn(email: String, password: String) async throws {
+        markInteractiveSignIn()
         do {
             try await auth.signIn(email: email, password: password)
             Log.auth.info("Email sign-in succeeded")
         } catch {
+            lastSignInWasInteractive = false
             Log.auth.error("Email sign-in failed: \(error.localizedDescription, privacy: .public)")
             throw error
         }
@@ -125,12 +187,17 @@ final class AccountStore {
     ///   session is granted (the UI should show a "check your inbox" state).
     /// - Throws: `AuthError` for duplicate accounts or weak passwords.
     func signUp(email: String, password: String) async throws -> Bool {
+        markInteractiveSignIn()
         do {
             let result = try await auth.signUp(email: email, password: password)
             let needsVerification = result.session == nil
+            // No session yet (verification pending) means no transition is coming;
+            // don't leave a stale grace that could skip a future lock prompt.
+            if needsVerification { lastSignInWasInteractive = false }
             Log.auth.info("Email sign-up succeeded, needsVerification=\(needsVerification)")
             return needsVerification
         } catch {
+            lastSignInWasInteractive = false
             Log.auth.error("Email sign-up failed: \(error.localizedDescription, privacy: .public)")
             throw error
         }
@@ -148,6 +215,21 @@ final class AccountStore {
         }
     }
 
+    // MARK: - Interactive sign-in grace
+
+    /// Marks the start of an interactive sign-in. Internal (not private) so tests
+    /// can exercise the grace-consumption logic without a network call.
+    func markInteractiveSignIn() { lastSignInWasInteractive = true }
+
+    /// One-shot read of the interactive sign-in grace: returns true at most once
+    /// per interactive sign-in, then resets. AppLockGate uses it to skip the
+    /// biometric prompt immediately after the user signed in.
+    /// - Returns: true when an interactive sign-in just happened (and consumes it).
+    func consumeInteractiveSignInGrace() -> Bool {
+        defer { lastSignInWasInteractive = false }
+        return lastSignInWasInteractive
+    }
+
     // MARK: - Sign out
 
     /// Clears local state immediately (so the UI responds without waiting on the
@@ -158,6 +240,7 @@ final class AccountStore {
         email = nil
         provider = nil
         displayName = nil
+        lastSignInWasInteractive = false
         // Stop any in-flight sync (its session is ending) and clear the surfaces
         // that show financial data on the home/lock screen while nobody is signed
         // in. The database stays (the same owner usually returns; a different

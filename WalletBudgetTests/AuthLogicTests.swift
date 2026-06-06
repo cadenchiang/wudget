@@ -105,6 +105,39 @@ final class AuthLogicTests: XCTestCase {
         )
     }
 
+    // MARK: - Private relay detection
+
+    /// Apple private-relay addresses are detected (any casing); normal ones are not.
+    func testPrivateRelayDetection() {
+        XCTAssertTrue(AccountView.isPrivateRelay("x9f3kq2@privaterelay.appleid.com"))
+        XCTAssertTrue(AccountView.isPrivateRelay("ABC123@PRIVATERELAY.APPLEID.COM"))
+        XCTAssertFalse(AccountView.isPrivateRelay("caden@example.com"))
+        XCTAssertFalse(AccountView.isPrivateRelay("someone@appleid.com"))
+        XCTAssertFalse(AccountView.isPrivateRelay(""))
+    }
+
+    // MARK: - Interactive sign-in grace
+
+    /// The grace is one-shot: false by default, true exactly once after an
+    /// interactive sign-in is marked, then reset by consumption.
+    @MainActor
+    func testInteractiveSignInGraceIsOneShot() {
+        let account = AccountStore()
+        XCTAssertFalse(account.lastSignInWasInteractive)
+        XCTAssertFalse(account.consumeInteractiveSignInGrace())
+
+        account.markInteractiveSignIn()
+        XCTAssertTrue(account.lastSignInWasInteractive)
+        XCTAssertTrue(account.consumeInteractiveSignInGrace())
+
+        XCTAssertFalse(account.lastSignInWasInteractive)
+        XCTAssertFalse(account.consumeInteractiveSignInGrace())
+    }
+
+    // NOTE: signOut() clearing the grace is intentionally not unit-tested here:
+    // AccountStore.signOut() revokes the real keychain session and clears real
+    // surfaces, which must never happen as a test side effect on a device.
+
     // MARK: - Legacy purge
 
     /// The pre-Supabase UserDefaults stub is removed on first run.

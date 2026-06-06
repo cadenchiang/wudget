@@ -4,9 +4,12 @@ import SwiftUI
 /// Which welcome-screen pill raised the auth sheet. Tailors the sheet copy, the
 /// Apple button label, and the email form's starting mode; all providers behave
 /// identically underneath (Supabase links by account, not by entry point).
-enum AuthIntent {
+enum AuthIntent: Hashable, Identifiable {
     case signUp
     case logIn
+
+    /// Identity for `.sheet(item:)` presentation; the case itself is the identity.
+    var id: Self { self }
 }
 
 /// The sign-in options presented as a bottom sheet from the welcome landing's pills.
@@ -40,11 +43,15 @@ struct AuthSheet: View {
 
             VStack(spacing: 12) {
                 appleButton
-                providerButton("Continue with Google", icon: "globe",
+                // Match the Apple button's intent-specific label ("Sign Up with
+                // Apple" / "Sign In with Apple") so the sheet never mixes
+                // sign-up and sign-in phrasing.
+                providerButton(intent == .signUp ? "Sign up with Google" : "Sign in with Google",
+                               icon: "logo_google", iconIsAsset: true,
                                background: Color(.secondarySystemBackground), foreground: .primary, bordered: true) {
                     Task { await signInWithGoogle() }
                 }
-                providerButton("Continue with Email", icon: "envelope.fill",
+                providerButton(intent == .signUp ? "Sign up with Email" : "Sign in with Email", icon: "envelope.fill",
                                background: Color(.secondarySystemBackground), foreground: .primary, bordered: true) {
                     showingEmail = true
                 }
@@ -70,7 +77,9 @@ struct AuthSheet: View {
         .onChange(of: account.isSignedIn) { _, signedIn in
             if signedIn { dismiss() }
         }
-        .sheet(isPresented: $showingEmail) {
+        // Full-screen page (not a nested sheet): the email form is a destination
+        // in its own right, with room for the keyboard and inline errors.
+        .fullScreenCover(isPresented: $showingEmail) {
             EmailAuthView(initialMode: intent == .signUp ? .signUp : .logIn)
         }
     }
@@ -84,6 +93,7 @@ struct AuthSheet: View {
 
     private var appleButton: some View {
         SignInWithAppleButton(intent == .signUp ? .signUp : .signIn) { request in
+            Haptics.tap()
             do {
                 let nonce = try AuthNonce.random()
                 currentNonce = nonce
@@ -97,7 +107,7 @@ struct AuthSheet: View {
             handleApple(result)
         }
         .signInWithAppleButtonStyle(.black)
-        .frame(height: 50)
+        .frame(height: Self.buttonHeight)
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
@@ -142,16 +152,21 @@ struct AuthSheet: View {
             }
         case .failure(let error):
             // The user closing the Apple dialog is not an error worth surfacing.
-            if (error as? ASAuthorizationError)?.code != .canceled {
-                Log.auth.error("Sign in with Apple failed: \(error.localizedDescription, privacy: .public)")
-                errorMessage = "Apple sign-in failed. Please try again."
-            }
+            // That arrives as .canceled, but a fast dismissal (or backing out of
+            // the Face ID step) reports .unknown (1000) — silence both, log all.
+            let code = (error as? ASAuthorizationError)?.code
+            Log.auth.error("""
+            Sign in with Apple did not complete: code=\(code?.rawValue ?? -1, privacy: .public), \
+            \(error.localizedDescription, privacy: .public)
+            """)
+            guard code != .canceled, code != .unknown else { return }
+            errorMessage = "Apple sign-in failed. Please try again."
         }
     }
 
     // MARK: - Google
 
-    /// Runs the Google OAuth web session; cancellation is silent, real failures alert.
+    /// Runs the native Google sign-in flow; cancellation is silent, real failures alert.
     private func signInWithGoogle() async {
         isWorking = true
         defer { isWorking = false }
@@ -159,24 +174,46 @@ struct AuthSheet: View {
             try await account.signInWithGoogle()
             Haptics.success()
             dismiss()
+        } catch is CancellationError {
+            // The user closing Google's sheet is not an error worth surfacing.
         } catch {
-            if (error as? ASWebAuthenticationSessionError)?.code != .canceledLogin {
-                errorMessage = "Google sign-in failed. Please try again."
-            }
+            errorMessage = "Google sign-in failed. Please try again."
         }
     }
 
     // MARK: - Shared button style
 
-    private func providerButton(_ title: String, icon: String, background: Color, foreground: Color,
+    /// Shared height for every provider button, including the system Apple one.
+    private static let buttonHeight: CGFloat = 50
+
+    /// Title size matching what the system Apple button actually draws at
+    /// `buttonHeight` (the HIG's "43% of height" spec overshoots the system
+    /// rendering; 19pt is the empirical match at 50pt).
+    private static let buttonFontSize: CGFloat = 19
+
+    /// Shared chrome for the custom provider buttons, sized to render identically
+    /// to the system `SignInWithAppleButton` above them (same height, same
+    /// title size/weight). `icon` names an SF Symbol unless `iconIsAsset` is
+    /// true, in which case it names a bundled image (the multicolor Google G
+    /// has no SF Symbol equivalent).
+    private func providerButton(_ title: String, icon: String, iconIsAsset: Bool = false,
+                                background: Color, foreground: Color,
                                 bordered: Bool = false, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
+        Button(action: { Haptics.tap(); action() }) {
             HStack(spacing: 10) {
-                Image(systemName: icon)
-                Text(title).fontWeight(.semibold)
+                if iconIsAsset {
+                    Image(icon)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: Self.buttonFontSize, height: Self.buttonFontSize)
+                } else {
+                    Image(systemName: icon)
+                }
+                Text(title)
             }
+            .font(.system(size: Self.buttonFontSize, weight: .medium))
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
+            .frame(height: Self.buttonHeight)
             .background(background, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
             .foregroundStyle(foreground)
             .overlay {

@@ -6,13 +6,25 @@
 	     UIBackgroundModes has no INFOPLIST_KEY_* build setting, so it must live here.
 	     Required: LocationProvider sets allowsBackgroundLocationUpdates, which aborts
 	     at runtime unless the app declares the `location` background mode. -->
+	<!-- CFBundleName defaults to PRODUCT_NAME ("WalletBudget"), and system surfaces
+	     like the ASWebAuthenticationSession consent alert ("X" Wants to Use "Y" to
+	     Sign In) display it instead of CFBundleDisplayName. Override so every
+	     system dialog says Orbit. -->
+	<key>CFBundleName</key>
+	<string>Orbit</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>location</string>
 	</array>
-	<!-- Custom URL scheme for the Supabase OAuth redirect (orbit://auth-callback).
-	     CFBundleURLTypes also has no INFOPLIST_KEY_* build setting. The same URL
-	     must be allowlisted in the Supabase dashboard under Auth → URL Configuration. -->
+	<!-- iOS OAuth client for the native Google Sign-In SDK (GIDSignIn reads this
+	     key at sign-in time). This client ID must also be listed in the Supabase
+	     Google provider's additional client IDs so the idToken's aud validates. -->
+	<key>GIDClientID</key>
+	<string>534745685219-pvl8j4j5el561vq2bet6julgobeu878j.apps.googleusercontent.com</string>
+	<!-- Custom URL schemes. CFBundleURLTypes has no INFOPLIST_KEY_* build setting.
+	     orbit:// is the Supabase OAuth redirect (allowlisted in the Supabase
+	     dashboard under Auth → URL Configuration); the reversed Google client ID
+	     is how Google Sign-In returns control to the app. -->
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -21,6 +33,14 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>orbit</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.cadenchiang.walletbudget.google</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.534745685219-pvl8j4j5el561vq2bet6julgobeu878j</string>
 			</array>
 		</dict>
 	</array>
