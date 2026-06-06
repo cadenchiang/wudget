@@ -18,46 +18,55 @@ struct BudgetEditorView: View {
         Double(draft.filter { $0.isNumber || $0 == "." }) ?? 0
     }
 
+    /// Days in the current month, for the per-day allowance line.
+    private var daysInMonth: Int {
+        Calendar.current.range(of: .day, in: .month, for: Date())?.count ?? 30
+    }
+
     var body: some View {
-        List {
-            Section {
-                HStack(spacing: 4) {
+        ScrollView {
+            VStack(spacing: 0) {
+                // The amount, front and center like the add-transaction flow.
+                HStack(alignment: .firstTextBaseline, spacing: 5) {
                     Text("$")
-                        .font(.title2.weight(.semibold))
+                        .font(.system(size: 34, weight: .semibold))
                         .foregroundStyle(.secondary)
                     TextField("0", text: $draft)
-                        .font(.title2.weight(.semibold))
+                        .font(.system(size: 52, weight: .bold))
                         .keyboardType(.decimalPad)
                         .focused($amountFocused)
                         .submitLabel(.done)
                         .onSubmit { commit() }
+                        .fixedSize()
                 }
-            } footer: {
-                Text("Your target spending per month, shown as a line on the chart. Week and Year views scale this automatically.")
-            }
+                .frame(maxWidth: .infinity)
+                .padding(.top, 32)
 
-            Section("Quick Set") {
-                ForEach(presets, id: \.self) { amount in
-                    Button {
-                        Haptics.selection()
-                        setBudget(amount)
-                    } label: {
-                        HStack {
-                            Text(amount.asCurrency())
-                                .foregroundStyle(.primary)
-                            Spacer()
-                            if draftValue == amount {
-                                Image(systemName: "checkmark").foregroundStyle(.primary)
-                            }
-                        }
+                // The smart line: what the monthly number means day to day.
+                Text(allowanceLine)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .padding(.top, 8)
+                    .opacity(draftValue > 0 ? 1 : 0)
+                    .animation(.easeInOut(duration: 0.15), value: draftValue > 0)
+
+                // Quick-set chips, monochrome capsules like the rest of the app.
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
+                    ForEach(presets, id: \.self) { amount in
+                        quickSetChip(amount)
                     }
                 }
-                Button(role: .destructive) {
+                .padding(.top, 28)
+
+                Button("No Budget") {
+                    Haptics.tap()
                     setBudget(0)
-                } label: {
-                    Text("No Budget")
                 }
+                .font(.footnote.weight(.medium))
+                .foregroundStyle(.secondary)
+                .padding(.top, 24)
             }
+            .padding(.horizontal, 24)
         }
         .scrollDismissesKeyboard(.interactively)
         .navigationTitle("Monthly Budget")
@@ -70,6 +79,49 @@ struct BudgetEditorView: View {
             amountFocused = true
         }
         .onDisappear { commit() }
+    }
+
+    /// "That's $33.33 a day, $233 a week" for the current draft.
+    private var allowanceLine: String {
+        let day = Self.perDay(monthly: draftValue, daysInMonth: daysInMonth)
+        let week = Self.perWeek(monthly: draftValue, daysInMonth: daysInMonth)
+        return "That's \(day.asCurrency()) a day, \(week.asCurrency()) a week"
+    }
+
+    /// One quick-set capsule; the selected preset renders inverted.
+    private func quickSetChip(_ amount: Double) -> some View {
+        let selected = draftValue == amount
+        return Button {
+            Haptics.selection()
+            setBudget(amount)
+        } label: {
+            Text(amount.asCurrency())
+                .font(.subheadline.weight(.semibold))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(Capsule().fill(selected ? Color.primary : Color(.secondarySystemBackground)))
+                .foregroundStyle(selected ? Color(.systemBackground) : .primary)
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// Per-day spending allowance for a monthly budget.
+    /// - Parameters:
+    ///   - monthly: the monthly budget.
+    ///   - daysInMonth: days in the month being considered (must be > 0).
+    /// - Returns: the daily allowance, or 0 for a non-positive budget/days.
+    nonisolated static func perDay(monthly: Double, daysInMonth: Int) -> Double {
+        guard monthly > 0, daysInMonth > 0 else { return 0 }
+        return monthly / Double(daysInMonth)
+    }
+
+    /// Per-week (7-day) spending allowance for a monthly budget.
+    /// - Parameters:
+    ///   - monthly: the monthly budget.
+    ///   - daysInMonth: days in the month being considered (must be > 0).
+    /// - Returns: the weekly allowance, or 0 for a non-positive budget/days.
+    nonisolated static func perWeek(monthly: Double, daysInMonth: Int) -> Double {
+        perDay(monthly: monthly, daysInMonth: daysInMonth) * 7
     }
 
     /// Writes the draft's parsed value to storage (idempotent; safe to call repeatedly)

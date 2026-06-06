@@ -178,11 +178,13 @@ private struct OnboardingStepView: View {
                     .buttonStyle(.plain)
                 }
             }
+            // FIXED height (not minHeight): every step's phone frame starts at
+            // exactly the same y, no matter how tall the title/pill/link is.
             .frame(maxWidth: .infinity, alignment: .topLeading)
-            .frame(minHeight: 48, alignment: .topLeading)
+            .frame(height: 104, alignment: .topLeading)
 
             artwork
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         }
         .padding(.horizontal, 24)
         .padding(.top, 4)

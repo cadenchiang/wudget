@@ -63,7 +63,7 @@ enum CategoryCatalog {
                 keywords: ["rent", "landlord", "lease", "mortgage", "apartment", "property"]),
         Default(name: "Subscription", colorName: "purple", icon: "repeat",
                 keywords: ["subscription", "membership", "icloud"]),
-        Default(name: "School", colorName: "teal", icon: "graduationcap.fill",
+        Default(name: "School", colorName: "indigo", icon: "graduationcap.fill",
                 keywords: ["tuition", "university", "college", "campus", "bookstore", "textbook"]),
         Default(name: "Other", colorName: "gray", icon: "square.grid.2x2.fill", keywords: []),
     ]

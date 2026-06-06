@@ -12,6 +12,20 @@ enum CategorySeeder {
         var nextOrder = (existing.map(\.sortOrder).max() ?? -1) + 1
         var changed = false
 
+        // One-time palette fix (2026-06): Rent moved teal→gray, School teal→indigo.
+        // Only recolors categories still wearing the old default, so any color the
+        // user picked themselves is preserved.
+        let paletteFixes: [String: (old: String, new: String)] = [
+            "Rent": ("teal", "gray"),
+            "School": ("teal", "indigo"),
+        ]
+        for category in existing {
+            if let fix = paletteFixes[category.seedKey ?? ""], category.colorName == fix.old {
+                category.colorName = fix.new
+                changed = true
+            }
+        }
+
         for def in CategoryCatalog.defaults {
             // Already seeded (even if the user renamed it) — leave it alone.
             if existing.contains(where: { $0.seedKey == def.name }) { continue }

@@ -52,4 +52,18 @@ final class SpendingSummaryTests: XCTestCase {
         XCTAssertEqual(totals.first?.total, 20)
         XCTAssertEqual(totals.last?.total, 10)
     }
+
+    // MARK: - Budget allowance math
+
+    /// Daily/weekly allowances divide the monthly budget by the month's days.
+    func testBudgetAllowances() {
+        XCTAssertEqual(BudgetEditorView.perDay(monthly: 3000, daysInMonth: 30), 100)
+        XCTAssertEqual(BudgetEditorView.perWeek(monthly: 3000, daysInMonth: 30), 700)
+        XCTAssertEqual(BudgetEditorView.perDay(monthly: 3100, daysInMonth: 31), 100)
+        // Degenerate inputs are 0, never NaN/inf.
+        XCTAssertEqual(BudgetEditorView.perDay(monthly: 0, daysInMonth: 30), 0)
+        XCTAssertEqual(BudgetEditorView.perDay(monthly: -5, daysInMonth: 30), 0)
+        XCTAssertEqual(BudgetEditorView.perDay(monthly: 100, daysInMonth: 0), 0)
+        XCTAssertEqual(BudgetEditorView.perWeek(monthly: 0, daysInMonth: 30), 0)
+    }
 }

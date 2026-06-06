@@ -56,6 +56,9 @@ struct ManageCategoriesView: View {
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.tertiary)
         }
+        // Whole row tappable: a plain-style Button only hit-tests its visible
+        // label, so without this the empty middle of the row ignored taps.
+        .contentShape(Rectangle())
     }
 
     /// Deletes categories (except "Other"), reassigning their transactions to "Other".
