@@ -21,6 +21,7 @@
 		1A2B3C4D5E6F708192A3002A /* UserCardTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708192A3002B /* UserCardTests.swift */; };
 		1A2B3C4D5E6F708192A30020 /* welcomeHero.json in Resources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708192A30021 /* welcomeHero.json */; };
 		1A2B3C4D5E6F708192A30022 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 1A2B3C4D5E6F708192A30023 /* Lottie */; };
+		1A2B3C4D5E6F708192A300A0 /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 1A2B3C4D5E6F708192A300A1 /* GoogleSignIn */; };
 		1A2B3C4D5E6F708192A30040 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 1A2B3C4D5E6F708192A30041 /* Supabase */; };
 		0EC04CBF48CA9FB8C383F854 /* GroupDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 513D61072A882AB8FE7FCAA9 /* GroupDetailView.swift */; };
 		123CD377ECADC136164C79DA /* TimeSpan.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88C2AA80CB889F87361E30D5 /* TimeSpan.swift */; };
@@ -48,6 +49,7 @@
 		5AD4C60A81E6D57A74DB70E3 /* AppLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 320C1960104669F5CCEB07C7 /* AppLock.swift */; };
 		5B1C60418AD7BFDA19DA5726 /* PersonalOnboardingFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DD0F19ECF77A497B5655ABB /* PersonalOnboardingFlow.swift */; };
 		5ECECA08425C23735031ED72 /* AddTransactionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 33CE0757DE390AD3D6B754D3 /* AddTransactionSheet.swift */; };
+		1A2B3C4D5E6F708192A300B0 /* TransactionLoggedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708192A300B1 /* TransactionLoggedView.swift */; };
 		621A7BAB1F62970014A14496 /* Expense.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7829AEE20FE7C85C23D72C20 /* Expense.swift */; };
 		626DC1446BDC3A625F027FBC /* CategoryRegistry.swift in Sources */ = {isa = PBXBuildFile; fileRef = 574742DB97BE751393D00A94 /* CategoryRegistry.swift */; };
 		628DEF4ED948F080EF6D0EC6 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D4FD4B30A50FDDE3E9173E1 /* Log.swift */; };
@@ -167,6 +169,7 @@
 		2E0FD05673C0FA09B5473CCA /* WidgetShared.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetShared.swift; sourceTree = "<group>"; };
 		320C1960104669F5CCEB07C7 /* AppLock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppLock.swift; sourceTree = "<group>"; };
 		33CE0757DE390AD3D6B754D3 /* AddTransactionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTransactionSheet.swift; sourceTree = "<group>"; };
+		1A2B3C4D5E6F708192A300B1 /* TransactionLoggedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionLoggedView.swift; sourceTree = "<group>"; };
 		3A8DEB5640055F69C67E5C29 /* SpendingGroupingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpendingGroupingTests.swift; sourceTree = "<group>"; };
 		3DA74F9B640CFA1C302AB79A /* WudgetWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = WudgetWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		433F75625EE33E963002A1A4 /* AuthSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthSheet.swift; sourceTree = "<group>"; };
@@ -227,7 +230,7 @@
 		1A2B3C4D5E6F708192A3005B /* SyncLogicTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SyncLogicTests.swift; sourceTree = "<group>"; };
 		A090EDE7CD091C4593296E50 /* WalletBudget.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = WalletBudget.entitlements; sourceTree = "<group>"; };
 		A4D5C0D39610BC264A208FF3 /* WudgetWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WudgetWidgetBundle.swift; sourceTree = "<group>"; };
-		AD53A91857295586BE052D9A /* WalletBudget.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = WalletBudget.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AD53A91857295586BE052D9A /* WalletBudget.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Orbit.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		ADFC4B644CE144489A62EBB0 /* TransactionLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TransactionLibrary.swift; sourceTree = "<group>"; };
 		AF9AB6A9C3E92D0C8557B0F4 /* SpendingWidgetConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpendingWidgetConfig.swift; sourceTree = "<group>"; };
 		AFBB1AD3AF14ABF14C201ED8 /* WalletBudgetApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletBudgetApp.swift; sourceTree = "<group>"; };
@@ -265,6 +268,7 @@
 				1A2B3C4D5E6F708192A30018 /* PrivacySecuritySettingsView.swift */,
 				0BF0F719047A32A4C6647E27 /* AccountView.swift */,
 				33CE0757DE390AD3D6B754D3 /* AddTransactionSheet.swift */,
+				1A2B3C4D5E6F708192A300B1 /* TransactionLoggedView.swift */,
 				541A06AD300D4C3214FF46F9 /* AppLockGate.swift */,
 				433F75625EE33E963002A1A4 /* AuthSheet.swift */,
 				1A2B3C4D5E6F708192A3004A /* EmailAuthView.swift */,
@@ -468,6 +472,7 @@
 			packageProductDependencies = (
 				1A2B3C4D5E6F708192A30023 /* Lottie */,
 				1A2B3C4D5E6F708192A30041 /* Supabase */,
+				1A2B3C4D5E6F708192A300A1 /* GoogleSignIn */,
 			);
 			productName = WalletBudget;
 			productReference = AD53A91857295586BE052D9A /* WalletBudget.app */;
@@ -544,6 +549,7 @@
 			packageReferences = (
 				1A2B3C4D5E6F708192A30025 /* XCRemoteSwiftPackageReference "lottie-ios" */,
 				1A2B3C4D5E6F708192A30042 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				1A2B3C4D5E6F708192A300A2 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 77B49E9C99F244891D47FE98 /* Products */;
@@ -563,6 +569,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1A2B3C4D5E6F708192A30022 /* Lottie in Frameworks */,
+				1A2B3C4D5E6F708192A300A0 /* GoogleSignIn in Frameworks */,
 				1A2B3C4D5E6F708192A30040 /* Supabase in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -626,6 +633,7 @@
 				0CC863CF863FB44798E30C8B /* AccountStore.swift in Sources */,
 				F15FED507DDAEEF5329A84AF /* AccountView.swift in Sources */,
 				5ECECA08425C23735031ED72 /* AddTransactionSheet.swift in Sources */,
+				1A2B3C4D5E6F708192A300B0 /* TransactionLoggedView.swift in Sources */,
 				5AD4C60A81E6D57A74DB70E3 /* AppLock.swift in Sources */,
 				CBA2DD8CAC5E4BFDBA061C5F /* AppLockGate.swift in Sources */,
 				759682447208897EFBFEFA3A /* AppTheme.swift in Sources */,
@@ -742,6 +750,14 @@
 				minimumVersion = 2.0.0;
 			};
 		};
+		1A2B3C4D5E6F708192A300A2 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -754,6 +770,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 1A2B3C4D5E6F708192A30042 /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Supabase;
+		};
+		1A2B3C4D5E6F708192A300A1 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 1A2B3C4D5E6F708192A300A2 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
 		};
 /* End XCSwiftPackageProductDependency section */
 
@@ -900,7 +921,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.cadenchiang.walletbudgetTests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WalletBudget.app/WalletBudget";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Orbit.app/Orbit";
 			};
 			name = Debug;
 		};
@@ -944,6 +965,8 @@
 					"@executable_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.cadenchiang.walletbudget;
+				PRODUCT_MODULE_NAME = WalletBudget;
+				PRODUCT_NAME = Orbit;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -980,7 +1003,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.cadenchiang.walletbudgetTests;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WalletBudget.app/WalletBudget";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Orbit.app/Orbit";
 			};
 			name = Release;
 		};
@@ -1006,6 +1029,8 @@
 					"@executable_path/Frameworks",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.cadenchiang.walletbudget;
+				PRODUCT_MODULE_NAME = WalletBudget;
+				PRODUCT_NAME = Orbit;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

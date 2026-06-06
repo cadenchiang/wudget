@@ -16,7 +16,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "06E341B52C4D47514AE2C712"
-               BuildableName = "WalletBudget.app"
+               BuildableName = "Orbit.app"
                BlueprintName = "WalletBudget"
                ReferencedContainer = "container:WalletBudget.xcodeproj">
             </BuildableReference>
@@ -58,7 +58,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "06E341B52C4D47514AE2C712"
-            BuildableName = "WalletBudget.app"
+            BuildableName = "Orbit.app"
             BlueprintName = "WalletBudget"
             ReferencedContainer = "container:WalletBudget.xcodeproj">
          </BuildableReference>
@@ -75,7 +75,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "06E341B52C4D47514AE2C712"
-            BuildableName = "WalletBudget.app"
+            BuildableName = "Orbit.app"
             BlueprintName = "WalletBudget"
             ReferencedContainer = "container:WalletBudget.xcodeproj">
          </BuildableReference>
