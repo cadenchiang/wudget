@@ -77,6 +77,7 @@
 		A349ACEFD3DB55D7D49470F2 /* RootGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D978EF958C1C58E9CAEFA7A /* RootGate.swift */; };
 		AA27954626BF0B75EAB45E82 /* SpendingGroupRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB092227C8A29FC4505A1626 /* SpendingGroupRow.swift */; };
 		B7A0B137417A61E85BD70C8B /* ManageCategoriesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9914378A8743498974C9ED7 /* ManageCategoriesView.swift */; };
+		1A2B3C4D5E6F708192A300C0 /* ManageMerchantsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2B3C4D5E6F708192A300C1 /* ManageMerchantsView.swift */; };
 		B80CA42F12C4C45011AF72B6 /* TopChromeBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = C740448D5F20571006ED775B /* TopChromeBar.swift */; };
 		BDEAA7E44A46DDEB23E31F47 /* RecurrenceFrequency.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83F6022920D4C45574AAACD1 /* RecurrenceFrequency.swift */; };
 		C00A9E34F672DEC4138ACBEA /* PrivacyPolicyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7B39EBACAF0D103CC90431D /* PrivacyPolicyView.swift */; };
@@ -242,6 +243,7 @@
 		C5B80A01155AD07584BE32DD /* WalletBudgetShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletBudgetShortcuts.swift; sourceTree = "<group>"; };
 		C740448D5F20571006ED775B /* TopChromeBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TopChromeBar.swift; sourceTree = "<group>"; };
 		C9914378A8743498974C9ED7 /* ManageCategoriesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManageCategoriesView.swift; sourceTree = "<group>"; };
+		1A2B3C4D5E6F708192A300C1 /* ManageMerchantsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManageMerchantsView.swift; sourceTree = "<group>"; };
 		CB5F89F0C46335F3333E44FB /* PersonalOnboardingStepView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersonalOnboardingStepView.swift; sourceTree = "<group>"; };
 		D09C3A39185D661975162F8E /* PeriodBucketizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PeriodBucketizer.swift; sourceTree = "<group>"; };
 		D61DBB159F1E56C038F5199A /* LibraryPickerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryPickerView.swift; sourceTree = "<group>"; };
@@ -279,6 +281,7 @@
 				87204F03B517ACA62A39335E /* LegalDocumentView.swift */,
 				D61DBB159F1E56C038F5199A /* LibraryPickerView.swift */,
 				C9914378A8743498974C9ED7 /* ManageCategoriesView.swift */,
+				1A2B3C4D5E6F708192A300C1 /* ManageMerchantsView.swift */,
 				8260296CE232E54B04D2E451 /* MerchantLogoTile.swift */,
 				ED7746652ABA2A9FB9EBCE3E /* NotificationSettingsView.swift */,
 				0FA78760B2C7B04E4ED8CECD /* OnboardingComponents.swift */,
@@ -666,6 +669,7 @@
 				628DEF4ED948F080EF6D0EC6 /* Log.swift in Sources */,
 				D32E89869F2F653380CAEAD9 /* LogoProvider.swift in Sources */,
 				B7A0B137417A61E85BD70C8B /* ManageCategoriesView.swift in Sources */,
+				1A2B3C4D5E6F708192A300C0 /* ManageMerchantsView.swift in Sources */,
 				DB299FF9BEDF5672361AD0AC /* MerchantLogoTile.swift in Sources */,
 				C344199EDB9B5218FCAAEBAD /* NotificationManager+Builders.swift in Sources */,
 				2D051851DCC5131DBE919B6C /* NotificationManager.swift in Sources */,

@@ -24,8 +24,13 @@ struct TrackingSettingsView: View {
                 } label: {
                     SettingsRow(icon: "tag.fill", tint: .purple, title: "Categories")
                 }
+                NavigationLink {
+                    ManageMerchantsView()
+                } label: {
+                    SettingsRow(icon: "storefront.fill", tint: .blue, title: "Merchants")
+                }
             } footer: {
-                Text("Customize the categories your spending is sorted into.")
+                Text("Customize your spending categories, or rename a merchant across all of its transactions.")
             }
         }
         .navigationTitle("Tracking")
