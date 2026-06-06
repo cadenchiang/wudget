@@ -162,7 +162,6 @@ struct SpendingView: View {
         NavigationStack {
             spendingScroll
                 .background(Color(.systemBackground))
-                .tabSwipe()
                 .topChromeBar { topBar }
                 .toolbar(.hidden, for: .navigationBar)
                 .sheet(isPresented: $showingAdd) {

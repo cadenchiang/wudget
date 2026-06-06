@@ -53,7 +53,6 @@ struct SetupGuideView: View {
                     }
                 }
             }
-            .tabSwipe()
             .topChromeBar {
                 Text("Settings")
                     .font(.title3.weight(.semibold))

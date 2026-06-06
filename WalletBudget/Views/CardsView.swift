@@ -374,12 +374,15 @@ private struct UtilizationGauge: View {
                     .frame(maxHeight: .infinity)
 
                 // The "you are here" dot: pure white in both themes, defined
-                // against the gradient by its shadow alone.
-                Circle()
-                    .fill(.white)
-                    .frame(width: 13, height: 13)
-                    .position(x: x, y: geo.size.height / 2)
-                    .shadow(color: .black.opacity(0.35), radius: 2, y: 1)
+                // against the gradient by its shadow alone. No dot on neutral
+                // bars — without a limit there is no position to mark.
+                if !neutral {
+                    Circle()
+                        .fill(.white)
+                        .frame(width: 13, height: 13)
+                        .position(x: x, y: geo.size.height / 2)
+                        .shadow(color: .black.opacity(0.35), radius: 2, y: 1)
+                }
             }
         }
         .frame(height: 14)

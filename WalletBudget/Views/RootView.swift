@@ -29,9 +29,8 @@ struct RootView: View {
         WidgetUpdater.refresh(context: context)
     }
 
-    /// Pager state (selection + live drag offset) shared with the root screens'
-    /// swipe gestures via the environment.
-    @State private var pager = TabPager()
+    /// Selected root tab; bound to the paged TabView and the custom tab bar.
+    @State private var selection = 0
     /// Namespace for the tab bar's sliding selection highlight.
     @Namespace private var tabNamespace
 
@@ -42,30 +41,18 @@ struct RootView: View {
     /// Both roots side by side in a pager, so switching tabs slides smoothly
     /// (a system TabView snaps with no animation). The floating glass pill
     /// below mirrors the iOS 26 tab-bar look.
+    /// Native paged TabView (UIPageViewController under the hood): swiping
+    /// tracks the finger with the system's own physics — no custom gesture
+    /// math. The page dots are hidden; our floating bar is the indicator.
     private var tabs: some View {
-        GeometryReader { geo in
-            HStack(spacing: 0) {
-                SpendingView()
-                    .frame(width: geo.size.width)
-                SetupGuideView()
-                    .frame(width: geo.size.width)
-            }
-            .offset(x: pagerOffset(width: geo.size.width))
-            .onAppear { pager.width = geo.size.width }
-            .onChange(of: geo.size.width) { _, width in pager.width = width }
+        TabView(selection: $selection) {
+            SpendingView()
+                .tag(0)
+            SetupGuideView()
+                .tag(1)
         }
-        .environment(pager)
+        .tabViewStyle(.page(indexDisplayMode: .never))
         .overlay(alignment: .bottom) { tabBar }
-    }
-
-    /// Pager x-offset: the selected page plus any in-flight drag, with rubber-
-    /// band resistance when dragging past the first/last tab.
-    private func pagerOffset(width: CGFloat) -> CGFloat {
-        var drag = pager.dragOffset
-        if (pager.selection == 0 && drag > 0) || (pager.selection == pager.count - 1 && drag < 0) {
-            drag /= 3
-        }
-        return -CGFloat(pager.selection) * width + drag
     }
 
     /// Floating glass tab bar (two pills) hovering at the bottom of the pager.
@@ -94,7 +81,7 @@ struct RootView: View {
     private func tabButton(_ index: Int, icon: String, title: String) -> some View {
         Button {
             Haptics.tap()
-            withAnimation(Self.tabAnimation) { pager.dragOffset = 0; pager.selection = index }
+            withAnimation(Self.tabAnimation) { selection = index }
         } label: {
             VStack(spacing: 3) {
                 Image(systemName: icon)
@@ -104,10 +91,10 @@ struct RootView: View {
                     .font(.caption2.weight(.medium))
                     .lineLimit(1)
             }
-            .foregroundStyle(pager.selection == index ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+            .foregroundStyle(selection == index ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
             .frame(width: 92, height: 48)
             .background {
-                if pager.selection == index {
+                if selection == index {
                     Capsule()
                         .fill(Color.primary.opacity(0.1))
                         .matchedGeometryEffect(id: "selectedTab", in: tabNamespace)
@@ -117,7 +104,7 @@ struct RootView: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(title)
-        .accessibilityAddTraits(pager.selection == index ? .isSelected : [])
+        .accessibilityAddTraits(selection == index ? .isSelected : [])
     }
 }
 
