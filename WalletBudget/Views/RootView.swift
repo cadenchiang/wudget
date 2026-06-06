@@ -31,6 +31,9 @@ struct RootView: View {
 
     /// Selected root tab; bound to the paged TabView and the custom tab bar.
     @State private var selection = 0
+    /// Bar visibility (hidden while typing or inside a pushed sub-page),
+    /// shared with every screen via the environment.
+    @State private var tabBarState = TabBarState()
     /// Namespace for the tab bar's sliding selection highlight.
     @Namespace private var tabNamespace
 
@@ -41,18 +44,45 @@ struct RootView: View {
     /// Both roots side by side in a pager, so switching tabs slides smoothly
     /// (a system TabView snaps with no animation). The floating glass pill
     /// below mirrors the iOS 26 tab-bar look.
-    /// Native paged TabView (UIPageViewController under the hood): swiping
-    /// tracks the finger with the system's own physics — no custom gesture
-    /// math. The page dots are hidden; our floating bar is the indicator.
+    /// Native paged TabView: swiping tracks the finger with the system's own
+    /// physics — no custom gesture math. The page dots are hidden; our
+    /// floating bar is the indicator.
+    ///
+    /// Each page keeps its OWN NavigationStack (a single root stack was tried
+    /// 2026-06-06 and reverted: it broke every page's safe-area layout).
+    /// While a sub-page is pushed, the pager's swipe is disabled two ways —
+    /// `scrollDisabled` (native SwiftUI pager) and `PagerScrollLock` (UIKit
+    /// UIPageViewController backing) — so the edge swipe belongs to the
+    /// navigation stack and pops back to Settings instead of dragging the
+    /// pager to Spending.
+    ///
+    /// `ignoresSafeArea` is required: the pager otherwise confines each page
+    /// to the safe area, so page backgrounds (e.g. Settings' grouped gray)
+    /// stop short of the screen edges and the white window shows through.
+    /// Each page's own NavigationStack re-derives its safe area, so list
+    /// insets and top chrome still land correctly. The tab bar lives beside
+    /// the pager in the ZStack (not an overlay on the expanded view) so it
+    /// keeps its own safe-area placement above the home indicator.
     private var tabs: some View {
-        TabView(selection: $selection) {
-            SpendingView()
-                .tag(0)
-            SetupGuideView()
-                .tag(1)
+        ZStack(alignment: .bottom) {
+            TabView(selection: $selection) {
+                SpendingView()
+                    .background(PagerScrollLock(locked: tabBarState.isPushed))
+                    .tag(0)
+                SetupGuideView()
+                    .background(PagerScrollLock(locked: tabBarState.isPushed))
+                    .tag(1)
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .scrollDisabled(tabBarState.isPushed)
+            .ignoresSafeArea()
+            tabBar
+                .opacity(tabBarState.isHidden ? 0 : 1)
+                .offset(y: tabBarState.isHidden ? 90 : 0)
+                .allowsHitTesting(!tabBarState.isHidden)
+                .animation(.spring(duration: 0.32, bounce: 0), value: tabBarState.isHidden)
         }
-        .tabViewStyle(.page(indexDisplayMode: .never))
-        .overlay(alignment: .bottom) { tabBar }
+        .environment(tabBarState)
     }
 
     /// Floating glass tab bar (two pills) hovering at the bottom of the pager.
@@ -105,6 +135,51 @@ struct RootView: View {
         .buttonStyle(.plain)
         .accessibilityLabel(title)
         .accessibilityAddTraits(selection == index ? .isSelected : [])
+    }
+}
+
+/// Disables the pager's swipe at the UIKit level while a sub-page is pushed.
+///
+/// Complements `scrollDisabled` on the TabView: whichever backing the paged
+/// TabView uses on this OS (native SwiftUI scrolling, or UIPageViewController
+/// with its internal `_UIQueuingScrollView`), one of the two mechanisms takes
+/// hold, so the edge-swipe-back always belongs to the navigation stack.
+private struct PagerScrollLock: UIViewRepresentable {
+    /// Whether the pager's swipe is currently disabled.
+    let locked: Bool
+
+    func makeUIView(context: Context) -> LockView { LockView() }
+
+    func updateUIView(_ view: LockView, context: Context) {
+        view.apply(locked: locked)
+    }
+
+    /// Invisible view that finds and toggles the enclosing pager scroll view.
+    final class LockView: UIView {
+        /// Last requested state, re-applied once the view lands in a window
+        /// (the scroll view isn't reachable before then).
+        private var locked = false
+
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            apply(locked: locked)
+        }
+
+        /// Walks up the superview chain to the pager's queuing scroll view
+        /// and sets its scroll-enabled state. A miss is fine: it means this
+        /// OS uses the native pager, which `scrollDisabled` already covers.
+        func apply(locked: Bool) {
+            self.locked = locked
+            var ancestor = superview
+            while let view = ancestor {
+                if let scroll = view as? UIScrollView,
+                   String(describing: type(of: scroll)).contains("Queuing") {
+                    scroll.isScrollEnabled = !locked
+                    return
+                }
+                ancestor = view.superview
+            }
+        }
     }
 }
 

@@ -61,6 +61,7 @@ struct SetupGuideView: View {
                     .padding(.top, 12)
                     .padding(.bottom, 16)
             }
+            .bottomBarScrollEdge()
             .toolbar(.hidden, for: .navigationBar)
         }
     }

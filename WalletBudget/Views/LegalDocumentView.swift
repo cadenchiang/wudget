@@ -43,5 +43,6 @@ struct LegalDocumentView: View {
         .background(Color(.systemGroupedBackground))
         .navigationTitle(title)
         .navigationBarTitleDisplayMode(.inline)
+        .hidesRootTabBar()
     }
 }

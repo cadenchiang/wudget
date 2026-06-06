@@ -11,7 +11,7 @@ struct BudgetEditorView: View {
     @FocusState private var amountFocused: Bool
     @State private var draft = ""
 
-    private let presets: [Double] = [500, 1000, 1500, 2000, 3000, 5000]
+    private let presets: [Double] = [500, 600, 700, 800, 900, 1000, 1500, 2000, 3000]
 
     /// The budget the current draft text represents (0 when blank/invalid).
     private var draftValue: Double {
@@ -30,7 +30,7 @@ struct BudgetEditorView: View {
                 HStack(alignment: .firstTextBaseline, spacing: 5) {
                     Text("$")
                         .font(.system(size: 34, weight: .semibold))
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.primary)
                     TextField("0", text: $draft)
                         .font(.system(size: 52, weight: .bold))
                         .keyboardType(.decimalPad)
@@ -71,6 +71,7 @@ struct BudgetEditorView: View {
         .scrollDismissesKeyboard(.interactively)
         .navigationTitle("Monthly Budget")
         .navigationBarTitleDisplayMode(.inline)
+        .hidesRootTabBar()
         .onChange(of: amountFocused) { _, focused in
             if !focused { commit() }
         }

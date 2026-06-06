@@ -58,6 +58,7 @@ struct ManageMerchantsView: View {
         }
         .navigationTitle("Merchants")
         .navigationBarTitleDisplayMode(.inline)
+        .hidesRootTabBar()
         .alert("Rename Merchant", isPresented: renameAlertShown, presenting: renaming) { group in
             TextField("Merchant name", text: $nameInput)
             Button("Save") { rename(group, to: nameInput) }

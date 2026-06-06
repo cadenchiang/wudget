@@ -10,6 +10,8 @@ struct RecurringPaymentsView: View {
         sort: [SortDescriptor(\Expense.date, order: .reverse)]
     ) private var expenses: [Expense]
     @State private var showingAdd = false
+    /// Links the + button (zoom source) to the add screen's transition.
+    @Namespace private var addTransition
 
     /// Active payments first, ignored ones at the very bottom (each group keeps
     /// the query's newest-first date order — `sorted` is stable).
@@ -74,15 +76,39 @@ struct RecurringPaymentsView: View {
                 HStack {
                     GlassCircleButton(systemImage: "chevron.left", label: "Back") { dismiss() }
                     Spacer()
-                    GlassCircleButton(systemImage: "plus", label: "Add repeating payment",
-                                      font: .headline.weight(.semibold)) { showingAdd = true }
+                    addButton
                 }
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 8)
         }
-        .sheet(isPresented: $showingAdd) {
-            AddTransactionSheet(recurrenceDefault: .monthly, categoryDefault: "Subscription")
+        // The add screen zooms out of the + button (system morph) on iOS 18+;
+        // a plain cover earlier, where the transition doesn't exist.
+        .fullScreenCover(isPresented: $showingAdd) {
+            addScreen
+        }
+    }
+
+    /// The + glass circle, doubling as the zoom transition's source.
+    @ViewBuilder
+    private var addButton: some View {
+        let button = GlassCircleButton(systemImage: "plus", label: "Add repeating payment",
+                                       font: .headline.weight(.semibold)) { showingAdd = true }
+        if #available(iOS 18.0, *) {
+            button.matchedTransitionSource(id: "addRecurring", in: addTransition)
+        } else {
+            button
+        }
+    }
+
+    /// The add screen preset for a repeating payment.
+    @ViewBuilder
+    private var addScreen: some View {
+        let sheet = AddTransactionSheet(recurrenceDefault: .monthly, categoryDefault: "Subscription")
+        if #available(iOS 18.0, *) {
+            sheet.navigationTransition(.zoom(sourceID: "addRecurring", in: addTransition))
+        } else {
+            sheet
         }
     }
 

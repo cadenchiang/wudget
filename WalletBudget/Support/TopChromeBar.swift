@@ -31,6 +31,27 @@ extension View {
     func topChromeBar<Bar: View>(@ViewBuilder _ bar: @escaping () -> Bar) -> some View {
         modifier(TopChromeBar(bar: bar))
     }
+
+    /// Declares the floating root tab bar's zone as bottom chrome, so scroll
+    /// content gets the native iOS 26 soft scroll-edge effect (progressive
+    /// blur) at the bottom of the screen, exactly like under a system tab bar.
+    /// The bar itself is rendered by `RootView`; this clear stand-in only
+    /// teaches the scroll view where the bar is. Pre-iOS 26 (no edge effects)
+    /// it falls back to a plain inset so content still clears the bar.
+    @ViewBuilder
+    func bottomBarScrollEdge() -> some View {
+        if #available(iOS 26.0, *) {
+            self
+                .safeAreaBar(edge: .bottom, spacing: 0) {
+                    Color.clear.frame(height: 60)
+                }
+                .scrollEdgeEffectStyle(.soft, for: .bottom)
+        } else {
+            safeAreaInset(edge: .bottom, spacing: 0) {
+                Color.clear.frame(height: 60)
+            }
+        }
+    }
 }
 
 extension View {

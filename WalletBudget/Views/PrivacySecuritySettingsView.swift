@@ -17,6 +17,7 @@ struct PrivacySecuritySettingsView: View {
         }
         .navigationTitle("Privacy & Security")
         .navigationBarTitleDisplayMode(.inline)
+        .hidesRootTabBar()
     }
 
     private var securitySection: some View {

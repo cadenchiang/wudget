@@ -71,6 +71,7 @@ struct AccountView: View {
         }
         .navigationTitle("Account")
         .navigationBarTitleDisplayMode(.inline)
+        .hidesRootTabBar()
         .alert("Edit name", isPresented: $editingName) {
             TextField("Your name", text: $nameInput)
                 .textInputAutocapitalization(.words)

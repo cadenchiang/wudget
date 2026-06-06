@@ -26,5 +26,6 @@ struct BudgetSettingsView: View {
         }
         .navigationTitle("Budget")
         .navigationBarTitleDisplayMode(.inline)
+        .hidesRootTabBar()
     }
 }

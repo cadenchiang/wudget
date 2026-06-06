@@ -20,8 +20,6 @@ struct AddTransactionSheet: View {
     @State private var errorMessage: String?
     @State private var showingMerchantPicker = false
     @State private var showingCardPicker = false
-    /// The just-saved expense; non-nil presents the full-screen confirmation.
-    @State private var savedExpense: Expense?
     /// Whether the optional details step is expanded. Collapsed by default so the sheet opens
     /// clean; auto-expanded when a default is pre-filled so the caller's preset is visible.
     @State private var showDetails: Bool
@@ -32,22 +30,19 @@ struct AddTransactionSheet: View {
     ///   - recurrenceDefault: Initial recurrence (e.g. `.monthly` when adding from the Repeat screen).
     ///   - categoryDefault: Initial category (e.g. "Subscription" when adding from the Repeat
     ///     screen). Empty means "Automatic" (derived from the merchant).
-    ///   - onLogged: called the moment an expense is saved (before the
-    ///     confirmation screen), so the presenter can hold its row's pop-in.
-    ///   - onViewSaved: called when the confirmation's View Transaction is
-    ///     tapped, after this sheet starts dismissing.
+    ///   - onLogged: called the moment an expense is saved, so the presenter
+    ///     can hold the new row out of its list until this screen has zoomed
+    ///     away and the row's spring-in is visible.
     init(recurrenceDefault: RecurrenceFrequency = .none, categoryDefault: String = "",
-         onLogged: ((Expense) -> Void)? = nil, onViewSaved: ((Expense) -> Void)? = nil) {
+         onLogged: ((Expense) -> Void)? = nil) {
         _recurrence = State(initialValue: recurrenceDefault)
         _category = State(initialValue: categoryDefault)
         _showDetails = State(initialValue: recurrenceDefault != .none || !categoryDefault.isEmpty)
         self.onLogged = onLogged
-        self.onViewSaved = onViewSaved
     }
 
-    /// See `init(recurrenceDefault:categoryDefault:onLogged:onViewSaved:)`.
+    /// See `init(recurrenceDefault:categoryDefault:onLogged:)`.
     private let onLogged: ((Expense) -> Void)?
-    private let onViewSaved: ((Expense) -> Void)?
 
     /// Step gates: each later step stays blurred until the one before it is complete.
     private var amountDone: Bool {
@@ -64,6 +59,21 @@ struct AddTransactionSheet: View {
     }
 
     var body: some View {
+        form
+            // Presented full screen via the system zoom transition (it morphs
+            // out of the + button), so the page is opaque, not a glass sheet.
+            .background(Color(.systemBackground))
+            .onAppear { amountFocused = true }
+        .sheet(isPresented: $showingMerchantPicker) {
+            LibraryPickerView(title: "Merchant", items: MerchantLibrary.items, fallbackIcon: "tag.fill") { merchant = $0 }
+        }
+        .sheet(isPresented: $showingCardPicker) {
+            MyCardPickerSheet { card = $0 }
+        }
+    }
+
+    /// The step form (everything the sheet shows until a save succeeds).
+    private var form: some View {
         VStack(spacing: 0) {
             header
             ScrollView {
@@ -93,30 +103,6 @@ struct AddTransactionSheet: View {
             }
         }
         .animation(.spring(duration: 0.35, bounce: 0.2), value: canSave)
-        // Rises as a partial-height glass sheet (the screen behind stays visible and ghosts
-        // through), expandable to full height by dragging. On iOS 26 this is real Liquid Glass
-        // (refraction, not just blur); earlier systems fall back to the thin material.
-        .presentationDetents([.fraction(0.82), .large])
-        .glassSheetBackground(cornerRadius: 36)
-        .presentationCornerRadius(36)
-        .presentationDragIndicator(.visible)
-        .onAppear { amountFocused = true }
-        .sheet(isPresented: $showingMerchantPicker) {
-            LibraryPickerView(title: "Merchant", items: MerchantLibrary.items, fallbackIcon: "tag.fill") { merchant = $0 }
-        }
-        .sheet(isPresented: $showingCardPicker) {
-            MyCardPickerSheet { card = $0 }
-        }
-        // Saving doesn't dismiss; it celebrates. Done tears down the whole
-        // stack (this cover and the sheet) in one dismissal.
-        .fullScreenCover(item: $savedExpense) { expense in
-            TransactionLoggedView(expense: expense,
-                                  onDone: { dismiss() },
-                                  onView: {
-                                      onViewSaved?(expense)
-                                      dismiss()
-                                  })
-        }
     }
 
     /// Close button and centered title, like a setup flow.
@@ -371,7 +357,10 @@ struct AddTransactionSheet: View {
             Log.ui.info("Manually added \(expense.amount) at \(cleanMerchant, privacy: .public)")
             SyncEngine.shared.requestSync()
             onLogged?(expense)
-            savedExpense = expense
+            // The system zoom transition morphs this screen back into the +
+            // button; the presenter springs the new row in once it's gone.
+            amountFocused = false
+            dismiss()
         } catch {
             errorMessage = "Could not save. Please try again."
             Log.ui.error("Manual save failed: \(error.localizedDescription, privacy: .public)")

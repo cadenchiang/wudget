@@ -40,6 +40,7 @@ struct NotificationSettingsView: View {
         }
         .navigationTitle("Notifications")
         .navigationBarTitleDisplayMode(.inline)
+        .hidesRootTabBar()
         .onAppear { notifier.refreshAuthorization() }
         .onChange(of: leadDays) { _, _ in reschedule() }
         .onChange(of: largeThreshold) { _, _ in reschedule() }

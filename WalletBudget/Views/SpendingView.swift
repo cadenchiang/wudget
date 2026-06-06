@@ -22,17 +22,20 @@ private enum SpendingTab: String, CaseIterable, Identifiable {
 /// Recent / By Merchant / By Category selector, and the matching rows below.
 struct SpendingView: View {
     @Query(sort: \Expense.date, order: .reverse) private var expenses: [Expense]
+    /// Screen scale, for drawing true one-pixel hairlines (0.5pt is 1.5px on
+    /// 3x displays, which anti-aliases unevenly: the top edge looked thinner).
+    @Environment(\.displayScale) private var displayScale
     @AppStorage("budget.monthly") private var monthlyBudget = 0.0
     @AppStorage("budget.enabled") private var budgetEnabled = true
     @State private var span: TimeSpan = .month
     @State private var tab: SpendingTab = .recent
     @State private var showingAdd = false
     @State private var showingCards = false
-    /// A just-celebrated expense held out of the Recent rows until the
-    /// confirmation screen dismisses, so its pop-in plays where it's visible.
-    @State private var pendingPopInID: PersistentIdentifier?
-    /// Pushes the just-saved transaction's detail when View Transaction is tapped.
-    @State private var viewingExpense: Expense?
+    /// The just-saved expense, held out of Recent until the add screen has
+    /// zoomed away, so its spring-in plays where it can be seen.
+    @State private var heldID: PersistentIdentifier?
+    /// Links the + button (zoom source) to the add screen's transition.
+    @Namespace private var addTransition
     /// Expenses within the selected period (already date-descending from the query).
     private var currentExpenses: [Expense] {
         SpendingSummary.filter(expenses, in: span.interval())
@@ -163,33 +166,24 @@ struct SpendingView: View {
             spendingScroll
                 .background(Color(.systemBackground))
                 .topChromeBar { topBar }
+                .bottomBarScrollEdge()
                 .toolbar(.hidden, for: .navigationBar)
-                .sheet(isPresented: $showingAdd) {
-                    AddTransactionSheet(
-                        // Hold the new row out of Recent so its pop-in plays
-                        // after the confirmation dismisses, not behind it.
-                        onLogged: { pendingPopInID = $0.id },
-                        // View Transaction pushes the same detail screen a row
-                        // tap opens, once the add flow has slid away.
-                        onViewSaved: { expense in
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.55) {
-                                pendingPopInID = nil
-                                viewingExpense = expense
-                            }
-                        }
-                    )
+                // The add screen zooms out of the + button (system morph) and
+                // zooms back into it on save or close.
+                .fullScreenCover(isPresented: $showingAdd) {
+                    addScreen
                 }
                 .onChange(of: showingAdd) { _, showing in
-                    guard !showing, pendingPopInID != nil else { return }
-                    // Reveal the held row once the sheet has animated out.
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+                    guard !showing, heldID != nil else { return }
+                    // Reveal the held row once the zoom-away has finished:
+                    // the rows part and the new one springs into the gap.
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
                         withAnimation(.spring(duration: 0.5, bounce: 0.25)) {
-                            pendingPopInID = nil
+                            heldID = nil
                         }
                     }
                 }
                 .navigationDestination(isPresented: $showingCards) { CardsView() }
-                .navigationDestination(item: $viewingExpense) { TransactionDetailView(expense: $0) }
                 .onChange(of: span) { _, _ in Haptics.selection() }
                 .onChange(of: tab) { _, _ in Haptics.selection() }
         }
@@ -235,6 +229,8 @@ struct SpendingView: View {
     }
 
     /// The add (+) button on a Liquid Glass circle (falls back to a material circle pre-iOS 26).
+    /// It is also the zoom transition's source: the add screen morphs out of
+    /// and back into this circle.
     @ViewBuilder
     private var addButton: some View {
         let button = Button { Haptics.tap(); showingAdd = true } label: {
@@ -246,10 +242,31 @@ struct SpendingView: View {
         .tint(.primary)
         .accessibilityLabel("Add transaction")
 
-        if #available(iOS 26.0, *) {
-            button.glassEffect(.regular.interactive(), in: .circle)
+        let styled = Group {
+            if #available(iOS 26.0, *) {
+                button.glassEffect(.regular.interactive(), in: .circle)
+            } else {
+                button.background(Circle().fill(.thinMaterial))
+            }
+        }
+
+        if #available(iOS 18.0, *) {
+            styled.matchedTransitionSource(id: "addTransaction", in: addTransition)
         } else {
-            button.background(Circle().fill(.thinMaterial))
+            styled
+        }
+    }
+
+    /// The add screen, zooming out of the + button on iOS 18+ (a plain cover
+    /// on iOS 17, where the system transition doesn't exist).
+    @ViewBuilder
+    private var addScreen: some View {
+        // Hold the new row out of Recent until the zoom-away has played.
+        let sheet = AddTransactionSheet(onLogged: { heldID = $0.id })
+        if #available(iOS 18.0, *) {
+            sheet.navigationTransition(.zoom(sourceID: "addTransaction", in: addTransition))
+        } else {
+            sheet
         }
     }
 
@@ -278,34 +295,34 @@ struct SpendingView: View {
     /// the list dropdown, and plain transaction rows separated by hairlines.
     private var spendingScroll: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                TotalSpendingCard(
-                    total: SpendingSummary.total(displayedCurrent),
-                    previousTotal: SpendingSummary.total(comparablePrevious),
-                    entries: chartEntries,
-                    domain: chartDomain,
-                    buckets: PeriodBucketizer.buckets(for: span),
-                    projection: projection,
-                    periodBudget: periodBudget
-                )
+                VStack(alignment: .leading, spacing: 16) {
+                    TotalSpendingCard(
+                        total: SpendingSummary.total(displayedCurrent),
+                        previousTotal: SpendingSummary.total(comparablePrevious),
+                        entries: chartEntries,
+                        domain: chartDomain,
+                        buckets: PeriodBucketizer.buckets(for: span),
+                        projection: projection,
+                        periodBudget: periodBudget
+                    )
 
-                recurringRow
+                    recurringRow
 
-                budgetBlurbCard
+                    budgetBlurbCard
 
-                VStack(alignment: .leading, spacing: 4) {
-                    tabSelector
-                    if tab == .recent {
-                        recentRows
-                    } else {
-                        groupRows
+                    VStack(alignment: .leading, spacing: 4) {
+                        tabSelector
+                        if tab == .recent {
+                            recentRows
+                        } else {
+                            groupRows
+                        }
                     }
+                    .padding(.top, 12) // extra air between the allowance card and the list
                 }
-                .padding(.top, 12) // extra air between the allowance card and the list
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 8)
-            .padding(.bottom, 24)
+                .padding(.horizontal, 20)
+                .padding(.top, 8)
+                .padding(.bottom, 24)
         }
     }
 
@@ -394,20 +411,20 @@ struct SpendingView: View {
             }
         }
         .frame(height: 36)
-        .overlay(Capsule().strokeBorder(Color.primary, lineWidth: 0.5))
+        .overlay(Capsule().strokeBorder(Color.primary, lineWidth: 1 / displayScale))
         .padding(.vertical, 6)
     }
 
-    /// Recent rows minus any expense whose pop-in is being deferred until the
-    /// post-save confirmation screen has dismissed.
+    /// Recent rows minus the just-saved expense, which stays held out until
+    /// the add screen has zoomed away.
     private var visibleRecent: [Expense] {
-        displayedCurrent.filter { $0.id != pendingPopInID }
+        displayedCurrent.filter { $0.id != heldID }
     }
 
     /// Flat, date-ordered list of the period's transactions (the Recent tab).
     /// Honors the spending mode so ignored items don't appear in Variable mode.
-    /// A freshly added transaction pops in with a subtle scale/fade while the
-    /// rows beneath it spring down to make room.
+    /// A freshly added transaction springs in with a subtle scale/fade while
+    /// the rows beneath it spring down to make room.
     private var recentRows: some View {
         rowsList(visibleRecent.isEmpty) {
             ForEach(Array(visibleRecent.enumerated()), id: \.element.id) { index, expense in

@@ -67,6 +67,7 @@ struct AboutView: View {
         }
         .navigationTitle("About")
         .navigationBarTitleDisplayMode(.inline)
+        .hidesRootTabBar()
     }
 
     /// A support/legal row: orange icon with title (orange title for links).

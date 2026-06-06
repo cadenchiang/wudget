@@ -28,6 +28,7 @@ struct ManageCategoriesView: View {
         }
         .navigationTitle("Categories")
         .navigationBarTitleDisplayMode(.inline)
+        .hidesRootTabBar()
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button { addingNew = true } label: { Image(systemName: "plus") }

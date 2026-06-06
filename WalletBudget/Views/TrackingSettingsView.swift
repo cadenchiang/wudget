@@ -35,6 +35,7 @@ struct TrackingSettingsView: View {
         }
         .navigationTitle("Tracking")
         .navigationBarTitleDisplayMode(.inline)
+        .hidesRootTabBar()
         .fullScreenCover(isPresented: $showingOnboarding) {
             OnboardingFlow()
         }
