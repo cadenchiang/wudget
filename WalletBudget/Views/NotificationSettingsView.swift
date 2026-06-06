@@ -13,6 +13,7 @@ struct NotificationSettingsView: View {
     @AppStorage(NotificationKeys.upcomingCharges) private var upcomingCharges = true
     @AppStorage(NotificationKeys.leadDays) private var leadDays = 1
     @AppStorage(NotificationKeys.budgetAlerts) private var budgetAlerts = true
+    @AppStorage(NotificationKeys.dailyAllowance) private var dailyAllowance = true
     @AppStorage(NotificationKeys.weeklySummary) private var weeklySummary = true
     @AppStorage(NotificationKeys.monthlyReset) private var monthlyReset = true
     @AppStorage(NotificationKeys.savingsReminder) private var savingsReminder = true
@@ -82,6 +83,9 @@ struct NotificationSettingsView: View {
 
     private var budgetSection: some View {
         Section("Budget") {
+            toggle("Daily spending allowance",
+                   "Each morning, how much you can spend today to stay on budget.",
+                   $dailyAllowance)
             toggle("Budget warnings",
                    "When you reach 80% and 100% of your monthly budget.",
                    $budgetAlerts)

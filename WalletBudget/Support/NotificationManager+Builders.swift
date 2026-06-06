@@ -90,6 +90,35 @@ extension NotificationManager {
         )
     }
 
+    /// One notification each morning with what's safe to spend that day: the
+    /// month's remaining budget spread over its remaining days. Amounts are
+    /// computed at schedule time and rebuilt on every app open, so the nearest
+    /// mornings are always the most accurate.
+    @MainActor
+    func scheduleDailyAllowance(_ expenses: [Expense]) {
+        let budget = UserDefaults.standard.double(forKey: ProfileKeys.monthlyBudget)
+        guard budget > 0, let month = TimeSpan.month.interval() else { return }
+        let spent = SpendingSummary.total(SpendingSummary.filter(expenses, in: month))
+        let remaining = budget - spent
+        let calendar = Calendar.current
+
+        for offset in 1...7 {
+            guard let day = calendar.date(byAdding: .day, value: offset, to: Date()),
+                  day < month.end,
+                  let fireDate = at9am(day) else { continue }
+            let daysLeft = max(1, calendar.dateComponents(
+                [.day], from: calendar.startOfDay(for: day), to: month.end).day ?? 1)
+            let allowance = Self.dailyAllowance(remaining: remaining, daysLeft: daysLeft)
+            let body = remaining > 0
+                ? "You can spend \(allowance.asCurrency()) today and stay on budget (\(remaining.asCurrency()) left this month)."
+                : "You're \((-remaining).asCurrency()) over budget this month. A no-spend day keeps it from growing."
+            scheduleCalendar(id: NotificationID.dailyAllowancePrefix + "\(offset)",
+                             title: "Today's budget",
+                             body: body,
+                             at: fireDate)
+        }
+    }
+
     // MARK: - Date helpers
 
     /// The given day at 9:00am local time.

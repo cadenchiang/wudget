@@ -120,16 +120,20 @@ struct CardsView: View {
                             .font(.caption)
                             .foregroundStyle(.secondary)
                         Spacer()
+                        // Tinted to the gauge's exact color at the dot, so the
+                        // label and the dot's zone always agree.
                         Text("\(Int((fraction * 100).rounded()))% used")
                             .font(.caption.weight(.semibold))
-                            .foregroundStyle(CardUtilization.tier(for: fraction).color)
+                            .foregroundStyle(UtilizationGauge.color(at: fraction))
                     }
                     .padding(.top, 5)
                 } else {
-                    // The spend amount is already on the right; no need to repeat it here.
+                    // Same slider silhouette as limited cards, just neutral gray.
+                    UtilizationGauge(fraction: 0, neutral: true)
                     Text("Tap to set a credit limit")
                         .font(.caption)
                         .foregroundStyle(.secondary)
+                        .padding(.top, 5)
                 }
             }
             .frame(height: 64)
@@ -318,22 +322,54 @@ private struct CardEditorSheet: View {
 private struct UtilizationGauge: View {
     /// Current utilization (spent / limit); values above 1 pin to the end.
     let fraction: Double
+    /// All-gray bar for cards without a limit (same silhouette, no health story).
+    var neutral: Bool = false
+
+    /// The health curve, shared by the bar gradient and `color(at:)` so the
+    /// "% used" label can match the dot's exact color.
+    private static let stops: [(color: UIColor, location: Double)] = [
+        (.systemOrange, 0.00), // unused: card looks inactive
+        (.systemGreen, 0.10),  // a little spend = healthy
+        (.systemGreen, 0.30),  // sweet spot through 30%
+        (.systemOrange, 0.50),
+        (.systemRed, 0.80),
+    ]
+
+    /// The gradient's interpolated color at a utilization fraction.
+    /// - Parameter fraction: utilization (clamped to 0...1).
+    /// - Returns: the same color the bar shows where the dot sits.
+    static func color(at fraction: Double) -> Color {
+        let f = min(max(fraction, 0), 1)
+        guard let upperIndex = stops.firstIndex(where: { $0.location >= f }) else {
+            return Color(uiColor: stops[stops.count - 1].color)
+        }
+        guard upperIndex > 0 else { return Color(uiColor: stops[0].color) }
+        let lo = stops[upperIndex - 1], hi = stops[upperIndex]
+        let t = (f - lo.location) / max(hi.location - lo.location, 0.0001)
+        var r1: CGFloat = 0, g1: CGFloat = 0, b1: CGFloat = 0, a1: CGFloat = 0
+        var r2: CGFloat = 0, g2: CGFloat = 0, b2: CGFloat = 0, a2: CGFloat = 0
+        lo.color.getRed(&r1, green: &g1, blue: &b1, alpha: &a1)
+        hi.color.getRed(&r2, green: &g2, blue: &b2, alpha: &a2)
+        return Color(red: r1 + (r2 - r1) * t, green: g1 + (g2 - g1) * t, blue: b1 + (b2 - b1) * t)
+    }
 
     var body: some View {
         GeometryReader { geo in
             let x = min(max(fraction, 0), 1) * geo.size.width
             ZStack(alignment: .leading) {
-                Capsule()
-                    .fill(LinearGradient(
-                        stops: [
-                            .init(color: .orange, location: 0.00), // unused: card looks inactive
-                            .init(color: .green, location: 0.10),  // a little spend = healthy
-                            .init(color: .green, location: 0.30),  // sweet spot through 30%
-                            .init(color: .orange, location: 0.50),
-                            .init(color: .red, location: 0.80),
-                        ],
-                        startPoint: .leading, endPoint: .trailing
-                    ))
+                Group {
+                    if neutral {
+                        Capsule().fill(Color(.systemFill))
+                    } else {
+                        Capsule()
+                            .fill(LinearGradient(
+                                stops: Self.stops.map {
+                                    .init(color: Color(uiColor: $0.color), location: $0.location)
+                                },
+                                startPoint: .leading, endPoint: .trailing
+                            ))
+                    }
+                }
                     .frame(height: 6)
                     .frame(maxHeight: .infinity)
 

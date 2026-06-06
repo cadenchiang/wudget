@@ -20,6 +20,8 @@ enum NotificationKeys {
     static let savingsReminder = "notify.savingsReminder"
     /// Monthly subscription review.
     static let subscriptionReview = "notify.subscriptionReview"
+    /// Each morning: how much can be spent today given the remaining budget.
+    static let dailyAllowance = "notify.dailyAllowance"
     /// Alert on a single large purchase.
     static let largePurchase = "notify.largePurchase"
     /// Amount at/above which a purchase counts as "large".
@@ -43,6 +45,7 @@ enum NotificationID {
     static let subscription = "subscription.review"
     static let budgetPrefix = "budget."
     static let largePrefix = "large."
+    static let dailyAllowancePrefix = "daily.allowance."
 }
 
 /// Manages all on-device notifications: authorization, the calendar-scheduled reminders
@@ -107,6 +110,18 @@ final class NotificationManager: NSObject, UNUserNotificationCenterDelegate {
         if NotificationKeys.isOn(NotificationKeys.monthlyReset) { scheduleMonthlyReset() }
         if NotificationKeys.isOn(NotificationKeys.savingsReminder) { scheduleSavingsReminder() }
         if NotificationKeys.isOn(NotificationKeys.subscriptionReview) { scheduleSubscriptionReview(all) }
+        if NotificationKeys.isOn(NotificationKeys.dailyAllowance) { scheduleDailyAllowance(all) }
+    }
+
+    /// Today's safe-to-spend amount: the remaining budget spread evenly over the
+    /// month's remaining days. Never negative; 0 when over budget or no days left.
+    /// - Parameters:
+    ///   - remaining: budget minus what's been spent this month (may be negative).
+    ///   - daysLeft: remaining days in the month including today (must be > 0).
+    /// - Returns: the per-day allowance.
+    static func dailyAllowance(remaining: Double, daysLeft: Int) -> Double {
+        guard daysLeft > 0 else { return 0 }
+        return max(0, remaining) / Double(daysLeft)
     }
 
     /// Checks current-month spend against the budget and fires an 80%/100% alert at most once each

@@ -53,6 +53,17 @@ final class SpendingSummaryTests: XCTestCase {
         XCTAssertEqual(totals.last?.total, 10)
     }
 
+    // MARK: - Daily notification allowance
+
+    /// Remaining budget splits over remaining days; over-budget and degenerate
+    /// inputs yield 0, never negative amounts.
+    func testDailyNotificationAllowance() {
+        XCTAssertEqual(NotificationManager.dailyAllowance(remaining: 300, daysLeft: 10), 30)
+        XCTAssertEqual(NotificationManager.dailyAllowance(remaining: 300, daysLeft: 1), 300)
+        XCTAssertEqual(NotificationManager.dailyAllowance(remaining: -50, daysLeft: 10), 0)
+        XCTAssertEqual(NotificationManager.dailyAllowance(remaining: 300, daysLeft: 0), 0)
+    }
+
     // MARK: - Budget allowance math
 
     /// Daily/weekly allowances divide the monthly budget by the month's days.
