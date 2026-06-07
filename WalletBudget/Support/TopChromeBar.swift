@@ -38,17 +38,24 @@ extension View {
     /// The bar itself is rendered by `RootView`; this clear stand-in only
     /// teaches the scroll view where the bar is. Pre-iOS 26 (no edge effects)
     /// it falls back to a plain inset so content still clears the bar.
+    ///
+    /// The stand-in is taller than the floating tab pill (≈56pt) on purpose:
+    /// the soft scroll-edge blur fills this region, so a region the same size
+    /// as the pill would hide the entire blur behind the glass. The extra
+    /// height lifts the blur above the pill, making it as visible as the top.
     @ViewBuilder
     func bottomBarScrollEdge() -> some View {
+        // Tall enough to clear the floating tab pill and still show blur above it.
+        let standInHeight: CGFloat = 100
         if #available(iOS 26.0, *) {
             self
                 .safeAreaBar(edge: .bottom, spacing: 0) {
-                    Color.clear.frame(height: 60)
+                    Color.clear.frame(height: standInHeight)
                 }
                 .scrollEdgeEffectStyle(.soft, for: .bottom)
         } else {
             safeAreaInset(edge: .bottom, spacing: 0) {
-                Color.clear.frame(height: 60)
+                Color.clear.frame(height: standInHeight)
             }
         }
     }
@@ -134,5 +141,15 @@ extension UINavigationController: UIGestureRecognizerDelegate {
     /// Only begin when there is something to pop (never fights the root).
     public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
         viewControllers.count > 1
+    }
+
+    /// Every pan in the hierarchy (most importantly the root pager's) must
+    /// WAIT for the edge-swipe-back to fail before it may begin. With a
+    /// sub-page pushed, an edge swipe therefore always pops back — it can
+    /// never drag the pager over to the other tab. With nothing pushed the
+    /// pop gesture refuses to begin (above), so the pager pans normally.
+    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
+                                  shouldBeRequiredToFailBy otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        otherGestureRecognizer is UIPanGestureRecognizer
     }
 }
