@@ -72,11 +72,10 @@ struct AuthSheet: View {
         } message: {
             Text(errorMessage ?? "Something went wrong. Please try again.")
         }
-        // Safety net for every sign-in path (including email completing inside the
-        // nested sheet): the moment a session exists this sheet has no purpose.
-        .onChange(of: account.isSignedIn) { _, signedIn in
-            if signedIn { dismiss() }
-        }
+        // Sign-in success is handled one level up: WelcomeLandingView clears the
+        // root presentation the moment a session exists, dismissing this sheet
+        // and any page above it in a single animation. No dismissal here, so
+        // two animations can never race.
         // Full-screen page (not a nested sheet): the email form is a destination
         // in its own right, with room for the keyboard and inline errors.
         .fullScreenCover(isPresented: $showingEmail) {
@@ -142,10 +141,8 @@ struct AuthSheet: View {
                         }
                     }
                     Haptics.success()
-                    // RootGate swaps the view tree on isSignedIn, but this sheet was
-                    // presented by the welcome screen; dismiss explicitly so it never
-                    // lingers over the app.
-                    dismiss()
+                    // WelcomeLandingView clears the root presentation on
+                    // isSignedIn; no explicit dismissal needed here.
                 } catch {
                     errorMessage = "Apple sign-in failed. Please try again."
                 }
@@ -173,7 +170,7 @@ struct AuthSheet: View {
         do {
             try await account.signInWithGoogle()
             Haptics.success()
-            dismiss()
+            // WelcomeLandingView clears the root presentation on isSignedIn.
         } catch is CancellationError {
             // The user closing Google's sheet is not an error worth surfacing.
         } catch {

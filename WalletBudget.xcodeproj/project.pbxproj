@@ -822,7 +822,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = J3BMT7MU7K;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -890,7 +890,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 3;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = J3BMT7MU7K;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -928,7 +928,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.cadenchiang.walletbudgetTests;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Orbit.app/Orbit";
 			};
 			name = Debug;
@@ -947,7 +947,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.cadenchiang.walletbudget.WudgetWidgets;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -976,7 +976,7 @@
 				PRODUCT_MODULE_NAME = WalletBudget;
 				PRODUCT_NAME = Orbit;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -994,7 +994,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.cadenchiang.walletbudget.WudgetWidgets;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -1010,7 +1010,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = com.cadenchiang.walletbudgetTests;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Orbit.app/Orbit";
 			};
 			name = Release;
@@ -1040,7 +1040,7 @@
 				PRODUCT_MODULE_NAME = WalletBudget;
 				PRODUCT_NAME = Orbit;
 				SDKROOT = iphoneos;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};

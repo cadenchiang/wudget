@@ -12,16 +12,22 @@ struct RootGate: View {
     @State private var showApp = false
     @AppStorage(AppTheme.storageKey) private var theme: AppTheme = .system
 
-    /// How long to let the auth sheet finish dismissing before swapping trees.
-    private static let sheetDismissDelay: TimeInterval = 0.6
+    /// How long to let the auth stack finish dismissing before swapping trees.
+    /// The welcome screen tears the whole stack down in ONE animation (sheet +
+    /// email page together), so this only needs to cover a single dismissal.
+    private static let sheetDismissDelay: TimeInterval = 0.5
 
     var body: some View {
         Group {
             if account.isRestoringSession {
                 // Hold a neutral splash while Supabase restores the persisted
                 // session, so cold launches don't flash the welcome screen.
-                ProgressView()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                // Deliberately a bare background — identical to the launch
+                // screen and the lock screen behind it — so launch reads as
+                // one continuous surface. A spinner here flashed for a split
+                // second on every cold launch and looked broken.
+                Color(.systemBackground)
+                    .ignoresSafeArea()
             } else if showApp {
                 AppLockGate { RootView() }
                     .transition(.opacity)

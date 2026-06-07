@@ -165,20 +165,24 @@ private struct PagerScrollLock: UIViewRepresentable {
             apply(locked: locked)
         }
 
-        /// Walks up the superview chain to the pager's queuing scroll view
-        /// and sets its scroll-enabled state. A miss is fine: it means this
-        /// OS uses the native pager, which `scrollDisabled` already covers.
+        /// Walks the whole superview chain and toggles EVERY ancestor scroll
+        /// view (the only scrollable ancestors of a page root are the pager's
+        /// internals, whatever class the OS implements them with — plain
+        /// scroll view, queuing scroll view, or collection view). Logs what
+        /// it touches so a silent miss is diagnosable from the console.
         func apply(locked: Bool) {
             self.locked = locked
+            guard window != nil else { return }
+            var found = 0
             var ancestor = superview
             while let view = ancestor {
-                if let scroll = view as? UIScrollView,
-                   String(describing: type(of: scroll)).contains("Queuing") {
+                if let scroll = view as? UIScrollView {
                     scroll.isScrollEnabled = !locked
-                    return
+                    found += 1
                 }
                 ancestor = view.superview
             }
+            Log.ui.debug("PagerScrollLock locked=\(locked) toggled \(found) ancestor scroll view(s)")
         }
     }
 }

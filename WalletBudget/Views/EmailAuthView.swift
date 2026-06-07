@@ -55,6 +55,8 @@ struct EmailAuthView: View {
     /// the password-reset confirmation.
     @State private var statusIsError = true
     @State private var awaitingVerification = false
+    /// Whether the password is shown in the clear (the eye toggle).
+    @State private var passwordVisible = false
 
     /// - Parameter initialMode: which mode the form opens in (matches the welcome
     ///   pill the user tapped); the segmented control still allows switching.
@@ -105,9 +107,7 @@ struct EmailAuthView: View {
                         .autocorrectionDisabled()
                         .textContentType(.emailAddress)
                         .underlinedField()
-                    SecureField("Password", text: $password)
-                        .textContentType(mode == .signUp ? .newPassword : .password)
-                        .underlinedField()
+                    passwordField
                 }
                 .padding(.top, 24)
 
@@ -155,6 +155,37 @@ struct EmailAuthView: View {
             .padding(.bottom, 8)
             .animation(.spring(duration: 0.35, bounce: 0.2), value: bothFieldsFilled)
         }
+    }
+
+    /// The password row: secure by default, revealed in the clear via the eye
+    /// toggle. The same binding backs both fields so text survives the swap.
+    private var passwordField: some View {
+        HStack(spacing: 12) {
+            Group {
+                if passwordVisible {
+                    TextField("Password", text: $password)
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                } else {
+                    SecureField("Password", text: $password)
+                }
+            }
+            .textContentType(mode == .signUp ? .newPassword : .password)
+
+            Button {
+                Haptics.tap()
+                passwordVisible.toggle()
+            } label: {
+                Image(systemName: passwordVisible ? "eye.slash" : "eye")
+                    .font(.system(size: 16))
+                    .foregroundStyle(.secondary)
+                    .frame(width: 28, height: 28)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(passwordVisible ? "Hide password" : "Show password")
+        }
+        .underlinedField()
     }
 
     /// Whether both fields have any content — gates the submit pill's appearance
@@ -244,15 +275,17 @@ struct EmailAuthView: View {
             case .logIn:
                 try await account.signIn(email: address, password: password)
                 Haptics.success()
-                dismiss()
+                // No dismissal here: WelcomeLandingView clears the whole auth
+                // stack (this page and the sheet beneath) in one animation the
+                // moment the session lands, so login goes straight to the app.
             case .signUp:
                 let needsVerification = try await account.signUp(email: address, password: password)
                 Haptics.success()
                 if needsVerification {
                     awaitingVerification = true
-                } else {
-                    dismiss()
                 }
+                // Verified-instantly accounts are signed in already; the root
+                // tears the auth stack down (see above).
             }
         } catch {
             statusMessage = Self.friendlyMessage(for: error, mode: mode)

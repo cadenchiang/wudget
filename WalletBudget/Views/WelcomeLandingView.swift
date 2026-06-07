@@ -37,6 +37,14 @@ struct WelcomeLandingView: View {
                 .presentationDragIndicator(.visible)
                 .presentationCornerRadius(28)
         }
+        // The ONE place the auth UI is torn down after any successful sign-in:
+        // clearing the root presentation dismisses the sheet and the email
+        // page above it in a single animation. (Dismissing layer by layer
+        // made a successful login linger on the email page, then the sheet,
+        // before the app finally appeared.)
+        .onChange(of: account.isSignedIn) { _, signedIn in
+            if signedIn { authIntent = nil }
+        }
     }
 
     /// The hero: the morphing monochrome ring loop, nothing else.

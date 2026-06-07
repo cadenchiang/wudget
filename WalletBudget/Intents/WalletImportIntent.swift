@@ -11,8 +11,10 @@ import SwiftData
 /// app uses the device's currency.)
 struct WalletImportIntent: AppIntent {
     static var title: LocalizedStringResource = "Automatically Log Card Payment"
+    // NOTE: App Review (ITMS-90626) forbids the word "Apple" anywhere in this
+    // description — say "Wallet", never "Apple Wallet".
     static var description = IntentDescription(
-        "Imports an Apple Wallet transaction into Budget. Map the Wallet automation's Amount, Merchant, and Card onto these fields."
+        "Imports a Wallet transaction into Orbit. Map the Wallet automation's Amount, Merchant, and Card onto these fields."
     )
 
     /// Amount as delivered by the automation (often a currency-formatted string, e.g. "$6.22").

@@ -6,8 +6,8 @@ Everything to paste into App Store Connect. Drafted 2026-06-05.
 
 | Field | Value |
 |---|---|
-| Name | Orbit: Spending Tracker (if plain "Orbit" is taken; try "Orbit" first) |
-| Subtitle (30 chars max) | `Private spending tracking` |
+| Name | **Orbit Finance** (final, set 2026-06-06; plain "Orbit" was taken) |
+| Subtitle (30 chars max) | `Automatic spending tracking` (final) |
 | Category | Finance |
 | Secondary category | Productivity (optional) |
 | Price | Free |
